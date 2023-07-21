@@ -1,0 +1,10 @@
+{
+  "name": "Scale Down",
+  "this": "01_scale_down",
+  "type": "sqs",
+  "steps": {
+    "01_scale_down": {
+      "action": "scale_up"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+.coverage
+venv
+.pytest_cache

@@ -1,0 +1,247 @@
+name: Upgrade Database
+this: 01_restore_database
+instance: '1692166454123'
+type: sqs
+retry_delay: 120
+data:
+  domain: cmil2mssslzz.ap-southeast-2.rds.amazonaws.com
+  instance_class: DBInstanceClassR5
+  instance_type: large
+  mysql_version: 5.7.41
+  params_id: '1'
+  run_date: '2023-08-15'
+  schema: Turkey_BLU
+  snapshot_arn: arn:aws:rds:ap-southeast-2:561082505378:snapshot:pr13lmoxio5uoh0-02-47-jul-12-2023
+  suffix: bua-sql
+  today: '2023-05-01'
+  update_id: '12'
+  rdssecret: "cicd/tst-anstead/rds/bua"
+steps:
+  01_restore_database:
+    action: restore_database
+    args:
+      mysql_version: 5.7.41
+    'on':
+      COMPLETE:
+        next: 04_check_restore_database
+      FAILED:
+        next: 02_destroy_database
+    retries: 1
+  02_destroy_database:
+    action: destroy_database
+    'on':
+      COMPLETE:
+        next: 03_check_destroy_database
+  03_check_destroy_database:
+    action: check_destroy_database
+    'on':
+      COMPLETE:
+        next: 01_restore_database
+  04_check_restore_database:
+    action: check_restore_database
+    'on':
+      COMPLETE:
+        next: 05_reset_password
+  05_reset_password:
+    action: reset_password
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 06_export_procedures
+  06_export_procedures:
+    action: export_procedures
+    args:
+      procedures:
+      - mi_mfin_triage_v2
+    'on':
+      COMPLETE:
+        next: 07_upgrade_database
+  07_upgrade_database:
+    action: create_upgrade_version_change_set
+    args:
+      change_set_name: upgrade-database-8-0-32
+      mysql_version: 8.0.32
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 08_check_upgrade_db_ready
+  08_check_upgrade_db_ready:
+    action: check_change_set_ready
+    args:
+      change_set_name: upgrade-database-8-0-32
+      mysql_version: 8.0.32
+    'on':
+      COMPLETE:
+        next: 09_execute_upgrade_database
+  09_execute_upgrade_database:
+    action: execute_change_set
+    args:
+      change_set_name: upgrade-database-8-0-32
+      mysql_version: 8.0.32
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 10_check_upgrade_db_complete
+  10_check_upgrade_db_complete:
+    action: check_change_set_complete
+    args:
+      change_set_name: upgrade-database-8-0-32
+      mysql_version: 8.0.32
+    'on':
+      COMPLETE:
+        next: 11_import_procedures
+  11_import_procedures:
+    action: import_procedures
+    args:
+      procedures:
+      - mi_mfin_triage_v2
+    'on':
+      COMPLETE:
+        next: 12_scale_database
+  12_scale_database:
+    action: create_scale_change_set
+    args:
+      change_set_name: scale-database-8xlarge
+      instance_class: DBInstanceClassR6i
+      instance_type: 8xlarge
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 13_check_scale_db_ready
+  13_check_scale_db_ready:
+    action: check_change_set_ready
+    'on':
+      COMPLETE:
+        next: 14_execute_scale_database
+  14_execute_scale_database:
+    action: execute_change_set
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 15_check_scale_db_complete
+  15_check_scale_db_complete:
+    action: check_change_set_complete
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 16_disable_workflow_schedules
+  16_disable_workflow_schedules:
+    action: disable_workflow_schedules
+    'on':
+      COMPLETE:
+        next: 17_disable_workflow_instances
+  17_disable_workflow_instances:
+    action: disable_workflow_instances
+    'on':
+      COMPLETE: {}
+  18_sync_passwords:
+    comment: set the user passwords
+    action: execute_sql
+    args:
+      sqlsecret: "cicd/tst-anstead/rds/bua/passwords"
+    'on':
+      COMPLETE: {}
+  19_restore_triggers:
+    comment: restore triggers from the turkey project when using anonymised snapshot
+  20_restore_bua_scripts:
+    comment: restore bua scripts that dont exist in production yet
+  21_restore_bua_procedures:
+    comment: restore bua procedures that dont exist in production yet
+  22_scale_down_deployments:
+    comment: kubectl -n core scale --replicas=0 deployment --all
+    args:
+      namespace: core
+      deployment: [ workflow , meterdata ]
+  23_switch_dns:
+    comment: need to update route53 entries with the sql server endpoint
+  24_scale_up_workflow:
+    comment: kubectl -n core scale --replicas=3 deployment workflow
+  25_analyse_statistics:
+    action: core_warm_database_statistics
+    args:
+      concurrency: 32
+      sample_pages:
+        AggregatedRead: 1600
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 26_wait_for_workflows
+  26_wait_for_workflows:
+    action: wait_for_workflows
+    retry_delay: 300
+    args:
+      workflow_name: EXECUTE_SQL
+    'on':
+      COMPLETE: {}
+  27_initiate_warming:
+    action: core_warm_database_indexes
+    args:
+      concurrency: 32
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 28_wait_for_workflows
+  28_wait_for_workflows:
+    action: wait_for_workflows
+    retry_delay: 300
+    args:
+      workflow_name: EXECUTE_SQL
+    'on':
+      COMPLETE: {}
+  29_initiate_utility_profiles:
+    action: bua_initiate
+    args:
+      run_type: Utility
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 30_wait_for_profiles_to_complete
+  30_wait_for_profiles_to_complete:
+    action: wait_for_empty_site_queues
+    retry_delay: 300
+    'on':
+      COMPLETE:
+        next: 31_jurisdiction_segment_generation
+  31_jurisdiction_segment_generation:
+    action: bua_initiate
+    args:
+      run_type: SegmentJurisdictionAvgExclEst
+    'on':
+      COMPLETE:
+        next: 32_wait_for_segment_to_complete
+  32_wait_for_segment_to_complete:
+    action: wait_for_empty_site_queues
+    retry_delay: 300
+    'on':
+      COMPLETE:
+        next: 33_initiate_profile_validation
+  33_initiate_profile_validation:
+    action: bua_initiate
+    args:
+      run_type: Validate
+    'on':
+      COMPLETE:
+        next: 34_wait_for_validation_to_complete
+  34_wait_for_validation_to_complete:
+    action: wait_for_empty_site_queues
+    retry_delay: 300
+    'on':
+      COMPLETE: {}
+  35_resolve_variances:
+    action: bua_resolve_variances
+    'on':
+      COMPLETE: {}
+  36_generate_missing_elec_interval_reads:
+    comment: Generate all of the missing electricity interval reads
+  37_generate_missing_elec_basic_reads:
+    comment: Generate all of the missing electricity basic reads
+  38_generate_missing_gas_reads:
+    comment: Generate all of the missing gas reads
+  39_wait_for_aggregations:
+    comment: Wait until the aggregation workflows are complete
+  40_initiate_invoice_runs:
+    comment: Initiate the invoice runs
+  41_wait_for_invoicing:
+    comment: Wait until all invoicing runs are complete
+  42_extract_results_to_s3:
+    comment: Extract the results of the invoice runs to S3

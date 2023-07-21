@@ -1,0 +1,16 @@
+{
+  "name": "Disable Workflow Instances",
+  "this": "01_disable_workflow_instances",
+  "type": "sqs",
+  "data": {
+    "update_id": "11",
+    "suffix": "bua-sql",
+    "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
+    "schema": "Turkey_BLU"
+  },
+  "steps": {
+    "01_disable_workflow_instances": {
+      "action": "disable_workflow_instances"
+    }
+  }
+}

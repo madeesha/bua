@@ -1,0 +1,288 @@
+import yaml
+import traceback
+from typing import Dict, Any
+from datetime import datetime, timezone, timedelta
+
+from bua.actions.dns import DNS
+from bua.actions.kube import KubeCtl
+from bua.actions.profiles import Profiles
+from bua.actions.reset import Reset
+from bua.actions.restore import Restore
+from bua.actions.destroy import Destroy
+from bua.actions.sql import SQL
+from bua.actions.changeset import ChangeSet
+from bua.rds import RDS
+from bua.sm import SecretManager
+from bua.sqs import SQS
+
+
+class BUAControllerHandler:
+
+    def __init__(self, config, r53, sm, s3, ddb, sqs, cf, rds, sts, eks, session):
+        self.config = config
+        self.s3 = s3
+        self.ddb = ddb
+        self.sqs = SQS(sqs, ddb)
+        secret_manager = SecretManager(sm=sm)
+        sql_handler = SQL(config=config, s3=s3, sm=secret_manager)
+        rds_handler = RDS(rds=rds)
+        reset_handler = Reset(config=config, rds=rds_handler, sm=secret_manager)
+        restore_handler = Restore(config=config, cf=cf)
+        destroy_handler = Destroy(config=config, cf=cf)
+        change_set_handler = ChangeSet(config=config, cf=cf)
+        kubectl_handler = KubeCtl(config=config, sts=sts, eks=eks, session=session)
+        profiles_handler = Profiles(config=config, sqs=self.sqs)
+        dns_handler = DNS(config=config, r53=r53)
+        self.handlers: Dict[str, Any] = {
+            'restore_database': restore_handler.restore_database,
+            'check_restore_database': restore_handler.check_restore_database,
+            'destroy_database': destroy_handler.destroy_database,
+            'check_destroy_database': destroy_handler.check_destroy_database,
+            'reset_password': reset_handler.reset_password,
+            'export_procedures': sql_handler.export_procedures,
+            'import_procedures': sql_handler.import_procedures,
+            'create_upgrade_version_change_set': change_set_handler.create_upgrade_version_change_set,
+            'create_scale_change_set': change_set_handler.create_scale_change_set,
+            'create_change_set': change_set_handler.create_change_set,
+            'check_change_set_ready': change_set_handler.check_change_set_ready,
+            'execute_change_set': change_set_handler.execute_change_set,
+            'check_change_set_complete': change_set_handler.check_change_set_complete,
+            'disable_workflow_schedules': sql_handler.disable_workflow_schedules,
+            'disable_workflow_instances': sql_handler.disable_workflow_instances,
+            'core_warm_database_statistics': sql_handler.core_warm_database_statistics,
+            'core_warm_database_indexes': sql_handler.core_warm_database_indexes,
+            'wait_for_workflows': sql_handler.wait_for_workflows,
+            'stats_sample_pages': sql_handler.stats_sample_pages,
+            'get_max_workflow_instance': sql_handler.get_max_workflow_instance,
+            'truncate_workflow_instance': sql_handler.truncate_workflow_instance,
+            'scale_replicas': kubectl_handler.scale_replicas,
+            'bua_initiate': sql_handler.bua_initiate,
+            'bua_resolve_variances': sql_handler.bua_resolve_variances,
+            'wait_for_empty_site_queues': profiles_handler.wait_for_empty_site_queues,
+            'execute_sql': sql_handler.execute_sql,
+            'insert_event_log': sql_handler.insert_event_log,
+            'set_rds_dns_entry': dns_handler.set_rds_dns_entry,
+        }
+
+    def handle_request(self, event):
+        print('ProjectVersion', self.config['version'])
+        if 'Records' in event:
+            for record in event['Records']:
+                print(record)
+                if record['eventSource'] == 'aws:s3':
+                    text = self._fetch_s3_object(record)
+                    body = yaml.load(text, Loader=yaml.Loader)
+                    self.handle_request(body)
+                if record['eventSource'] == 'aws:sqs':
+                    if self.sqs.deduplicate_request(record):
+                        body = yaml.load(record['body'], Loader=yaml.Loader)
+                        if 'Records' in body:
+                            self.handle_request(body)
+                        else:
+                            if 'type' not in body:
+                                body['type'] = 'sqs'
+                            self._handle_event(body)
+        else:
+            if 'type' not in event:
+                event['type'] = 'sqs'
+            self._handle_event(event)
+            return event
+
+    def _fetch_s3_object(self, record):
+        bucket = record['s3']['bucket']['name']
+        key = record['s3']['object']['key']
+        version = record['s3']['object']['versionId']
+        response = self.s3.get_object(Bucket=bucket, Key=key, VersionId=version)
+        text: str = response['Body'].read().decode('utf-8')
+        return text
+
+    def _handle_event(self, event):
+        use_sqs = event['type'] == 'sqs'
+        try:
+            if 'name' not in event:
+                raise Exception('[name] tag is missing from the event')
+            name = event['name']
+            if 'this' not in event:
+                raise Exception('[this] tag is missing from the event')
+            this = event['this']
+            if 'steps' in event:
+                self._handle_event_steps(event, name, this)
+            else:
+                self._handle_step(event, name, this, event)
+            if use_sqs:
+                self._handle_next_via_sqs(event)
+        except Exception as e:
+            self._handle_step_failure(e, event, use_sqs)
+
+    def _handle_next_via_sqs(self, event):
+        _next = event.get('next')
+        if _next is not None and len(_next) > 0:
+            event['this'] = _next
+            del event['next']
+            delay = event.get('delay', 0)
+            if 'delay' in event:
+                del event['delay']
+            response = self.sqs.send_message(
+                queue_url=self.config['next_queue_url'],
+                body=yaml.dump(event),
+                delay=delay
+            )
+            print(f'Sent message [{response["MessageId"]}] to {self.config["next_queue_url"]}')
+
+    def _handle_event_steps(self, event, name, this):
+        if this not in event['steps']:
+            raise Exception('There is no step definition for [{this}] in the event')
+        step = event['steps'][this]
+        self._handle_step(event, name, this, step)
+
+    def _handle_step(self, event, name, this, step):
+        event['next'] = ''
+        data = self._get_data(event)
+        self._process_args(data, step)
+        instance = self._determine_instance(event)
+        log_item = self._log_processing_start(instance, name, this)
+        reason, status = self._perform_action(data, log_item, step, this)
+        status = self._check_retries_exceeded(status, step, log_item)
+        self._record_result(event, log_item, reason, status, this)
+        self._determine_next_step(event, log_item, status, step)
+        self.ddb.put_item(Item=log_item)
+        if status == 'ABORT':
+            raise Exception(reason)
+
+    def _handle_step_failure(self, e, event, use_sqs):
+        traceback.print_exception(e)
+        if use_sqs:
+            response = self.sqs.send_message(
+                queue_url=self.config['failure_queue_url'],
+                body=yaml.dump({
+                    'event': event,
+                    'cause': traceback.format_exception(e)
+                })
+            )
+            print(f'Sent message [{response["MessageId"]}] to {self.config["failure_queue_url"]}')
+        else:
+            raise
+
+    def _perform_action(self, data, log_item, step, this):
+        if 'action' in step:
+
+            action = step['action']
+            log_item['ACTION'] = action
+            print(f'Invoking [{action}] for [{this}]')
+
+            try:
+                if action not in self.handlers:
+                    raise Exception(f'Cannot find handler for [{action}]')
+                status, reason = self.handlers[action](step, data)
+            except Exception as e:
+                log_item['TIME2'] = self._local_time()
+                log_item['STATUS'] = 'ABORT'
+                log_item['REASON'] = str(e)
+                self.ddb.put_item(Item=log_item)
+                raise
+
+        else:
+            status, reason = 'COMPLETE', 'No action'
+        return reason, status
+
+    def _record_result(self, event, log_item, reason, status, this):
+        log_item['TIME2'] = self._local_time()
+        if status is not None:
+            log_item['STATUS'] = status
+        if reason is not None:
+            log_item['REASON'] = reason
+        event['result'] = {
+            'step': this,
+            'status': status,
+            'reason': reason,
+            'when': log_item['TIME2']
+        }
+        print(f'Result : [{status}] : {reason}')
+
+    @staticmethod
+    def _local_time():
+        return str(datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=10))))
+
+    def _log_processing_start(self, instance, name, this):
+        time1 = self._local_time()
+        result = self.ddb.get_item(
+            Key={
+                'PK': name,
+                'SK': this
+            },
+            ConsistentRead=True
+        )
+        if 'Item' in result:
+            if 'INSTANCE' in result['Item'] and result['Item']['INSTANCE'] == instance:
+                if 'TIME1' in result['Item']:
+                    time1 = result['Item']['TIME1']
+        log_item = {
+            'PK': name,
+            'SK': this,
+            'INSTANCE': instance,
+            'TIME1': time1,
+        }
+        self.ddb.put_item(Item=log_item)
+        return log_item
+
+    def _determine_instance(self, event):
+        if 'instance' not in event or event['instance'] is None or len(event['instance']) == 0:
+            event['instance'] = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+        instance = str(event['instance'])
+        return instance
+
+    def _process_args(self, data, step):
+        if 'args' in step:
+            for key, value in step['args'].items():
+                data[key] = value
+
+    def _get_data(self, event):
+        if 'data' not in event:
+            event['data'] = dict()
+        data = event['data']
+        return data
+
+    def _determine_next_step(self, event, log_item, status, step):
+        if 'on' in step:
+            if status in step['on']:
+                if 'next' in step['on'][status]:
+                    event['next'] = step['on'][status]['next']
+                    event['delay'] = int(step['on'][status].get('delay', 0))
+                    self._log_next_step(event, log_item)
+                else:
+                    self._no_next_step(event, log_item)
+                return
+        if status == 'RETRY':
+            event['next'] = event['this']
+            event['delay'] = int(step.get('retry_delay', event.get('retry_delay', 60)))
+            self._log_next_step(event, log_item)
+            return
+        if status != 'ABORT':
+            log_item['WARNING'] = f'Unhandled state transition {status}'
+        self._no_next_step(event, log_item)
+
+    def _check_retries_exceeded(self, status, step, log_item):
+        if status not in ('COMPLETE', 'ABORT'):
+            if 'retries' in step:
+                retries = int(step['retries'])
+                if retries > 0:
+                    step['retries'] = retries - 1
+                else:
+                    status = 'ABORT'
+                    log_item['WARNING'] = f'Retries exceeded'
+        return status
+
+    def _log_next_step(self, event, log_item):
+        if len(event['next']) > 0:
+            log_item['NEXT'] = event['next']
+        elif 'NEXT' in log_item:
+            del log_item['NEXT']
+        if event['delay'] > 0:
+            log_item['DELAY'] = str(event['delay'])
+        elif 'DELAY' in log_item:
+            del log_item['DELAY']
+
+    def _no_next_step(self, event, log_item):
+        event['next'] = ''
+        event['delay'] = 0
+        self._log_next_step(event, log_item)

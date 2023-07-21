@@ -1,0 +1,332 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  ResourcePrefix:
+    Type: String
+  ClassName:
+    Type: String
+  EnvironmentName:
+    Type: String
+  AllocatedStorage:
+    Type: String
+    Default: ''
+  InstanceType:
+    Type: String
+    Default: 4xlarge
+    AllowedValues:
+    - large
+    - xlarge
+    - 2xlarge
+    - 4xlarge
+    - 8xlarge
+    - 12xlarge
+    - 16xlarge
+    - 24xlarge
+    - 32xlarge
+  TeamsChannelEmail:
+    Type: String
+    Default: "e9e19092.alintaenergy.com.au@au.teams.ms"  
+  ReadReplicaOf:
+    Type: String
+    Default: ''
+  MySQLVersion:
+    Type: String
+    Default: "8.0.32"
+    AllowedValues:
+      - "5.7.38"
+      - "5.7.41"
+      - "5.7.42"
+      - "8.0.28"
+      - "8.0.31"
+      - "8.0.32"
+      - "8.0.33"
+  MYSQLDBName:
+    Type: String
+    Default: "Turkey_BLU"
+  MultiAZEnabled:
+    Type: String
+    Default: false
+  BackupRetention:
+    Type: String
+    Default: "7"
+  MonitoringInterval:
+    Type: String
+    Default: "1"
+  SnapshotIdentifier:
+    Type: String
+    Default: ""
+  UpdateID:
+    Type: Number
+    Default: 6
+  InstanceSuffix:
+    Type: String
+    Default: "sql"
+  WasReplica:
+    Type: String
+    Default: "No"
+    AllowedValues:
+      - "No"
+      - "Yes"
+  ParamsID:
+    Description: 'Revision of the parameter groups to use'
+    Type: String
+    Default: "1"
+  DBInstanceClass:
+    Description: 'Instance class type to use'
+    Type: String
+    Default: 'DBInstanceClassR5'
+    AllowedValues:
+      - 'DBInstanceClassR5'
+      - 'DBInstanceClassR6i'
+
+Mappings:
+  InstanceTypeMap:
+    large:
+      DBInstanceClassR5: db.r5.large
+      DBInstanceClassR6i: db.r6i.large
+    xlarge:
+      DBInstanceClassR5: db.r5.xlarge
+      DBInstanceClassR6i: db.r6i.xlarge
+    2xlarge:
+      DBInstanceClassR5: db.r5.2xlarge
+      DBInstanceClassR6i: db.r6i.2xlarge
+    4xlarge:
+      DBInstanceClassR5: db.r5.4xlarge
+      DBInstanceClassR6i: db.r6i.4xlarge
+    8xlarge:
+      DBInstanceClassR5: db.r5.8xlarge
+      DBInstanceClassR6i: db.r6i.8xlarge
+    12xlarge:
+      DBInstanceClassR5: db.r5.12xlarge
+      DBInstanceClassR6i: db.r6i.12xlarge
+    16xlarge:
+      DBInstanceClassR5: db.r5.16xlarge
+      DBInstanceClassR6i: db.r6i.16xlarge
+    24xlarge:
+      DBInstanceClassR5: db.r5.24xlarge
+      DBInstanceClassR6i: db.r6i.24xlarge
+    32xlarge:
+      DBInstanceClassR5: db.r5.32xlarge
+      DBInstanceClassR6i: db.r6i.32xlarge
+
+Conditions:
+  isProduction: !Equals
+    - !Ref EnvironmentName
+    - 'prd'    
+  HasReplicaReference: !Not
+    - !Equals
+      - !Ref ReadReplicaOf
+      - ''
+  HasSnapshotIdentifier: !Not
+    - !Equals
+      - !Ref SnapshotIdentifier
+      - ''
+  IsMySQL80: !And
+    - !Equals
+      - !Select
+        - 0
+        - !Split
+          - "."
+          - !Ref MySQLVersion
+      - '8'
+    - !Equals
+      - !Select
+        - 1
+        - !Split
+          - "."
+          - !Ref MySQLVersion
+      - '0'
+  WasReadReplica: !Or
+    - !Equals
+      - !Ref WasReplica
+      - 'Yes'
+    - !Not
+      - !Equals
+        - !Ref ReadReplicaOf
+        - ''
+  WasReadReplicaOrSnapshot: !Or
+      - !Equals
+        - !Ref WasReplica
+        - 'Yes'
+      - !Not
+        - !Equals
+          - !Ref ReadReplicaOf
+          - ''
+      - !Not
+        - !Equals
+          - !Ref SnapshotIdentifier
+          - ''
+  WasNotReadReplicaOrSnapshot: !Not
+    - !Or
+      - !Equals
+        - !Ref WasReplica
+        - 'Yes'
+      - !Not
+        - !Equals
+          - !Ref ReadReplicaOf
+          - ''
+      - !Not
+        - !Equals
+          - !Ref SnapshotIdentifier
+          - ''
+
+Resources:
+
+  MonitoringRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ResourcePrefix}-${UpdateID}-${InstanceSuffix}-rds-monitoring-role'
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service: "monitoring.rds.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+
+  RdsInstanceSecret:
+    Type: AWS::SecretsManager::Secret
+    Condition: WasNotReadReplicaOrSnapshot
+    Properties:
+      Name: !Sub '${ResourcePrefix}-rds-instance-secret'
+      Description: 'CORE RDS Instance Master Credentials'
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "core_admin"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds-parameter-group
+        - Key: resource-class
+          Value: data
+
+  RdsDBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      EnablePerformanceInsights: true
+      PerformanceInsightsKMSKeyId: !ImportValue CORECMK
+      PerformanceInsightsRetentionPeriod: 731
+      MonitoringInterval: !Ref MonitoringInterval
+      MonitoringRoleArn: !GetAtt  MonitoringRole.Arn
+      AllocatedStorage: !If
+        - WasReadReplicaOrSnapshot
+        - !Ref 'AWS::NoValue'
+        - !Ref AllocatedStorage
+      DBInstanceClass: !FindInMap
+        - InstanceTypeMap
+        - !Ref InstanceType
+        - !Ref DBInstanceClass
+      AllowMajorVersionUpgrade: true
+      AutoMinorVersionUpgrade: false
+      BackupRetentionPeriod: !Ref BackupRetention
+      DBName: !If
+        - HasSnapshotIdentifier
+        - !Ref 'AWS::NoValue'
+        - !Ref MYSQLDBName
+      DBInstanceIdentifier: !Sub '${ResourcePrefix}-${UpdateID}-${InstanceSuffix}'
+      DBParameterGroupName: !If
+        - HasReplicaReference
+        - !If
+          - IsMySQL80
+          - Fn::ImportValue:
+              Fn::Sub: 'core-rds-mysql80-${InstanceType}-${ParamsID}-rr-parameter-group-name'
+          - Fn::ImportValue:
+              Fn::Sub: 'core-rds-mysql57-${InstanceType}-${ParamsID}-rr-parameter-group-name'
+        - !If
+          - IsMySQL80
+          - Fn::ImportValue:
+              Fn::Sub: 'core-rds-mysql80-${InstanceType}-${ParamsID}-parameter-group-name'
+          - Fn::ImportValue:
+              Fn::Sub: 'core-rds-mysql57-${InstanceType}-${ParamsID}-parameter-group-name'
+      DBSubnetGroupName: !If
+        - WasReadReplica
+        - !Ref 'AWS::NoValue'
+        - !Sub '${ResourcePrefix}-rds-subnet-group'
+      EnableCloudwatchLogsExports:
+        - audit
+        - error
+        - general
+        - slowquery
+      Engine: mysql
+      EngineVersion: !Ref MySQLVersion
+      KmsKeyId: !ImportValue CORECMK
+      MasterUsername: !If
+        - WasReadReplicaOrSnapshot
+        - !Ref 'AWS::NoValue'
+        - core_admin
+      MasterUserPassword: !If
+        - WasReadReplicaOrSnapshot
+        - !Ref 'AWS::NoValue'
+        - !Sub '{{resolve:secretsmanager:${RdsInstanceSecret}::password}}'
+      MultiAZ: !Ref MultiAZEnabled
+      OptionGroupName: !If
+        - IsMySQL80
+        - !ImportValue 'core-rds-mysql80-option-group-name'
+        - !ImportValue 'core-rds-mysql57-option-group-name'
+      Port: '3306'
+      PreferredBackupWindow: '14:00-15:00'
+      PreferredMaintenanceWindow: 'Sun:15:00-Sun:15:45'
+      PubliclyAccessible: false
+      StorageEncrypted: !If
+        - WasReadReplicaOrSnapshot
+        - !Ref 'AWS::NoValue'
+        - true
+      StorageType: gp2
+      VPCSecurityGroups:
+        - Fn::ImportValue:
+            Fn::Sub: '${ResourcePrefix}-RDSSecurityGroup'
+      DeleteAutomatedBackups: false
+      SourceDBInstanceIdentifier: !If
+        - HasReplicaReference
+        - !Ref ReadReplicaOf
+        - !Ref 'AWS::NoValue'
+      DBSnapshotIdentifier: !If
+        - HasSnapshotIdentifier
+        - !Ref SnapshotIdentifier
+        - !Ref 'AWS::NoValue'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-${UpdateID}-${InstanceSuffix}'
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+          
+  RdsDBInstanceAuditLogAlerts:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Condition: "isProduction"
+    Properties:
+      TemplateURL: "https://gbl-core-cfn-templates.s3-ap-southeast-2.amazonaws.com/cfn/rds/mysql_audit_alarms.yml"
+      Parameters:
+        TeamsChannelEmail: !Ref TeamsChannelEmail
+        RDSInstanceName: !Ref RdsDBInstance        
+
+Outputs:
+  RdsDBInstance:
+    Description: A reference to the created CORE RDS Instance
+    Value: !Ref RdsDBInstance
+    Export:
+      Name: !Sub '${ResourcePrefix}-${UpdateID}-${InstanceSuffix}-rds-RdsDBInstance'
+  RdsDBInstanceEndpoint:
+    Description: A reference to the created CORE RDS Instance Address
+    Value: !GetAtt RdsDBInstance.Endpoint.Address
+    Export:
+      Name: !Sub '${ResourcePrefix}-${UpdateID}-${InstanceSuffix}-rds-RdsDBInstanceEndpoint'

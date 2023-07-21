@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+cd cloudformation
+export ProjectVersion=1
+for f in `ls *.yml`
+do
+  echo "Cloudformation Lint ${f}"
+  j2 ${f} > ${f}.txt
+  cat ${f}.txt | cfn-lint -i E3006 -i E3002 -i E1022 -t -
+  rm -f ${f}.txt
+done
+cd ../bua/actions
+for f in `ls *.yml`
+do
+  echo "Cloudformation Lint ${f}"
+  cat ${f} > ${f}.txt
+  cat ${f}.txt | cfn-lint -i E3006 -i E3002 -i E1022 -t -
+  rm -f ${f}.txt
+done
+

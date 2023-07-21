@@ -1,0 +1,221 @@
+name: Restore Database
+this: 01_restore_database
+instance: ''
+type: sqs
+retry_delay: 120
+data:
+  domain: cmil2mssslzz.ap-southeast-2.rds.amazonaws.com
+  instance_class: DBInstanceClassR6i
+  instance_type: 8xlarge
+  mysql_version: 8.0.32
+  params_id: '1'
+  schema: Turkey_BLU
+  snapshot_arn: arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32
+  suffix: bua-sql
+  update_id: '12'
+  rdssecret: "cicd/tst-anstead/rds/bua"
+  hosted_zone_id: "Z06477101FOH3N8B2WK6N"
+steps:
+  01_restore_database:
+    action: restore_database
+    'on':
+      COMPLETE:
+        next: 01_wait_for_restore_database
+      FAILED:
+        next: 02_destroy_database
+    retries: 1
+  01_wait_for_restore_database:
+    action: check_restore_database
+    'on':
+      COMPLETE:
+        next: 03_reset_rds_password
+  02_destroy_database:
+    action: destroy_database
+    'on':
+      COMPLETE:
+        next: 02_wait_for_destroy_database
+  02_wait_for_destroy_database:
+    action: check_destroy_database
+    'on':
+      COMPLETE:
+        next: 01_restore_database
+  03_reset_rds_password:
+    action: reset_password
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 04_disable_workflow_schedules
+  04_disable_workflow_schedules:
+    action: disable_workflow_schedules
+    'on':
+      COMPLETE:
+        next: 05_disable_workflow_instances
+  05_disable_workflow_instances:
+    action: disable_workflow_instances
+    'on':
+      COMPLETE:
+        next: 06_set_user_passwords
+  06_set_user_passwords:
+    comment: set the user passwords
+    action: execute_sql
+    args:
+      sqlsecret: "cicd/tst-anstead/rds/bua/passwords"
+    'on':
+      COMPLETE:
+        next: 07_stats_sample_pages
+  07_stats_sample_pages:
+    action: stats_sample_pages
+    speed: slow
+    args:
+      tables:
+        - name: AggregatedRead
+          sample_pages: 1600
+    'on':
+      COMPLETE:
+        next: 08_scale_down_deployments
+  08_scale_down_deployments:
+    comment: kubectl -n core scale --replicas=0 deployment --all
+    action: scale_replicas
+    args:
+      namespace: core
+      deployment: [ workflow , meterdata ]
+      replicas: 0
+    'on':
+      COMPLETE:
+        next: 09_switch_dns
+  09_switch_dns:
+    comment: need to update route53 entries with the rds server endpoint
+    action: set_rds_dns_entry
+    args:
+      route53_records:
+        - name: tst-sql1.anstead.encore.sh
+          type: CNAME
+    'on':
+      COMPLETE:
+        next: 10_scale_up_workflow
+  10_scale_up_workflow:
+    comment: kubectl -n core scale --replicas=3 deployment workflow
+    action: scale_replicas
+    args:
+      namespace: core
+      deployment: [ workflow ]
+      replicas: 3
+    'on':
+      COMPLETE:
+        next: 11_analyse_statistics
+  11_analyse_statistics:
+    action: core_warm_database_statistics
+    args:
+      concurrency: 32
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 11_wait_for_analyse_statistics
+  11_wait_for_analyse_statistics:
+    action: wait_for_workflows
+    retry_delay: 300
+    args:
+      workflow_name: EXECUTE_SQL
+    'on':
+      COMPLETE:
+        next: 12_database_warming
+  12_database_warming:
+    action: core_warm_database_indexes
+    args:
+      concurrency: 32
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 12_wait_for_database_warming
+  12_wait_for_database_warming:
+    action: wait_for_workflows
+    retry_delay: 300
+    args:
+      workflow_name: EXECUTE_SQL
+    'on':
+      COMPLETE:
+        next: 13_utility_profiles
+  13_utility_profiles:
+    action: bua_initiate
+    args:
+      run_type: Utility
+      run_date: '2023-08-17'
+      today: '2023-05-01'
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 13_wait_for_utility_profiles
+  13_wait_for_utility_profiles:
+    action: wait_for_empty_site_queues
+    retry_delay: 300
+    'on':
+      COMPLETE:
+        next: 14_jurisdiction_segments
+  14_jurisdiction_segments:
+    action: bua_initiate
+    args:
+      run_type: SegmentJurisdictionAvgExclEst
+      run_date: '2023-08-17'
+      today: '2023-05-01'
+    'on':
+      COMPLETE:
+        next: 14_wait_for_jurisdiction_segments
+  14_wait_for_jurisdiction_segments:
+    action: wait_for_empty_site_queues
+    retry_delay: 300
+    'on':
+      COMPLETE:
+        next: 15_profile_validation
+  15_profile_validation:
+    action: bua_initiate
+    args:
+      run_type: Validate
+      run_date: '2023-08-17'
+      today: '2023-05-01'
+    'on':
+      COMPLETE:
+        next: 15_wait_for_profile_validation
+  15_wait_for_profile_validation:
+    action: wait_for_empty_site_queues
+    retry_delay: 300
+    'on':
+      COMPLETE:
+        next: 16_resolve_variances
+  16_resolve_variances:
+    comment: bua_resolve_variances
+    args:
+      run_date: '2023-08-17'
+      today: '2023-05-01'
+    'on':
+      COMPLETE:
+        next: 17_scale_up_meterdata
+  17_scale_up_meterdata:
+    comment: kubectl -n core scale --replicas=6 deployment meterdata
+    action: scale_replicas
+    args:
+      namespace: core
+      deployment: [ meterdata ]
+      replicas: 6
+    'on':
+      COMPLETE: {}
+  18_generate_missing_elec_interval_reads:
+    comment: Generate all of the missing electricity interval reads
+  19_generate_missing_elec_basic_reads:
+    comment: Generate all of the missing electricity basic reads
+  20_generate_missing_gas_reads:
+    comment: Generate all of the missing gas reads
+  20_wait_for_aggregations:
+    comment: Wait until the aggregation workflows are complete
+  21_invoice_runs:
+    comment: Initiate the invoice runs
+  21_wait_for_invoice_runs:
+    comment: Wait until all invoicing runs are complete
+  22_extract_results_to_s3:
+    comment: Extract the results of the invoice runs to S3
+  23_scale_down_deployments:
+    comment: kubectl -n core scale --replicas=0 deployment --all
+    args:
+      namespace: core
+      deployment: [ workflow , meterdata ]
+    'on':
+      COMPLETE: {}

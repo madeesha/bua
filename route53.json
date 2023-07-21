@@ -1,0 +1,17 @@
+{
+	"Changes": [
+		{
+			"Action": "UPSERT",
+			"ResourceRecordSet": {
+				"Name": "tst-sql1.anstead.encore.sh",
+				"Type": "CNAME",
+                "TTL": 60,
+                "ResourceRecords": [
+                  {
+                    "Value": "tst-anstead-12-bua-sql.cmil2mssslzz.ap-southeast-2.rds.amazonaws.com"
+                  }
+                ]
+			}
+		}
+	]
+}

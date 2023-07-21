@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Configure environment persistent dynamodb resources
+
+Parameters:
+  EnvironmentName:
+    Description: The name of the environment to deploy into
+    Type: String
+    AllowedValues: [ "dev", "tst", "prd" ]
+  ClassName:
+    Description: The class of the environment to deploy into
+    Type: String
+  ResourcePrefix:
+    Description: Prefix to assign to resources
+    Type: String
+
+Resources:
+
+  Table:
+    Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-bua" ] ]
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
+      TimeToLiveSpecification:
+        AttributeName: TTL
+        Enabled: true
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: dynamodb
+        - Key: resource-class
+          Value: data

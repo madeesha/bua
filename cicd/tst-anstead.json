@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "VPCSecurityGroups",
+    "ParameterValue": "sg-02aecdf74c689b487"
+  },
+  {
+    "ParameterKey": "VPCSubnetIds",
+    "ParameterValue": "subnet-0d71794d32f2695f5, subnet-0fc4ed93d6cab3a88, subnet-06bd566ce1c974067"
+  }
+]

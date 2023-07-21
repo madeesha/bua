@@ -1,0 +1,257 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: |
+  Configure AWS queues for bua
+Parameters:
+  EnvironmentName:
+    Description: The name of the environment to deploy into
+    Type: String
+    AllowedValues: [ "dev", "tst", "prd" ]
+  ClassName:
+    Description: The class of the environment to deploy into
+    Type: String
+  ResourcePrefix:
+    Description: Prefix to assign to resources
+    Type: String
+
+Resources:
+
+  BUAControllerFastDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-fast-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 120
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerSlowDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-slow-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 120
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerNextDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-next-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 120
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerLambdaDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-lambda-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 120
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-failure-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 120
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerFastQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-fast-queue" ] ]
+      MessageRetentionPeriod: 3600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 240
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUAControllerFastDLQ.Arn
+        maxReceiveCount: 5
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerNextQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-next-queue" ] ]
+      MessageRetentionPeriod: 3600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 120
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUAControllerNextDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerSlowQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-slow-queue" ] ]
+      MessageRetentionPeriod: 86400
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 960
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUAControllerSlowDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerFastDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-fast-dlqueue-alarm" ] ]
+      AlarmDescription: "Alarm if queue depth grows beyond 0 messages"
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value : !GetAtt BUAControllerFastDLQ.QueueName
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Join [ "" , [ "arn:aws:sns:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sns-alarms" ] ]
+
+  BUAControllerFastQueueAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-fast-queue-alarm" ] ]
+      AlarmDescription: "Alarm if queue age grows beyond 300 seconds"
+      Namespace: "AWS/SQS"
+      MetricName: ApproximateAgeOfOldestMessage
+      Dimensions:
+        - Name: QueueName
+          Value : !GetAtt BUAControllerFastQueue.QueueName
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 300
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Join [ "" , [ "arn:aws:sns:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sns-alarms" ] ]
+
+  BUAControllerFastQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref BUAControllerFastQueue
+      PolicyDocument:
+        Id: BUAControllerFastQueuePolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowS3ToSendToBUAControllerFastQueue
+            Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt BUAControllerFastQueue.Arn
+            Condition:
+              ArnLike:
+                "aws:SourceArn": !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua" ] ]
+
+  BUAControllerSlowQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref BUAControllerSlowQueue
+      PolicyDocument:
+        Id: BUAControllerSlowQueuePolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowS3ToSendToBUAControllerSlowQueue
+            Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt BUAControllerSlowQueue.Arn
+            Condition:
+              ArnLike:
+                "aws:SourceArn": !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua" ] ]
+
+  BUAControllerNextQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref BUAControllerNextQueue
+      PolicyDocument:
+        Id: BUAControllerNextQueuePolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowS3ToSendToBUAControllerNextQueue
+            Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt BUAControllerNextQueue.Arn
+            Condition:
+              ArnLike:
+                "aws:SourceArn": !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua" ] ]
