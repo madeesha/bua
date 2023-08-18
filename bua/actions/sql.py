@@ -11,10 +11,10 @@ from bua.sm import SecretManager
 
 class SQL:
 
-    def __init__(self, config, s3, sm: SecretManager):
+    def __init__(self, config, s3_client, secret_manager: SecretManager):
         self.config = config
-        self.s3 = s3
-        self.sm = sm
+        self.s3 = s3_client
+        self.sm = secret_manager
         self.prefix = config['prefix']
 
     def _connect(self, data):

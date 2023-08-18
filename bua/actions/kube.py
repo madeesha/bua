@@ -11,10 +11,10 @@ class KubeCtl:
 
     KUBE_FILEPATH = '/tmp/kubeconfig'
 
-    def __init__(self, config, sts, eks, session: Session):
+    def __init__(self, config, sts_client, eks_client, session: Session):
         self.config = config
-        self.sts = sts
-        self.eks = eks
+        self.sts = sts_client
+        self.eks = eks_client
         self.session = session
         self.region = session.region_name
         self.cluster = config['cluster']

@@ -12,27 +12,32 @@ from bua.actions.destroy import Destroy
 from bua.actions.sql import SQL
 from bua.actions.changeset import ChangeSet
 from bua.rds import RDS
+from bua.route53 import Route53
 from bua.sm import SecretManager
 from bua.sqs import SQS
 
 
 class BUAControllerHandler:
 
-    def __init__(self, config, r53, sm, s3, ddb, sqs, cf, rds, sts, eks, session):
+    def __init__(
+            self, config, r53_client, sm_client, s3_client, ddb_table, sqs_client, cf_client, rds_client,
+            sts_client, eks_client, session
+    ):
         self.config = config
-        self.s3 = s3
-        self.ddb = ddb
-        self.sqs = SQS(sqs, ddb)
-        secret_manager = SecretManager(sm=sm)
-        sql_handler = SQL(config=config, s3=s3, sm=secret_manager)
-        rds_handler = RDS(rds=rds)
-        reset_handler = Reset(config=config, rds=rds_handler, sm=secret_manager)
-        restore_handler = Restore(config=config, cf=cf)
-        destroy_handler = Destroy(config=config, cf=cf)
-        change_set_handler = ChangeSet(config=config, cf=cf)
-        kubectl_handler = KubeCtl(config=config, sts=sts, eks=eks, session=session)
+        self.s3_client = s3_client
+        self.ddb_table = ddb_table
+        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
+        secret_manager = SecretManager(sm_client=sm_client)
+        sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager)
+        rds_handler = RDS(rds_client=rds_client)
+        reset_handler = Reset(config=config, rds=rds_handler, secret_manager=secret_manager)
+        restore_handler = Restore(config=config, cf_client=cf_client)
+        destroy_handler = Destroy(config=config, cf_client=cf_client)
+        change_set_handler = ChangeSet(config=config, cf_client=cf_client)
+        kubectl_handler = KubeCtl(config=config, sts_client=sts_client, eks_client=eks_client, session=session)
         profiles_handler = Profiles(config=config, sqs=self.sqs)
-        dns_handler = DNS(config=config, r53=r53)
+        route53 = Route53(r53_client=r53_client)
+        dns_handler = DNS(config=config, route53=route53)
         self.handlers: Dict[str, Any] = {
             'restore_database': restore_handler.restore_database,
             'check_restore_database': restore_handler.check_restore_database,
@@ -92,7 +97,7 @@ class BUAControllerHandler:
         bucket = record['s3']['bucket']['name']
         key = record['s3']['object']['key']
         version = record['s3']['object']['versionId']
-        response = self.s3.get_object(Bucket=bucket, Key=key, VersionId=version)
+        response = self.s3_client.get_object(Bucket=bucket, Key=key, VersionId=version)
         text: str = response['Body'].read().decode('utf-8')
         return text
 
@@ -145,7 +150,7 @@ class BUAControllerHandler:
         status = self._check_retries_exceeded(status, step, log_item)
         self._record_result(event, log_item, reason, status, this)
         self._determine_next_step(event, log_item, status, step)
-        self.ddb.put_item(Item=log_item)
+        self.ddb_table.put_item(Item=log_item)
         if status == 'ABORT':
             raise Exception(reason)
 
@@ -178,7 +183,7 @@ class BUAControllerHandler:
                 log_item['TIME2'] = self._local_time()
                 log_item['STATUS'] = 'ABORT'
                 log_item['REASON'] = str(e)
-                self.ddb.put_item(Item=log_item)
+                self.ddb_table.put_item(Item=log_item)
                 raise
 
         else:
@@ -201,11 +206,15 @@ class BUAControllerHandler:
 
     @staticmethod
     def _local_time():
-        return str(datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=10))))
+        utc_now = datetime.now(timezone.utc)
+        utc_now_no_microseconds = utc_now.replace(microsecond=0)
+        gmt_plus_10_timezone = timezone(timedelta(hours=10))
+        local_now = utc_now_no_microseconds.astimezone(gmt_plus_10_timezone)
+        return str(local_now)
 
     def _log_processing_start(self, instance, name, this):
         time1 = self._local_time()
-        result = self.ddb.get_item(
+        result = self.ddb_table.get_item(
             Key={
                 'PK': name,
                 'SK': this
@@ -222,7 +231,7 @@ class BUAControllerHandler:
             'INSTANCE': instance,
             'TIME1': time1,
         }
-        self.ddb.put_item(Item=log_item)
+        self.ddb_table.put_item(Item=log_item)
         return log_item
 
     def _determine_instance(self, event):

@@ -4,10 +4,10 @@ from bua.sm import SecretManager
 
 class Reset:
 
-    def __init__(self, config, rds: RDS, sm: SecretManager):
+    def __init__(self, config, rds: RDS, secret_manager: SecretManager):
         self.config = config
         self.rds = rds
-        self.sm = sm
+        self.sm = secret_manager
         self.prefix = config['prefix']
 
     def reset_password(self, step, data):

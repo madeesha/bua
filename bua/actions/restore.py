@@ -5,9 +5,9 @@ from bua.cf import CF
 
 class Restore:
 
-    def __init__(self, config, cf):
+    def __init__(self, config, cf_client):
         self.config = config
-        self.cf = CF(cf)
+        self.cf = CF(cf_client)
         self.prefix = self.config['prefix']
         self.cluster_name = self.config['cluster']
         self.env_name = self.config['env']

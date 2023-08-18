@@ -5,9 +5,9 @@ from botocore.exceptions import ClientError
 
 
 class SQS:
-    def __init__(self, sqs, ddb):
-        self.sqs = sqs
-        self.ddb = ddb
+    def __init__(self, sqs_client, ddb_table):
+        self.sqs = sqs_client
+        self.ddb = ddb_table
 
     def deduplicate_request(self, record):
         message_id = record['messageId']

@@ -288,7 +288,11 @@ Resources:
               'bucket_name': os.environ['bucketName']
           }
           
-          handler = BUAControllerHandler(config=config, r53=r53_client, sm=sm_client, s3=s3_client, ddb=ddb_table, sqs=sqs_client, cf=cf_client, rds=rds_client, sts=sts_client, eks=eks_client, session=session)
+          handler = BUAControllerHandler(
+              config=config, r53_client=r53_client, sm_client=sm_client, s3_client=s3_client, 
+              ddb_table=ddb_table, sqs_client=sqs_client, cf_client=cf_client, rds_client=rds_client, 
+              sts_client=sts_client, eks_client=eks_client, session=session
+          )
 
           def lambda_handler(event, context):
               print(event)
@@ -384,7 +388,11 @@ Resources:
               'bucket_name': os.environ['bucketName']
           }
           
-          handler = BUAControllerHandler(config=config, r53=r53_client, sm=sm_client, s3=s3_client, ddb=ddb_table, sqs=sqs_client, cf=cf_client, rds=rds_client, sts=sts_client, eks=eks_client, session=session)
+          handler = BUAControllerHandler(
+              config=config, r53_client=r53_client, sm_client=sm_client, s3_client=s3_client, 
+              ddb_table=ddb_table, sqs_client=sqs_client, cf_client=cf_client, rds_client=rds_client, 
+              sts_client=sts_client, eks_client=eks_client, session=session
+          )
 
           def lambda_handler(event, context):
               print(event)

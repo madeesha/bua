@@ -50,7 +50,7 @@ class TestCase:
             'failure_queue_url': '123'
         }
         handler = BUAControllerHandler(config=config,
-                                       r53=r53, sm=sm, s3=s3, ddb=ddb, sqs=sqs, cf=cf, rds=rds, sts=sts, eks=eks, session=session)
+                                       r53_client=r53, sm_client=sm, s3_client=s3, ddb_table=ddb, sqs_client=sqs, cf_client=cf, rds_client=rds, sts_client=sts, eks_client=eks, session=session)
         handler.handle_request(body)
 
     def test_handler_sqs_check_restore_database(self):
@@ -107,7 +107,7 @@ class TestCase:
             'failure_queue_url': 'failure_queue'
         }
         handler = BUAControllerHandler(config=config,
-                                       r53=r53, sm=sm, s3=s3, ddb=ddb, sqs=sqs, cf=cf, rds=rds, sts=sts, eks=eks, session=session)
+                                       r53_client=r53, sm_client=sm, s3_client=s3, ddb_table=ddb, sqs_client=sqs, cf_client=cf, rds_client=rds, sts_client=sts, eks_client=eks, session=session)
         handler.handle_request(event)
         assert len(sqs.messages) == 1
         assert sqs.messages[0]['QueueUrl'] == 'next_queue'
