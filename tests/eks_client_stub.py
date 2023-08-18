@@ -4,6 +4,7 @@ class EKSClientStub:
             assert key in {'name'}
         return {
             'cluster': {
+                'arn': '123',
                 'certificateAuthority': {
                     'data': '123'
                 },

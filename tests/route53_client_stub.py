@@ -1,9 +1,10 @@
 class Route53ClientStub:
 
-    def __init__(self):
-        self.hosted_zone_id = 'ZONEID'
-        self.start_record_name = 'record1.here'
-        self.start_record_type = 'CNAME'
+    def __init__(self, hosted_zone_id, start_record_name, start_record_type, resource_records):
+        self.hosted_zone_id = hosted_zone_id
+        self.start_record_name = start_record_name
+        self.start_record_type = start_record_type
+        self.resource_records = resource_records
         self.max_items = '1'
 
         self.expected_list_resource_record_sets = {
@@ -23,11 +24,7 @@ class Route53ClientStub:
                             "Name": self.start_record_name,
                             "Type": self.start_record_type,
                             "TTL": 60,
-                            "ResourceRecords": [
-                                {
-                                    "Value": 'abc.def'
-                                }
-                            ]
+                            "ResourceRecords": self.resource_records
                         }
                     }
                 ]
@@ -36,7 +33,7 @@ class Route53ClientStub:
 
     def list_resource_record_sets(self, **kwargs):
         for k, v in kwargs.items():
-            assert self.expected_list_resource_record_sets[k] == v
+            assert self.expected_list_resource_record_sets[k] == v, f'Unexpected value {v} for key {k}'
         return {
             'ResourceRecordSets': [
 
@@ -45,4 +42,4 @@ class Route53ClientStub:
 
     def change_resource_record_sets(self, **kwargs):
         for k, v in kwargs.items():
-            assert self.expected_change_resource_record_sets[k] == v
+            assert self.expected_change_resource_record_sets[k] == v, f'Unexpected value {v} for key {k}'

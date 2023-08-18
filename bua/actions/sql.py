@@ -11,11 +11,12 @@ from bua.sm import SecretManager
 
 class SQL:
 
-    def __init__(self, config, s3_client, secret_manager: SecretManager):
+    def __init__(self, config, s3_client, secret_manager: SecretManager, mysql=pymysql):
         self.config = config
         self.s3 = s3_client
         self.sm = secret_manager
         self.prefix = config['prefix']
+        self.mysql = mysql
 
     def _connect(self, data):
         update_id = data['update_id']
@@ -27,7 +28,7 @@ class SQL:
         password = secret['password']
         db_instance_identifier = f'{self.prefix}-{update_id}-{suffix}'
         host = f'{db_instance_identifier}.{domain}'
-        con = pymysql.connect(
+        con = self.mysql.connect(
             host=host, user=username, password=password, database=schema,
             cursorclass=pymysql.cursors.DictCursor, autocommit=False
         )

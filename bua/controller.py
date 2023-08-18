@@ -1,3 +1,5 @@
+import kubernetes
+import pymysql
 import yaml
 import traceback
 from typing import Dict, Any
@@ -21,20 +23,22 @@ class BUAControllerHandler:
 
     def __init__(
             self, config, r53_client, sm_client, s3_client, ddb_table, sqs_client, cf_client, rds_client,
-            sts_client, eks_client, session
+            sts_client, eks_client, session, mysql=pymysql, kubes=kubernetes
     ):
         self.config = config
         self.s3_client = s3_client
         self.ddb_table = ddb_table
         self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
         secret_manager = SecretManager(sm_client=sm_client)
-        sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager)
+        sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager, mysql=mysql)
         rds_handler = RDS(rds_client=rds_client)
         reset_handler = Reset(config=config, rds=rds_handler, secret_manager=secret_manager)
         restore_handler = Restore(config=config, cf_client=cf_client)
         destroy_handler = Destroy(config=config, cf_client=cf_client)
         change_set_handler = ChangeSet(config=config, cf_client=cf_client)
-        kubectl_handler = KubeCtl(config=config, sts_client=sts_client, eks_client=eks_client, session=session)
+        kubectl_handler = KubeCtl(
+            config=config, sts_client=sts_client, eks_client=eks_client, session=session, kubes=kubes
+        )
         profiles_handler = Profiles(config=config, sqs=self.sqs)
         route53 = Route53(r53_client=r53_client)
         dns_handler = DNS(config=config, route53=route53)

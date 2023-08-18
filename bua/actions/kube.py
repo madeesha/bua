@@ -11,7 +11,7 @@ class KubeCtl:
 
     KUBE_FILEPATH = '/tmp/kubeconfig'
 
-    def __init__(self, config, sts_client, eks_client, session: Session):
+    def __init__(self, config, sts_client, eks_client, session: Session, kubes=kubernetes):
         self.config = config
         self.sts = sts_client
         self.eks = eks_client
@@ -19,6 +19,7 @@ class KubeCtl:
         self.region = session.region_name
         self.cluster = config['cluster']
         self.port = config.get('eksport')
+        self.kubes = kubes
 
     def _get_bearer_token(self):
         """
@@ -124,8 +125,8 @@ class KubeCtl:
         deployments = data['deployment']
         namespace = data['namespace']
         replicas = int(data['replicas'])
-        kubernetes.config.load_kube_config(KubeCtl.KUBE_FILEPATH)
-        apps_api = kubernetes.client.AppsV1Api()
+        self.kubes.config.load_kube_config(KubeCtl.KUBE_FILEPATH)
+        apps_api = self.kubes.client.AppsV1Api()
         for name in deployments:
             deployment = apps_api.read_namespaced_deployment(name=name, namespace=namespace)
             print(name, deployment.spec.replicas, 'replicas')
@@ -138,8 +139,8 @@ class KubeCtl:
         self._create_kube_config(self.cluster)
         deployments = data['deployment']
         namespace = data['namespace']
-        kubernetes.config.load_kube_config(KubeCtl.KUBE_FILEPATH)
-        apps_api = kubernetes.client.AppsV1Api()
+        self.kubes.config.load_kube_config(KubeCtl.KUBE_FILEPATH)
+        apps_api = self.kubes.client.AppsV1Api()
         for name in deployments:
             deployment = apps_api.read_namespaced_deployment(name=name, namespace=namespace)
             print(name, deployment.spec.replicas, 'replicas')
