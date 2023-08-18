@@ -203,6 +203,12 @@ Resources:
                   - 's3:DeleteObject*'
                 Resource:
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/schedule/*" ] ]
+              - Sid: AllowUpdatingRoute53
+                Effect: Allow
+                Action:
+                  - 'route53:ListResourceRecordSets'
+                Resource:
+                  - 'arn:aws:route53:::hostedzone/*'
 
   BUAFastControllerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
