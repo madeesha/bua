@@ -2,7 +2,7 @@
 set -euo pipefail
 cd cloudformation
 export ProjectVersion=1
-for f in `ls *.yml`
+for f in `ls cf-*.yml`
 do
   echo "Cloudformation Lint ${f}"
   j2 ${f} > ${f}.txt
@@ -10,7 +10,7 @@ do
   rm -f ${f}.txt
 done
 cd ../bua/actions
-for f in `ls *.yml`
+for f in `ls cf-*.yml`
 do
   echo "Cloudformation Lint ${f}"
   cat ${f} > ${f}.txt

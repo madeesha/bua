@@ -15,6 +15,8 @@ data:
   update_id: '13'
   rdssecret: "cicd/tst-anstead/rds/bua"
   hosted_zone_id: "Z06477101FOH3N8B2WK6N"
+  run_date: '2023-08-17'
+  today: '2023-05-01'
 steps:
   01_restore_database:
     action: restore_database
@@ -142,8 +144,6 @@ steps:
     action: bua_initiate
     args:
       run_type: Utility
-      run_date: '2023-08-17'
-      today: '2023-05-01'
     'on':
       COMPLETE:
         delay: 120
@@ -158,8 +158,6 @@ steps:
     action: bua_initiate
     args:
       run_type: SegmentJurisdictionAvgExclEst
-      run_date: '2023-08-17'
-      today: '2023-05-01'
     'on':
       COMPLETE:
         next: 14_wait_for_jurisdiction_segments
@@ -173,8 +171,6 @@ steps:
     action: bua_initiate
     args:
       run_type: Validate
-      run_date: '2023-08-17'
-      today: '2023-05-01'
     'on':
       COMPLETE:
         next: 15_wait_for_profile_validation
@@ -186,9 +182,6 @@ steps:
         next: 16_resolve_variances
   16_resolve_variances:
     comment: bua_resolve_variances
-    args:
-      run_date: '2023-08-17'
-      today: '2023-05-01'
     'on':
       COMPLETE:
         next: 17_scale_up_meterdata

@@ -13,6 +13,7 @@ from bua.actions.restore import Restore
 from bua.actions.destroy import Destroy
 from bua.actions.sql import SQL
 from bua.actions.changeset import ChangeSet
+from bua.actions.trigger import Trigger
 from bua.rds import RDS
 from bua.route53 import Route53
 from bua.sm import SecretManager
@@ -42,6 +43,7 @@ class BUAControllerHandler:
         profiles_handler = Profiles(config=config, sqs=self.sqs)
         route53 = Route53(r53_client=r53_client)
         dns_handler = DNS(config=config, route53=route53)
+        trigger_handler = Trigger(config=config, sqs=self.sqs)
         self.handlers: Dict[str, Any] = {
             'restore_database': restore_handler.restore_database,
             'check_restore_database': restore_handler.check_restore_database,
@@ -71,6 +73,7 @@ class BUAControllerHandler:
             'execute_sql': sql_handler.execute_sql,
             'insert_event_log': sql_handler.insert_event_log,
             'set_rds_dns_entry': dns_handler.set_rds_dns_entry,
+            'trigger_restore': trigger_handler.trigger_restore,
         }
 
     def handle_request(self, event):
