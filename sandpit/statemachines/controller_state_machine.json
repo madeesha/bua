@@ -1,0 +1,49 @@
+{
+  "Comment": "BUA Controller",
+  "StartAt": "call_controller",
+  "States": {
+    "call_controller": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ControllerFunction}",
+        "Payload.$": "$"
+      },
+      "TimeoutSeconds": 60,
+      "InputPath": "$",
+      "ResultPath": "$",
+      "OutputPath": "$",
+      "Next": "next_state"
+    },
+    "next_state": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.next",
+          "StringEquals": "",
+          "Next": "restore_done"
+        },
+        {
+          "Variable": "$.delay",
+          "NumericGreaterThan": "0",
+          "Next": "next_wait"
+        }
+      ],
+      "Default": "next_transition"
+    },
+    "next_wait": {
+      "Type": "Wait",
+      "SecondsPath": "$.delay",
+      "Next": "next_transition"
+    },
+    "next_transition": {
+      "Type": "Pass",
+      "Result": "$.next",
+      "ResultPath": "$.this",
+      "Next": "call_controller"
+    },
+    "restore_done": {
+      "Type": "Succeed"
+    }
+  }
+}

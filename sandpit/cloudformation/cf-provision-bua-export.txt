@@ -1,0 +1,195 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description:  BUA export RDS snapshot for cross account use
+Parameters:
+  EnvironmentName:
+    Description: The name of the environment to deploy into
+    Type: String
+    AllowedValues: [ "dev", "tst", "prd" ]
+  ClassName:
+    Description: The class of the environment to deploy into
+    Type: String
+  ResourcePrefix:
+    Description: Prefix to assign to resources
+    Type: String
+  ScheduleExpression:
+    Description: Schedule the export
+    Type: String
+    Default: "cron(30 0 * * ? *)"
+
+Resources:
+
+  BUAExportKeyAlias:
+    Type: "AWS::KMS::Alias"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      AliasName: !Join [ "" , [ "alias/" , !Ref ResourcePrefix , "-bua-export-key" ] ]
+      TargetKeyId: !Ref BUAExportKey
+
+  BUAExportKey:
+    Type: "AWS::KMS::Key"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: !Join [ "", [ "CMK for exporting RDS snapshots to other accounts ", !Ref ResourcePrefix ] ]
+      Enabled: true
+      EnableKeyRotation: false
+      KeyPolicy:
+        Id: "bua-export-key-policy"
+        Version: '2012-10-17'
+        Statement:
+          - Sid: "Enable IAM User Permissions"
+            Effect: Allow
+            Principal:
+              AWS: !Join [ "" , [ "arn:aws:iam::" , !Ref "AWS::AccountId", ":root" ] ]
+            Action: 'kms:*'
+            Resource: '*'
+
+  BUAExportScheduler:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Trigger snapshot creation
+      Name: !Sub "${ResourcePrefix}-BUAExportScheduler"
+      RoleArn: !GetAtt BUAExportSchedulerRole.Arn
+      ScheduleExpression: !Ref ScheduleExpression
+      State: ENABLED
+      Targets:
+        - Arn: !Ref BUAExportWorkflow
+          Id: "InvokeWorkflow"
+          RoleArn: !GetAtt BUAExportSchedulerRole.Arn
+
+  BUAExportSchedulerRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+                - states.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: InvokeCloudWatchEvent
+          PolicyDocument:
+            Statement:
+              - Action: ["states:startexecution"]
+                Resource: "*"
+                Effect: Allow
+              - Effect: Allow
+                Action:
+                  - "events:DescribeRule"
+                Resource:
+                  - "*"
+
+  BUAExportWorkflow:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub "${ResourcePrefix}-BUAExportWorkflow"
+      DefinitionString:
+        !Sub
+          - |-
+            {
+              "StartAt": "CreateLatestSnapshot",
+              "States": {
+                "CreateLatestSnapshot": {
+                  "Type": "Task",
+                  "Resource": "${CreateLatestSnapshot.Arn}",
+                  "Next": "CheckSnapshotStatus"
+                },
+                "CheckSnapshotStatus": {
+                  "Type": "Task",
+                  "Resource": "${CheckSnapshotStatus.Arn}",
+                  "Next": "IsSnapshotAvailable"
+                },
+                "IsSnapshotAvailable": {
+                  "Type": "Choice",
+                  "Choices": [
+                    {
+                      "Variable": "$.SourceDBSnapshot.status",
+                      "StringEquals": "Available",
+                      "Next": "CopyEncryptedSnapshot"
+                    },
+                    {
+                      "Variable": "$.SourceDBSnapshot.status",
+                      "StringEquals": "NotAvailable",
+                      "Next": "WaitSnapshotAvailable"
+                    }
+                  ]
+                },
+                "WaitSnapshotAvailable": {
+                  "Type": "Wait",
+                  "Seconds": 240,
+                  "Next": "CheckSnapshotStatus"
+                },
+                "CopyEncryptedSnapshot": {
+                  "Type": "Task",
+                  "Resource": "${CopyEncryptSnapshot.Arn}",
+                  "Next": "TargetRDSSnapshotStatus"
+                },
+                "TargetRDSSnapshotStatus": {
+                  "Type": "Task",
+                  "Resource": "${DescribeCopyEncryptSnapshotStatus.Arn}", 
+                  "Next": "IsEncryptSnapshotAvailable"
+                },
+                "IsEncryptSnapshotAvailable": {
+                  "Type": "Choice",
+                  "Choices": [
+                    {
+                      "Variable": "$.targetDBSnapshot.status",
+                      "StringEquals": "Available",
+                      "Next": "ShareStatusWithTargetAccount"
+                    },
+                    {
+                      "Variable": "$.targetDBSnapshot.status",
+                      "StringEquals": "NotAvailable",
+                      "Next": "WaitForTargetSnapshot"
+                    }
+                  ]
+                },
+                "WaitForTargetSnapshot": {
+                  "Type": "Wait",
+                  "Seconds": 180,
+                  "Next": "TargetRDSSnapshotStatus"
+                },
+                "ShareStatusWithTargetAccount": {
+                  "Type": "Task",
+                  "Resource": "${RDSShareSnapshot.Arn}", 
+                  "Next": "NotifyToTargetAccount"
+                },
+                "NotifyToTargetAccount": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::sns:publish",
+                  "Parameters": {
+                    "Message": {
+                      "Input.$": "$"
+                    },
+                    "TopicArn": "${CrossAccountSnapshotNotificationSNSTopic}"                      
+                  },
+                  "End": true
+                }
+              }
+            }
+          - {}
+      RoleArn: !GetAtt StepFunctionLambdaExecutionRole.Arn
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+
+Outputs:
+  StackName:
+    Description: The name of this stack
+    Value: !Ref "AWS::StackName"
+  BUAExportKey:
+    Description: The id of the kms key
+    Value: !Ref BUAExportKey
+    Export:
+      Name: !Join [ "-" , [ !Ref ResourcePrefix , "BUAExportKey" ] ]
+  BUAExportKeyARN:
+    Description: The ARN of the kms key
+    Value: !Join [ "" , [ "arn:aws:kms:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":key/" , !Ref BUAExportKey ] ]
+    Export:
+      Name: !Join [ "-" , [ !Ref ResourcePrefix , "BUAExportKeyARN" ] ]
