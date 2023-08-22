@@ -36,46 +36,17 @@ watch-nodes: venv
 read-namespaced-deployments: venv
 	kubectl describe deployment -n core workflow -v=6
 
-01_restore_database:
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 01_restore_database/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
-
-06_set_user_passwords:
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 06_set_user_passwords/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
-
-07_stats_sample_pages:
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 07_stats_sample_pages/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
-
-08_scale_down_deployments:
-	#kubectl -n core scale --replicas=0 deployment --all
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 08_scale_down_deployments/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
-
-09_switch_dns_cli:
+switch-dns-cli:
 	aws --profile anstead route53 change-resource-record-sets --hosted-zone-id Z06477101FOH3N8B2WK6N \
 		--change-batch file://route53.json
 
-09_switch_dns_test:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/09_switch_dns.yml s3://tst-anstead-s3-bua/schedule/next/09_switch_dns.yaml
+# Trigger Restore Pipeline
 
-10_scale_up_workflow:
-	kubectl -n core scale --replicas=3 deployment workflow -v=6
-
-11_analyse_statistics:
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 11_analyse_statistics/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
-
-12_database_warming:
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 12_database_warming/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
+01_restore_database:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_restore.yml s3://tst-anstead-s3-bua/schedule/next/trigger_restore.yml
 
 13_utility_profiles:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_utility_profiles.yml s3://tst-anstead-s3-bua/schedule/next/trigger_utility_profiles.yml
-
-17_scale_up_meterdata:
-	kubectl -n core scale --replicas=6 deployment meterdata
 
 # Upgrade Steps
 
@@ -109,15 +80,3 @@ read-namespaced-deployments: venv
 
 24-scale-up-workflow:
 	kubectl -n core scale --replicas=3 deployment workflow -v=6
-
-25-anstead-bua-initiate:
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 25_analyse_statistics/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
-
-27-anstead-bua-initiate:
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 27_initiate_warming/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
-
-scale-up-all:
-	kubectl -n core scale --replicas=3 deployment workflow
-	kubectl -n core scale --replicas=6 deployment meterdata
