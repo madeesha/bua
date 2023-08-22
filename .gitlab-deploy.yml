@@ -54,6 +54,15 @@ deploy:
       # Deploy new retry aws lambda function version
       python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-next
     - |
+      # Deploy new site data aws lambda function version
+      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-site-data
+    - |
+      # Deploy new site initiate aws lambda function version
+      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-site-initiate
+    - |
+      # Deploy new site segment aws lambda function version
+      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-site-segment
+    - |
       # Clean up old lambda layers
       python3 -m cicd --cmd clean-layers --version-id $CI_PARENT_PIPELINE_ID --version $CI_PARENT_PIPELINE_ID --layer "layer-bua-python-libs"
   variables:

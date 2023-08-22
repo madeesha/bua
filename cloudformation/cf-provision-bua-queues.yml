@@ -83,6 +83,57 @@ Resources:
         - Key: resource-class
           Value: data
 
+  BUASiteDataDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-data-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteSegmentDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-segment-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteInitiateDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-initiate-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
   BUAControllerFailureQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -149,6 +200,66 @@ Resources:
       VisibilityTimeout: 960
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BUAControllerSlowDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteDataQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-data-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 660
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUASiteDataDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteSegmentQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-segment-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUASiteSegmentDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteInitiateQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-initiate-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 960
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUASiteInitiateDLQ.Arn
         maxReceiveCount: 10
       Tags:
         - Key: env

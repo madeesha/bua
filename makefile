@@ -80,3 +80,13 @@ switch-dns-cli:
 
 24-scale-up-workflow:
 	kubectl -n core scale --replicas=3 deployment workflow -v=6
+
+test-bua-initiate-requeue:
+	aws --profile anstead lambda invoke \
+	--cli-binary-format raw-in-base64-out \
+	--function-name tst-anstead-lambda-bua-site-initiate \
+	--invocation-type Event \
+	--payload '{"run_type": "Requeue", "source_queue": "tst-anstead-sqs-bua-site-data-dlqueue", "target_queue": "tst-anstead-sqs-bua-site-data-queue"}' \
+	response.json
+	cat response.json
+	rm response.json
