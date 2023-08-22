@@ -10,7 +10,7 @@ data:
   mysql_version: 8.0.32
   params_id: '1'
   schema: Turkey_BLU
-  snapshot_arn: arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-2023-08-18
+  snapshot_arn: arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32
   suffix: bua-sql
   update_id: '13'
   rdssecret: "cicd/tst-anstead/rds/bua"
