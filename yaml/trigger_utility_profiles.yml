@@ -7,6 +7,6 @@ steps:
       this: 13_utility_profiles
       snapshot_arn: arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32
       suffix: bua-sql
-      update_id: '13'
-      run_date: '2023-08-17'
-      today: '2023-05-01'
+      update_id: '12'
+      run_date: '2023-08-22'
+      today: '2023-07-01'

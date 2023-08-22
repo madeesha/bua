@@ -246,7 +246,7 @@ Resources:
       Code:
         ZipFile: |
           import os
-          from bua.controller import BUAControllerHandler
+          from bua.pipeline.handler.controller import BUAControllerHandler
           import boto3
           import botocore.config
           import json
@@ -346,7 +346,7 @@ Resources:
       Code:
         ZipFile: |
           import os
-          from bua.controller import BUAControllerHandler
+          from bua.pipeline.handler.controller import BUAControllerHandler
           import boto3
           import botocore.config
           import json

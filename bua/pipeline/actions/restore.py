@@ -1,6 +1,6 @@
 import pathlib
 import os
-from bua.cf import CF
+from bua.pipeline.facade.cf import CF
 
 
 class Restore:

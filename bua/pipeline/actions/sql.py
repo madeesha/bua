@@ -6,7 +6,7 @@ from typing import Dict, List
 import pymysql
 import pymysql.cursors
 
-from bua.sm import SecretManager
+from bua.pipeline.facade.sm import SecretManager
 
 
 class SQL:

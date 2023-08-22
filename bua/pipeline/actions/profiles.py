@@ -1,6 +1,6 @@
 from typing import Dict
 
-from bua.sqs import SQS
+from bua.pipeline.facade.sqs import SQS
 
 
 class Profiles:

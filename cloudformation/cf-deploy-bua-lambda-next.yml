@@ -106,7 +106,7 @@ Resources:
       Code:
         ZipFile: |
           import os
-          from bua.next import BUANextHandler
+          from bua.pipeline.handler.next import BUANextHandler
           import boto3
           import botocore.config
           

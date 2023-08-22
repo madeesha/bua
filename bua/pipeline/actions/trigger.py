@@ -3,7 +3,7 @@ import pathlib
 
 import yaml
 
-from bua.sqs import SQS
+from bua.pipeline.facade.sqs import SQS
 
 
 class Trigger:

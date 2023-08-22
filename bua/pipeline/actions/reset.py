@@ -1,5 +1,5 @@
-from bua.rds import RDS
-from bua.sm import SecretManager
+from bua.pipeline.facade.rds import RDS
+from bua.pipeline.facade.sm import SecretManager
 
 
 class Reset:

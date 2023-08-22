@@ -2,20 +2,20 @@ import yaml
 import os
 from pytest import fixture
 from pytest import mark
-from bua.controller import BUAControllerHandler
-from bua.actions.kube import KubeCtl
-from tests.cf_client_stub import CFClientStub
-from tests.ddb_table_stub import DDBTableStub
-from tests.eks_client_stub import EKSClientStub
-from tests.kubernetes_stub import KubernetesStub
-from tests.my_sql_stub import MySQLStub
-from tests.rds_client_stub import RDSClientStub
-from tests.route53_client_stub import Route53ClientStub
-from tests.s3_client_stub import S3ClientStub
-from tests.session_stub import SessionStub
-from tests.sm_client_stub import SecretsManagerClientStub
-from tests.sqs_client_stub import SQSClientStub
-from tests.sts_client_stub import STSClientStub
+from bua.pipeline.handler.controller import BUAControllerHandler
+from bua.pipeline.actions.kube import KubeCtl
+from tests.pipeline.stubs.cf_client_stub import CFClientStub
+from tests.pipeline.stubs.ddb_table_stub import DDBTableStub
+from tests.pipeline.stubs.eks_client_stub import EKSClientStub
+from tests.pipeline.stubs.kubernetes_stub import KubernetesStub
+from tests.pipeline.stubs.my_sql_stub import MySQLStub
+from tests.pipeline.stubs.rds_client_stub import RDSClientStub
+from tests.pipeline.stubs.route53_client_stub import Route53ClientStub
+from tests.pipeline.stubs.s3_client_stub import S3ClientStub
+from tests.pipeline.stubs.session_stub import SessionStub
+from tests.pipeline.stubs.sm_client_stub import SecretsManagerClientStub
+from tests.pipeline.stubs.sqs_client_stub import SQSClientStub
+from tests.pipeline.stubs.sts_client_stub import STSClientStub
 
 
 class TestCase:

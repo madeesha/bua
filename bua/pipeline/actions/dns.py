@@ -1,4 +1,4 @@
-from bua.route53 import Route53
+from bua.pipeline.facade.route53 import Route53
 
 
 class DNS:

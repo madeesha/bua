@@ -1,6 +1,6 @@
 import boto3
 
-from bua.actions.kube import KubeCtl
+from bua.pipeline.actions import KubeCtl
 
 if __name__ == '__main__':
     session = boto3.Session(region_name='ap-southeast-2')
