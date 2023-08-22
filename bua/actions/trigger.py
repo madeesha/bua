@@ -26,3 +26,4 @@ class Trigger:
                     pipeline['data'][key] = data[key]
             msg = yaml.dump(pipeline, Dumper=yaml.Dumper)
         self.sqs.send_message(self.next_queue_url, msg, delay=60)
+        return "COMPLETE", f"Triggered restore"
