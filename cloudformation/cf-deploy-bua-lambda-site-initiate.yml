@@ -74,24 +74,11 @@ Parameters:
       - "8"
       - "4"
       - "2"
-  BUASiteInitiateEnabled:
-    Description: Whether to deploy the site-initiate lambda
-    Type: String
-    Default: "No"
-    AllowedValues:
-      - "Yes"
-      - "No"
-
-Conditions:
-  EnableBUASiteInitiate: !Equals
-    - !Ref BUASiteInitiateEnabled
-    - "Yes"
 
 Resources:
 
   BUASiteInitiateLambdaExecRole:
     Type: AWS::IAM::Role
-    Condition: EnableBUASiteInitiate
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -148,14 +135,12 @@ Resources:
 
   BUASiteInitiateLambdaLogGroup:
     Type: AWS::Logs::LogGroup
-    Condition: EnableBUASiteInitiate
     Properties:
       LogGroupName: !Join [ "" , [ "/aws/lambda/" , !Ref ResourcePrefix , "-lambda-bua-site-initiate" ] ]
       RetentionInDays: !Ref LogRetentionInDays
 
   BUASiteInitiateLambda:
     Type: AWS::Lambda::Function
-    Condition: EnableBUASiteInitiate
     DependsOn:
       - BUASiteInitiateLambdaLogGroup
     Properties:
@@ -248,7 +233,6 @@ Resources:
 
   BUASiteInitiateLambdaFileEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
-    Condition: EnableBUASiteInitiate
     Properties:
       BatchSize: 1
       Enabled: true

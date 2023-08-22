@@ -64,24 +64,11 @@ Parameters:
     AllowedValues:
       - "Yes"
       - "No"
-  BUASiteDataEnabled:
-    Description: Whether to deploy the site-data lambda
-    Type: String
-    Default: "No"
-    AllowedValues:
-      - "Yes"
-      - "No"
-
-Conditions:
-  EnableBUASiteData: !Equals
-    - !Ref BUASiteDataEnabled
-    - "Yes"
 
 Resources:
 
   BUASiteDataLambdaExecRole:
     Type: AWS::IAM::Role
-    Condition: EnableBUASiteData
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -138,14 +125,12 @@ Resources:
 
   BUASiteDataLambdaLogGroup:
     Type: AWS::Logs::LogGroup
-    Condition: EnableBUASiteData
     Properties:
       LogGroupName: !Join [ "" , [ "/aws/lambda/" , !Ref ResourcePrefix , "-lambda-bua-site-data" ] ]
       RetentionInDays: !Ref LogRetentionInDays
 
   BUASiteDataLambda:
     Type: AWS::Lambda::Function
-    Condition: EnableBUASiteData
     DependsOn:
       - BUASiteDataLambdaLogGroup
     Properties:
@@ -230,7 +215,6 @@ Resources:
 
   BUASiteDataLambdaFileEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
-    Condition: EnableBUASiteData
     Properties:
       BatchSize: 1
       Enabled: true

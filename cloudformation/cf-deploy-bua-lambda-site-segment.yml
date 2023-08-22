@@ -50,24 +50,11 @@ Parameters:
     AllowedValues:
       - "Yes"
       - "No"
-  BUASiteSegmentEnabled:
-    Description: Whether to deploy the site-segment lambda
-    Type: String
-    Default: "No"
-    AllowedValues:
-      - "Yes"
-      - "No"
-
-Conditions:
-  EnableBUASiteSegment: !Equals
-    - !Ref BUASiteSegmentEnabled
-    - "Yes"
 
 Resources:
 
   BUASiteSegmentLambdaExecRole:
     Type: AWS::IAM::Role
-    Condition: EnableBUASiteSegment
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -124,14 +111,12 @@ Resources:
 
   BUASiteSegmentLambdaLogGroup:
     Type: AWS::Logs::LogGroup
-    Condition: EnableBUASiteSegment
     Properties:
       LogGroupName: !Join [ "" , [ "/aws/lambda/" , !Ref ResourcePrefix , "-lambda-bua-site-segment" ] ]
       RetentionInDays: !Ref LogRetentionInDays
 
   BUASiteSegmentLambda:
     Type: AWS::Lambda::Function
-    Condition: EnableBUASiteSegment
     DependsOn:
       - BUASiteSegmentLambdaLogGroup
     Properties:
@@ -212,7 +197,6 @@ Resources:
 
   BUASiteSegmentLambdaFileEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
-    Condition: EnableBUASiteSegment
     Properties:
       BatchSize: 2
       Enabled: true
