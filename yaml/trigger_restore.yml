@@ -1,0 +1,12 @@
+name: Trigger Restore
+this: 01_trigger
+steps:
+  01_trigger:
+    action: trigger_restore
+    args:
+      this: 01_restore_database
+      snapshot_arn: arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-2023-08-18
+      suffix: bua-sql
+      update_id: '13'
+      run_date: '2023-08-17'
+      today: '2023-05-01'

@@ -72,8 +72,7 @@ read-namespaced-deployments: venv
 	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
 
 13_utility_profiles:
-	@cat yaml/restore_database.yml | sed 's/this:.*/this: 13_utility_profiles/' | venv/bin/python yaml2json.py > json/restore_database.json
-	@aws --profile anstead --region ap-southeast-2 s3 cp json/restore_database.json s3://tst-anstead-s3-bua/schedule/next/restore_database.json
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_utility_profiles.yml s3://tst-anstead-s3-bua/schedule/next/trigger_utility_profiles.yml
 
 17_scale_up_meterdata:
 	kubectl -n core scale --replicas=6 deployment meterdata
