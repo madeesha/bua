@@ -6,7 +6,9 @@ from bua.site.action.sitedata import SiteData
 
 class BUASiteDataHandler:
     """AWS Lambda handler for bottom up accruals site data extraction and validation"""
-    def __init__(self, table, queue, conn, debug=False, check_nem=True, check_aggread=False):
+    def __init__(self, s3_client,  bucket_name, table, queue, conn, debug=False, check_nem=True, check_aggread=False):
+        self.s3_client = s3_client
+        self.bucket_name = bucket_name
         self.table = table
         self.queue = queue
         self.conn = conn
@@ -79,5 +81,7 @@ class BUASiteDataHandler:
         today = entry['today']
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
-        action = NEM12(queue=self.queue, conn=self.conn, debug=debug)
+        action = NEM12(
+            queue=self.queue, conn=self.conn, debug=debug, s3_client=self.s3_client, bucket_name=self.bucket_name
+        )
         action.nem12_file_generation(run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)

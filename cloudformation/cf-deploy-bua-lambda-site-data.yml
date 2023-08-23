@@ -122,6 +122,15 @@ Resources:
                 Action:
                   - 'dynamodb:Query'
                 Resource: !Join [ "" , [ "arn:aws:dynamodb:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":table/" , !Ref ResourcePrefix , "-ddb-meterdata" ] ]
+              - Sid: AllowS3AccessForNEM12Files
+                Effect: Allow
+                Action:
+                  - 's3:GetObject*'
+                  - 's3:PutObject*'
+                  - 's3:DeleteObject*'
+                Resource:
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-meterdata/nem/bua/*" ] ]
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-meterdata/bua/*" ] ]
 
   BUASiteDataLambdaLogGroup:
     Type: AWS::Logs::LogGroup
@@ -146,6 +155,7 @@ Resources:
           debugEnabled: !Ref DebugEnabled
           checkNEM: !Ref CheckNEM
           checkAggRead: !Ref CheckAggRead
+          bucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "meterdata" ] ]
       Code:
         ZipFile: |
           import os
@@ -180,7 +190,11 @@ Resources:
           check_nem = os.environ['checkNEM'] == 'Yes'
           check_aggread = os.environ['checkAggRead'] == 'Yes'
           
-          handler = BUASiteDataHandler(table=table, queue=queue, conn=conn, debug=debug, check_nem=check_nem, check_aggread=check_aggread)
+          s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
+          s3_client = boto3.client('s3', config=s3_config)
+          bucket_name = os.environ['bucketName']
+
+          handler = BUASiteDataHandler(s3_client=s3_client, bucket_name=bucket_name, table=table, queue=queue, conn=conn, debug=debug, check_nem=check_nem, check_aggread=check_aggread)
 
           def lambda_handler(event, context):
               try:
