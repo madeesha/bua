@@ -1,6 +1,6 @@
 import traceback
-from typing import Optional
-
+from typing import Optional, List, Dict
+from datetime import datetime, timedelta
 from pymysql import Connection
 
 from bua.site.action import Action
@@ -62,10 +62,28 @@ class NEM12(Action):
                     "CALL bua_list_missing_periods(%s, %s, %s, %s, %s, %s)",
                     (nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
                 )
+                records: List[Dict] = list(cur.fetchall())
                 total = 0
-                for record in cur.fetchall_unbuffered():
-                    print(record)
+                lines = []
+                file_date_time = datetime.strptime(run_date, '%Y-%m-%d').strftime('%Y%m%d%H%M')
+                update_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S')
+                update_date_time = update_date_time - timedelta(days=36525)
+                update_date_time = update_date_time.strftime('%Y%m%d%H%M%S')
+                lines.append(['100', 'NEM12', file_date_time, 'BUA', 'BUA'])
+                nmi_configuration = ''.join({row['suffix_id'] for row in records})
+                for record in records:
+                    register_id = record['register_id']
+                    suffix_id = record['suffix_id']
+                    serial = record['serial']
+                    unit_of_measure = record['unit_of_measure']
+                    lines.append(['200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial, unit_of_measure, '30', ''])
+                    read_date = datetime.strptime(record['read_date'], '%Y-%m-%d').strftime('%Y%m%d')
+                    values = [record[f'value_{index:02}'] for index in range(1, 49)]
+                    lines.append(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
                     total += 1
+                lines.append(['900'])
+                for line in lines:
+                    print(','.join(line))
                 self.log(f'{total} {run_type} profiled estimates for {nmi}')
                 self.conn.commit()
             except Exception as ex:
