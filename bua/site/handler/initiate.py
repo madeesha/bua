@@ -1,6 +1,7 @@
 import json
 
 from bua.site.action.jurisdiction import SegmentJurisdiction
+from bua.site.action.nem12 import NEM12
 from bua.site.action.sitedata import SiteData
 from bua.site.action.tni import SegmentTNI
 from bua.site.action.requeue import SiteRequeue
@@ -25,6 +26,7 @@ class BUASiteInitiateHandler:
             'SegmentJurisdiction': self._initiate_segment_jurisdiction_calculation,
             'SegmentTNI': self._initiate_segment_tni_calculation,
             'Requeue': self._initiate_requeue,
+            'NEM12': self._initiate_nem12_files,
         }
 
     def reconnect(self, conn):
@@ -101,4 +103,20 @@ class BUASiteInitiateHandler:
             end_exclusive=body['end_exclusive'],
             source_date=source_date,
             limit=limit
+        )
+
+    def _initiate_nem12_files(self, body, debug, run_type):
+        today: str = body['today']
+        run_date: str = body['run_date']
+        action = NEM12(queue=self.data_queue, conn=self.conn, debug=debug)
+        identifier_type = body['identifier_type']
+        start_inclusive = body.get('start_inclusive')
+        end_exclusive = body.get('end_exclusive')
+        action.initiate_nem12_file_generation(
+            run_type=run_type,
+            today=today,
+            run_date=run_date,
+            start_inclusive=start_inclusive,
+            end_exclusive=end_exclusive,
+            identifier_type=identifier_type
         )

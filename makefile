@@ -90,3 +90,13 @@ test-bua-initiate-requeue:
 	response.json
 	cat response.json
 	rm response.json
+
+test-bua-initiate-nem12:
+	aws --profile anstead --region ap-southeast-2 lambda invoke \
+	--cli-binary-format raw-in-base64-out \
+	--function-name tst-anstead-lambda-bua-site-initiate \
+	--invocation-type Event \
+	--payload '{"run_type": "NEM12", "today": "2023-07-01", "run_date": "2023-08-23", "identifier_type": "SegmentJurisdictionAvgExclEst"}' \
+	response.json
+	cat response.json
+	rm response.json
