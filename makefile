@@ -48,6 +48,9 @@ switch-dns-cli:
 13_utility_profiles:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_utility_profiles.yml s3://tst-anstead-s3-bua/schedule/next/trigger_utility_profiles.yml
 
+18_execute_micro_scalar:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_micro_scalar.yml s3://tst-anstead-s3-bua/schedule/next/trigger_micro_scalar.yml
+
 # Upgrade Steps
 
 18-sync-passwords:

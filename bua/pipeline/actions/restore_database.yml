@@ -194,6 +194,21 @@ steps:
       replicas: 6
     'on':
       COMPLETE: {}
+  18_execute_micro_scalar:
+    comment: Generate micro scalar values
+    action: bua_create_invoice_scalar
+    args:
+      concurrency: 32
+    'on':
+      COMPLETE:
+        next: 18_wait_for_execute_micro_scalar
+  18_wait_for_execute_micro_scalar:
+    action: wait_for_workflows
+    retry_delay: 300
+    args:
+      workflow_name: EXECUTE_SQL
+    'on':
+      COMPLETE: {}
   18_generate_missing_elec_interval_reads:
     comment: Generate all of the missing electricity interval reads
   19_generate_missing_elec_basic_reads:

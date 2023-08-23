@@ -74,6 +74,7 @@ class BUAControllerHandler:
             'insert_event_log': sql_handler.insert_event_log,
             'set_rds_dns_entry': dns_handler.set_rds_dns_entry,
             'trigger_restore': trigger_handler.trigger_restore,
+            'bua_create_invoice_scalar': sql_handler.bua_create_invoice_scalar,
         }
 
     def handle_request(self, event):

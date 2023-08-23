@@ -78,6 +78,29 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
+    def bua_create_invoice_scalar(self, step, data):
+        concurrency = int(data['concurrency'])
+        end_exclusive = data.get('end_exclusive')
+        today = data.get('today')
+        run_date = data.get('run_date')
+        try:
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
+                    con.commit()
+                    cur.execute(
+                        "CALL bua_create_invoice_scalar_bootstrap(%s, %s, %s, %s)",
+                        (concurrency, end_exclusive, today, run_date)
+                    )
+                    con.commit()
+            return "COMPLETE", f'BUA create invoice scalar, max wfi {workflow_instance_id}'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def bua_initiate(self, step, data):
         run_type = data['run_type']
         start_inclusive = data.get('start_inclusive')
