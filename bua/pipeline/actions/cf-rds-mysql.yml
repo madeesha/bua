@@ -220,6 +220,7 @@ Resources:
       PerformanceInsightsRetentionPeriod: 731
       MonitoringInterval: !Ref MonitoringInterval
       MonitoringRoleArn: !GetAtt  MonitoringRole.Arn
+      CACertificateIdentifier: 'rds-ca-rsa2048-g1'
       AllocatedStorage: !If
         - WasReadReplicaOrSnapshot
         - !Ref 'AWS::NoValue'
