@@ -84,6 +84,7 @@ class SQL:
         end_exclusive = data.get('end_exclusive')
         today = data.get('today')
         run_date = data.get('run_date')
+        identifier_type = data['identifier_type']
         try:
             con = self._connect(data)
             with con:
@@ -92,8 +93,8 @@ class SQL:
                     workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
                     con.commit()
                     cur.execute(
-                        "CALL bua_create_invoice_scalar_bootstrap(%s, %s, %s, %s, %s)",
-                        (concurrency, start_inclusive, end_exclusive, today, run_date)
+                        "CALL bua_create_invoice_scalar_bootstrap(%s, %s, %s, %s, %s, %s)",
+                        (concurrency, start_inclusive, end_exclusive, today, run_date, identifier_type)
                     )
                     con.commit()
             return "COMPLETE", f'BUA create invoice scalar, max wfi {workflow_instance_id}'
@@ -109,14 +110,15 @@ class SQL:
         today = data['today']
         run_date = data['run_date']
         source_date = data.get('source_date')
+        identifier_type = data.get('identifier_type')
         try:
             con = self._connect(data)
             with con:
                 cur = con.cursor()
                 with cur:
                     cur.execute(
-                        "CALL bua_initiate(%s, %s, %s, %s, %s, %s)",
-                        (run_type, start_inclusive, end_inclusive, today, run_date, source_date)
+                        "CALL bua_initiate(%s, %s, %s, %s, %s, %s, %s)",
+                        (run_type, start_inclusive, end_inclusive, today, run_date, source_date, identifier_type)
                     )
                     con.commit()
             return "COMPLETE", f'Initiated BUA {run_type} as at {today}'

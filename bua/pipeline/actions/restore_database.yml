@@ -200,6 +200,7 @@ steps:
     speed: slow
     args:
       concurrency: 64
+      identifier_type: SegmentJurisdictionAvgExclEst
     'on':
       COMPLETE:
         next: 18_wait_for_execute_micro_scalar
@@ -210,8 +211,20 @@ steps:
       workflow_name: EXECUTE_UPDATE_SQL
     'on':
       COMPLETE: {}
-  18_generate_missing_elec_interval_reads:
-    comment: Generate all of the missing electricity interval reads
+  19_generate_NEM12_files:
+    comment: Generate the missing electricity interval reads
+    action: bua_initiate
+    args:
+      run_type: NEM12
+      identifier_type: SegmentJurisdictionAvgExclEst
+    'on':
+      COMPLETE:
+        next: 19_wait_for_generate_NEM12_files
+  19_wait_for_generate_NEM12_files:
+    action: wait_for_empty_site_queues
+    retry_delay: 300
+    'on':
+      COMPLETE: {}
   19_generate_missing_elec_basic_reads:
     comment: Generate all of the missing electricity basic reads
   20_generate_missing_gas_reads:
