@@ -77,7 +77,7 @@ class NEM12(Action):
                 update_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S')
                 update_date_time = update_date_time - timedelta(days=36525)
                 update_date_time = update_date_time.strftime('%Y%m%d%H%M%S')
-                unique_id = f'{nmi}{update_date_time}'
+                unique_id = f'{nmi}{file_date_time}'
                 file_name = f'nem12#{unique_id}#bua#bua.csv'
                 output = io.StringIO()
                 writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
