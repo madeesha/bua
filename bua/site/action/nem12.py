@@ -40,7 +40,6 @@ class NEM12(Action):
                     nmi = record['nmi']
                     start_date = record['start_inclusive']
                     end_date = record['end_exclusive']
-                    print(nmi, start_date, end_date)
                     if start_date <= end_date:
                         if body is not None:
                             self.send_if_needed(bodies, force=False, batch_size=self.batch_size)
@@ -63,7 +62,7 @@ class NEM12(Action):
                 self.conn.rollback()
                 raise
 
-    def nem12_file_generation(self, run_type: str, nmi: str, start_inclusive: str, end_exclusive:str, today: str, run_date: str, identifier_type: str):
+    def nem12_file_generation(self, run_type: str, nmi: str, start_inclusive: Optional[str], end_exclusive: Optional[str], today: str, run_date: str, identifier_type: str):
         with self.conn.cursor() as cur:
             try:
                 cur.execute(
