@@ -73,7 +73,7 @@ class NEM12(Action):
                 )
                 records: List[Dict] = list(cur.fetchall())
                 total = 0
-                file_date_time = datetime.strptime(run_date, '%Y-%m-%d').strftime('%Y%m%d%H%M')
+                file_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S').strftime('%Y%m%d%H%M')
                 update_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S')
                 update_date_time = update_date_time - timedelta(days=36525)
                 update_date_time = update_date_time.strftime('%Y%m%d%H%M%S')
