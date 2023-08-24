@@ -80,6 +80,7 @@ class SQL:
 
     def bua_create_invoice_scalar(self, step, data):
         concurrency = int(data['concurrency'])
+        start_inclusive = data.get('start_inclusive')
         end_exclusive = data.get('end_exclusive')
         today = data.get('today')
         run_date = data.get('run_date')
@@ -91,8 +92,8 @@ class SQL:
                     workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
                     con.commit()
                     cur.execute(
-                        "CALL bua_create_invoice_scalar_bootstrap(%s, %s, %s, %s)",
-                        (concurrency, end_exclusive, today, run_date)
+                        "CALL bua_create_invoice_scalar_bootstrap(%s, %s, %s, %s, %s)",
+                        (concurrency, start_inclusive, end_exclusive, today, run_date)
                     )
                     con.commit()
             return "COMPLETE", f'BUA create invoice scalar, max wfi {workflow_instance_id}'
