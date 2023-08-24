@@ -51,6 +51,9 @@ switch-dns-cli:
 18_execute_micro_scalar:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_micro_scalar.yml s3://tst-anstead-s3-bua/schedule/next/trigger_micro_scalar.yml
 
+19_generate_NEM12_files:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger_nem12_files.yml
+
 # Upgrade Steps
 
 18-sync-passwords:

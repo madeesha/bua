@@ -4,7 +4,7 @@ import io
 import traceback
 from hashlib import md5
 from typing import Optional, List, Dict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from pymysql import Connection
 import csv
@@ -39,8 +39,8 @@ class NEM12(Action):
                 body = None
                 for record in cur.fetchall_unbuffered():
                     nmi = record['nmi']
-                    start_date = record['start_inclusive']
-                    end_date = record['end_exclusive']
+                    start_date: date = record['start_inclusive']
+                    end_date: date = record['end_exclusive']
                     if start_date <= end_date:
                         if body is not None:
                             self.send_if_needed(bodies, force=False, batch_size=self.batch_size)
@@ -49,8 +49,8 @@ class NEM12(Action):
                             'today': today,
                             'run_date': run_date,
                             'nmi': nmi,
-                            'start_inclusive': start_date,
-                            'end_exclusive': end_date,
+                            'start_inclusive': start_date.strftime('%Y%m%d'),
+                            'end_exclusive': end_date.strftime('%Y%m%d'),
                             'identifier_type': identifier_type
                         }
                         bodies.append(body)
@@ -63,7 +63,7 @@ class NEM12(Action):
                 self.conn.rollback()
                 raise
 
-    def nem12_file_generation(self, run_type: str, nmi: str, start_inclusive: Optional[str], end_exclusive: Optional[str], today: str, run_date: str, identifier_type: str):
+    def nem12_file_generation(self, run_type: str, nmi: str, start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str):
         with self.conn.cursor() as cur:
             try:
                 decimal.getcontext().prec = 6

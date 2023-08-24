@@ -76,8 +76,8 @@ class BUASiteDataHandler:
 
     def _handle_nem12(self, entry, run_type, debug):
         nmi = entry['nmi']
-        start_inclusive = entry.get('start_inclusive')
-        end_exclusive = entry.get('end_exclusive')
+        start_inclusive = entry['start_inclusive']
+        end_exclusive = entry['end_exclusive']
         today = entry['today']
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
