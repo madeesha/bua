@@ -1,4 +1,5 @@
 import base64
+import decimal
 import io
 import traceback
 from hashlib import md5
@@ -65,6 +66,7 @@ class NEM12(Action):
     def nem12_file_generation(self, run_type: str, nmi: str, start_inclusive: Optional[str], end_exclusive: Optional[str], today: str, run_date: str, identifier_type: str):
         with self.conn.cursor() as cur:
             try:
+                decimal.getcontext().prec = 6
                 cur.execute(
                     "CALL bua_list_missing_periods(%s, %s, %s, %s, %s, %s)",
                     (nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
@@ -86,9 +88,10 @@ class NEM12(Action):
                     suffix_id = record['suffix_id']
                     serial = record['serial']
                     unit_of_measure = record['unit_of_measure']
+                    scalar = decimal.Decimal(record['scalar'])
                     writer.writerow(['200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial, unit_of_measure, '30', ''])
                     read_date = record['read_date'].strftime('%Y%m%d')
-                    values = [record[f'value_{index:02}'] for index in range(1, 49)]
+                    values = [str(decimal.Decimal(record[f'value_{index:02}']) * scalar) for index in range(1, 49)]
                     writer.writerow(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
                     total += 1
                 writer.writerow(['900'])
