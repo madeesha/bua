@@ -2,6 +2,7 @@ import json
 
 from bua.site.action.jurisdiction import SegmentJurisdiction
 from bua.site.action.nem12 import NEM12
+from bua.site.action.scalar import MicroScalar
 from bua.site.action.sitedata import SiteData
 from bua.site.action.tni import SegmentTNI
 from bua.site.action.requeue import SiteRequeue
@@ -27,6 +28,7 @@ class BUASiteInitiateHandler:
             'SegmentTNI': self._initiate_segment_tni_calculation,
             'Requeue': self._initiate_requeue,
             'NEM12': self._initiate_nem12_files,
+            'MicroScalar': self._initiate_microscalar,
         }
 
     def reconnect(self, conn):
@@ -118,5 +120,17 @@ class BUASiteInitiateHandler:
             run_date=run_date,
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
+            identifier_type=identifier_type
+        )
+
+    def _initiate_microscalar(self, body, debug, run_type):
+        today: str = body['today']
+        run_date: str = body['run_date']
+        action = MicroScalar(queue=self.segment_queue, conn=self.conn, debug=debug)
+        identifier_type = body['identifier_type']
+        action.initiate_microscalar_calculation(
+            run_type=run_type,
+            today=today,
+            run_date=run_date,
             identifier_type=identifier_type
         )

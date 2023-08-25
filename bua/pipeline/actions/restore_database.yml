@@ -196,19 +196,17 @@ steps:
       COMPLETE: {}
   18_execute_micro_scalar:
     comment: Generate micro scalar values
-    action: bua_create_invoice_scalar
+    action: bua_initiate
     speed: slow
     args:
-      concurrency: 64
+      run_type: MicroScalar
       identifier_type: SegmentJurisdictionAvgExclEst
     'on':
       COMPLETE:
         next: 18_wait_for_execute_micro_scalar
   18_wait_for_execute_micro_scalar:
-    action: wait_for_workflows
+    action: wait_for_empty_site_queues
     retry_delay: 300
-    args:
-      workflow_name: EXECUTE_UPDATE_SQL
     'on':
       COMPLETE: {}
   19_generate_NEM12_files:

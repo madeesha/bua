@@ -2,6 +2,7 @@ import json
 from typing import Dict
 
 from bua.site.action.nem12 import NEM12
+from bua.site.action.scalar import MicroScalar
 from bua.site.action.sitesegment import SiteSegment
 
 
@@ -24,6 +25,7 @@ class BUASiteSegmentHandler:
             'SegmentTNIAvgExclEst': self._handle_segment_tni_avg_excl_est,
             'SegmentTNISumExclEst': self._handle_segment_tni_sum_excl_est,
             'NEM12': self._handle_nem12,
+            'MicroScalar': self._handle_microscalar,
         }
 
     def reconnect(self, conn):
@@ -115,6 +117,16 @@ class BUASiteSegmentHandler:
             queue=self.queue, conn=self.conn, debug=debug, s3_client=self.s3_client, bucket_name=self.bucket_name
         )
         action.nem12_file_generation(run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
+
+    def _handle_microscalar(self, run_type: str, entry: Dict, debug: bool):
+        account_id = entry['account_id']
+        today = entry['today']
+        run_date = entry['run_date']
+        identifier_type = entry['identifier_type']
+        action = MicroScalar(
+            queue=self.queue, conn=self.conn, debug=debug
+        )
+        action.execute_microscalar_calculation(run_type, today, run_date, identifier_type, account_id)
 
     def calculate_jurisdiction_segment(self, run_type, run_date, source_date, entry,
                                        debug=False, avg_sum='Average', incl_est=True):
