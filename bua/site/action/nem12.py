@@ -88,9 +88,17 @@ class NEM12(Action):
                     suffix_id = record['suffix_id']
                     serial = record['serial']
                     unit_of_measure = record['unit_of_measure']
+                    read_date = record['read_date'].strftime('%Y%m%d')
+                    if register_id is None:
+                        raise Exception(f'No register id defined for {nmi} {suffix_id} {serial} on {read_date}')
+                    if suffix_id is None:
+                        raise Exception(f'No suffix defined for {nmi} {serial} {register_id} on {read_date}')
+                    if unit_of_measure is None:
+                        raise Exception(f'No unit of measure defined for {nmi} {suffix_id} on {read_date}')
+                    if record['scalar'] is None:
+                        raise Exception(f'No scalar defined for {nmi} {suffix_id} on {read_date}')
                     scalar = decimal.Decimal(record['scalar'])
                     writer.writerow(['200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial, unit_of_measure, '30', ''])
-                    read_date = record['read_date'].strftime('%Y%m%d')
                     values = [str(decimal.Decimal(record[f'value_{index:02}']) * scalar) for index in range(1, 49)]
                     writer.writerow(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
                     total += 1
@@ -111,4 +119,21 @@ class NEM12(Action):
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                raise
+                self._log_exception(cur, ex, nmi, run_date, start_inclusive)
+
+    def _log_exception(self, cur, ex, nmi, run_date, start_inclusive):
+        try:
+            mvk_id = f'{nmi}|{run_date}|{start_inclusive}'
+            notes = str(ex)
+            status = 'X'
+            cr_process = 'BUA'
+            sql = """
+                INSERT INTO Exception
+                (exception_type_id, mvk_id, notes, status, cr_process)
+                SELECT (SELECT id FROM ExceptionType WHERE name = 'BUA_EXCEPTION'), %s, %s, %s, %s
+                """
+            cur.execute(sql, (mvk_id, notes, status, cr_process))
+            self.conn.commit()
+        except Exception as e:
+            traceback.print_exception(e)
+            self.conn.rollback()
