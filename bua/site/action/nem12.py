@@ -64,6 +64,7 @@ class NEM12(Action):
                 raise
 
     def nem12_file_generation(self, run_type: str, nmi: str, start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str):
+        row_count = 0
         with self.conn.cursor() as cur:
             try:
                 decimal.getcontext().prec = 6
@@ -72,7 +73,7 @@ class NEM12(Action):
                     (nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
                 )
                 records: List[Dict] = list(cur.fetchall())
-                total = 0
+                row_count = len(records)
                 file_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S').strftime('%Y%m%d%H%M')
                 update_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S')
                 update_date_time = update_date_time - timedelta(days=36525)
@@ -102,39 +103,38 @@ class NEM12(Action):
                     values = [decimal.Decimal(record[f'value_{index:02}']) * scalar for index in range(1, 49)]
                     values = [f'{value:.06f}' for value in values]
                     writer.writerow(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
-                    total += 1
                 writer.writerow(['900'])
-                body = output.getvalue().encode('utf-8')
-                md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
                 key = f'bua/{run_date}/{file_name}'
-                self.s3_client.put_object(
-                    Bucket=self.bucket_name,
-                    Key=key,
-                    ContentMD5=md5sum,
-                    ContentType='text/plain',
-                    Body=body,
-                    ContentLength=len(body)
-                )
-                self.log(f'{total} {run_type} profiled estimates for {nmi}')
+                if row_count > 0:
+                    body = output.getvalue().encode('utf-8')
+                    md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
+                    self.s3_client.put_object(
+                        Bucket=self.bucket_name,
+                        Key=key,
+                        ContentMD5=md5sum,
+                        ContentType='text/plain',
+                        Body=body,
+                        ContentLength=len(body)
+                    )
+                status = "PASS"
+                reason = "No missing reads" if row_count == 0 else key
+                sql = """
+                REPLACE INTO BUAControl
+                (run_type, identifier, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cur.execute(sql, (run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason))
+                self.log(f'{len(records)} {run_type} profiled estimates for {nmi}')
                 self.conn.commit()
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                self._log_exception(cur, ex, nmi, run_date, start_inclusive)
-
-    def _log_exception(self, cur, ex, nmi, run_date, start_inclusive):
-        try:
-            mvk_id = f'{nmi}|{run_date}|{start_inclusive}'
-            notes = str(ex)
-            status = 'X'
-            cr_process = 'BUA'
-            sql = """
-                INSERT INTO Exception
-                (exception_type_id, mvk_id, notes, status, cr_process)
-                SELECT (SELECT id FROM ExceptionType WHERE name = 'BUA_EXCEPTION'), %s, %s, %s, %s
+                status = "FAIL"
+                reason = str(ex)[0:255]
+                sql = """
+                REPLACE INTO BUAControl
+                (run_type, identifier, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
-            cur.execute(sql, (mvk_id, notes, status, cr_process))
-            self.conn.commit()
-        except Exception as e:
-            traceback.print_exception(e)
-            self.conn.rollback()
+                cur.execute(sql, (run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason))
+                self.conn.commit()
