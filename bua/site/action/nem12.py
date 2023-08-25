@@ -94,6 +94,7 @@ class NEM12(Action):
                 writer.writerow(['100', 'NEM12', file_date_time, 'BUA', 'BUA'])
                 nmi_configuration = ''.join({row['suffix_id'] for row in records})
                 rows_written = 0
+                reason = None
                 for index, record in enumerate(records):
                     register_id = record['register_id']
                     suffix_id = record['suffix_id']
@@ -117,7 +118,10 @@ class NEM12(Action):
                                 raise Exception(f'Multiple scalar values defined for {nmi} {suffix_id} on {read_date}')
                     values = [decimal.Decimal(record[f'value_{index:02}']) * scalar for index in range(1, 49)]
                     total_value = sum(values)
-                    if total_value > 0:
+                    if total_value == 0:
+                        if reason is None:
+                            reason = 'Some rows have no profile data'
+                    if total_value >= 0:
                         values = [f'{value:.06f}' for value in values]
                         row = [
                             '200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial,
@@ -143,9 +147,7 @@ class NEM12(Action):
                 if rows_counted == 0:
                     reason = 'No missing reads'
                 elif rows_written < rows_counted:
-                    reason = 'Some rows with no profile data'
-                else:
-                    reason = None
+                    reason = 'Some rows have negative profile data'
                 sql = """
                 INSERT INTO BUAControl
                 ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
