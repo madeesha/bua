@@ -67,8 +67,13 @@ class NEM12(Action):
                 self.conn.rollback()
                 raise
 
-    def nem12_file_generation(self, run_type: str, nmi: str, start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str):
-        row_count = 0
+    def nem12_file_generation(
+            self, run_type: str, nmi: str, start_inclusive: str, end_exclusive: str,
+            today: str, run_date: str, identifier_type: str
+    ):
+        rows_counted = None
+        rows_written = None
+        key = None
         with self.conn.cursor() as cur:
             try:
                 decimal.getcontext().prec = 6
@@ -77,7 +82,7 @@ class NEM12(Action):
                     (nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
                 )
                 records: List[Dict] = list(cur.fetchall())
-                row_count = len(records)
+                rows_counted = len(records)
                 file_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S').strftime('%Y%m%d%H%M')
                 update_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S')
                 update_date_time = update_date_time - timedelta(days=36525)
@@ -88,7 +93,8 @@ class NEM12(Action):
                 writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(['100', 'NEM12', file_date_time, 'BUA', 'BUA'])
                 nmi_configuration = ''.join({row['suffix_id'] for row in records})
-                for record in records:
+                rows_written = 0
+                for index, record in enumerate(records):
                     register_id = record['register_id']
                     suffix_id = record['suffix_id']
                     serial = record['serial']
@@ -105,13 +111,24 @@ class NEM12(Action):
                     scalar = decimal.Decimal(record['scalar'])
                     if scalar.is_zero():
                         raise Exception(f'Scalar defined as zero for {nmi} {suffix_id} on {read_date}')
-                    writer.writerow(['200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial, unit_of_measure, '30', ''])
+                    if index > 0:
+                        if records[index-1]['read_date'] == record['read_date']:
+                            if records[index-1]['suffix_id'] == record['suffix_id']:
+                                raise Exception(f'Multiple scalar values defined for {nmi} {suffix_id} on {read_date}')
                     values = [decimal.Decimal(record[f'value_{index:02}']) * scalar for index in range(1, 49)]
-                    values = [f'{value:.06f}' for value in values]
-                    writer.writerow(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
+                    total_value = sum(values)
+                    if total_value > 0:
+                        values = [f'{value:.06f}' for value in values]
+                        row = [
+                            '200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial,
+                            unit_of_measure, '30', ''
+                        ]
+                        writer.writerow(row)
+                        writer.writerow(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
+                        rows_written += 1
                 writer.writerow(['900'])
-                key = f'bua/{run_date}/{file_name}'
-                if row_count > 0:
+                if rows_written > 0:
+                    key = f'bua/{run_date}/{file_name}'
                     body = output.getvalue().encode('utf-8')
                     md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
                     self.s3_client.put_object(
@@ -123,13 +140,22 @@ class NEM12(Action):
                         ContentLength=len(body)
                     )
                 status = "PASS"
-                reason = "No missing reads" if row_count == 0 else key
+                if rows_counted == 0:
+                    reason = 'No missing reads'
+                elif rows_written < rows_counted:
+                    reason = 'Some rows with no profile data'
+                else:
+                    reason = None
                 sql = """
                 INSERT INTO BUAControl
-                (run_type, identifier, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
+                , identifier_type, rows_counted, rows_written, status, reason, s3_key)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
-                cur.execute(sql, (run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason))
+                cur.execute(sql,
+                (run_type, nmi, start_inclusive, end_exclusive, today, run_date,
+                     identifier_type, rows_counted, rows_written, status, reason, key)
+                )
                 self.log(f'{len(records)} {run_type} profiled estimates for {nmi}')
                 self.conn.commit()
             except Exception as ex:
@@ -140,10 +166,14 @@ class NEM12(Action):
                     reason = str(ex)[0:255]
                     sql = """
                     INSERT INTO BUAControl
-                    (run_type, identifier, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
+                    , identifier_type, rows_counted, rows_written, status, reason, s3_key)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """
-                    cur.execute(sql, (run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason))
+                    cur.execute(sql,
+                    (run_type, nmi, start_inclusive, end_exclusive, today, run_date,
+                         identifier_type, rows_counted, rows_written, status, reason, key)
+                    )
                     self.conn.commit()
                 except Exception as e2:
                     traceback.print_exception(e2)
