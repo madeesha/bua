@@ -95,6 +95,10 @@ class NEM12(Action):
                 nmi_configuration = ''.join({row['suffix_id'] for row in records})
                 rows_written = 0
                 reason = None
+                extra = None
+                status = 'PASS'
+                if rows_counted == 0:
+                    reason = 'No missing reads'
                 for index, record in enumerate(records):
                     register_id = record['register_id']
                     suffix_id = record['suffix_id']
@@ -102,25 +106,45 @@ class NEM12(Action):
                     unit_of_measure = record['unit_of_measure']
                     read_date = record['read_date'].strftime('%Y%m%d')
                     if register_id is None:
-                        raise Exception(f'No register id defined for {nmi} {suffix_id} {serial} on {read_date}')
+                        status = 'FAIL'
+                        reason = 'No register id defined'
+                        extra = f'No register id defined for {nmi} {suffix_id} {serial} on {read_date}'
+                        break
                     if suffix_id is None:
-                        raise Exception(f'No suffix defined for {nmi} {serial} {register_id} on {read_date}')
+                        status = 'FAIL'
+                        reason = 'No suffix defined'
+                        extra = f'No suffix defined for {nmi} {serial} {register_id} on {read_date}'
+                        break
                     if unit_of_measure is None:
-                        raise Exception(f'No unit of measure defined for {nmi} {suffix_id} on {read_date}')
+                        status = 'FAIL'
+                        reason = 'No unit of measure defined'
+                        extra = f'No unit of measure defined for {nmi} {suffix_id} on {read_date}'
+                        break
                     if record['scalar'] is None:
-                        raise Exception(f'No scalar defined for {nmi} {suffix_id} on {read_date}')
+                        status = 'FAIL'
+                        reason = 'No scalar defined'
+                        extra = f'No scalar defined for {nmi} {suffix_id} on {read_date}'
+                        break
                     scalar = decimal.Decimal(record['scalar'])
                     if scalar.is_zero():
-                        raise Exception(f'Scalar defined as zero for {nmi} {suffix_id} on {read_date}')
+                        status = 'FAIL'
+                        reason = 'Scalar defined as zero'
+                        extra = f'Scalar defined as zero for {nmi} {suffix_id} on {read_date}'
+                        break
                     if index > 0:
                         if records[index-1]['read_date'] == record['read_date']:
                             if records[index-1]['suffix_id'] == record['suffix_id']:
-                                raise Exception(f'Multiple scalar values defined for {nmi} {suffix_id} on {read_date}')
+                                status = 'FAIL'
+                                reason = 'Multiple scalar values defined'
+                                extra = f'Multiple scalar values defined for {nmi} {suffix_id} on {read_date}'
+                                break
                     values = [decimal.Decimal(record[f'value_{index:02}']) * scalar for index in range(1, 49)]
                     total_value = sum(values)
                     if total_value == 0:
                         if reason is None:
-                            reason = 'Some rows have no profile data'
+                            reason = 'Some rows have zero profile data'
+                    elif total_value < 0:
+                        reason = 'Some rows have negative profile data'
                     if total_value >= 0:
                         values = [f'{value:.06f}' for value in values]
                         row = [
@@ -131,50 +155,47 @@ class NEM12(Action):
                         writer.writerow(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
                         rows_written += 1
                 writer.writerow(['900'])
-                if rows_written > 0:
-                    key = f'bua/{run_date}/{file_name}'
-                    body = output.getvalue().encode('utf-8')
-                    md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
-                    self.s3_client.put_object(
-                        Bucket=self.bucket_name,
-                        Key=key,
-                        ContentMD5=md5sum,
-                        ContentType='text/plain',
-                        Body=body,
-                        ContentLength=len(body)
-                    )
-                status = "PASS"
-                if rows_counted == 0:
-                    reason = 'No missing reads'
-                elif rows_written < rows_counted:
-                    reason = 'Some rows have negative profile data'
+                if status == 'PASS':
+                    if rows_written > 0:
+                        key = f'bua/{run_date}/{file_name}'
+                        body = output.getvalue().encode('utf-8')
+                        md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
+                        self.s3_client.put_object(
+                            Bucket=self.bucket_name,
+                            Key=key,
+                            ContentMD5=md5sum,
+                            ContentType='text/plain',
+                            Body=body,
+                            ContentLength=len(body)
+                        )
                 sql = """
                 INSERT INTO BUAControl
                 ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
-                , identifier_type, rows_counted, rows_written, status, reason, s3_key)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                , identifier_type, rows_counted, rows_written, status, reason, extra, s3_key)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 cur.execute(sql,
                 (run_type, nmi, start_inclusive, end_exclusive, today, run_date,
-                     identifier_type, rows_counted, rows_written, status, reason, key)
+                     identifier_type, rows_counted, rows_written, status, reason, extra, key)
                 )
-                self.log(f'{len(records)} {run_type} profiled estimates for {nmi}')
+                self.log(f'{len(records)} {run_type} profiled estimates for {nmi}. {status} : {reason} : {extra}')
                 self.conn.commit()
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
                 try:
                     status = "FAIL"
-                    reason = str(ex)[0:255]
+                    reason = "Exception raised"
+                    extra = str(ex)[0:255]
                     sql = """
                     INSERT INTO BUAControl
                     ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
-                    , identifier_type, rows_counted, rows_written, status, reason, s3_key)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    , identifier_type, rows_counted, rows_written, status, reason, extra, s3_key)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """
                     cur.execute(sql,
                     (run_type, nmi, start_inclusive, end_exclusive, today, run_date,
-                         identifier_type, rows_counted, rows_written, status, reason, key)
+                         identifier_type, rows_counted, rows_written, status, reason, extra, key)
                     )
                     self.conn.commit()
                 except Exception as e2:
