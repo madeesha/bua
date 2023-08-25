@@ -99,6 +99,8 @@ class NEM12(Action):
                     if record['scalar'] is None:
                         raise Exception(f'No scalar defined for {nmi} {suffix_id} on {read_date}')
                     scalar = decimal.Decimal(record['scalar'])
+                    if scalar.is_zero():
+                        raise Exception(f'Scalar defined as zero for {nmi} {suffix_id} on {read_date}')
                     writer.writerow(['200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial, unit_of_measure, '30', ''])
                     values = [decimal.Decimal(record[f'value_{index:02}']) * scalar for index in range(1, 49)]
                     values = [f'{value:.06f}' for value in values]
