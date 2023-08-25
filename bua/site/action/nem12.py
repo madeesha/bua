@@ -135,12 +135,16 @@ class NEM12(Action):
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                status = "FAIL"
-                reason = str(ex)[0:255]
-                sql = """
-                INSERT INTO BUAControl
-                (run_type, identifier, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                cur.execute(sql, (run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason))
-                self.conn.commit()
+                try:
+                    status = "FAIL"
+                    reason = str(ex)[0:255]
+                    sql = """
+                    INSERT INTO BUAControl
+                    (run_type, identifier, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """
+                    cur.execute(sql, (run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason))
+                    self.conn.commit()
+                except Exception as e2:
+                    traceback.print_exception(e2)
+                    self.conn.rollback()
