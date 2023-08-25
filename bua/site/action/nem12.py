@@ -99,7 +99,8 @@ class NEM12(Action):
                         raise Exception(f'No scalar defined for {nmi} {suffix_id} on {read_date}')
                     scalar = decimal.Decimal(record['scalar'])
                     writer.writerow(['200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial, unit_of_measure, '30', ''])
-                    values = [str(decimal.Decimal(record[f'value_{index:02}']) * scalar) for index in range(1, 49)]
+                    values = [decimal.Decimal(record[f'value_{index:02}']) * scalar for index in range(1, 49)]
+                    values = [f'{value:.06f}' for value in values]
                     writer.writerow(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
                     total += 1
                 writer.writerow(['900'])
