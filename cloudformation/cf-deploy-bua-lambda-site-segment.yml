@@ -31,7 +31,7 @@ Parameters:
   ReservedConcurrentExecutions:
     Description: Number of lambda instances to reserve
     Type: String
-    Default: "64"
+    Default: "32"
   KMSKeyId:
     Description: KMS Key ID to use for encryption
     Type: String
