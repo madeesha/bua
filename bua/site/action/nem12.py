@@ -31,6 +31,10 @@ class NEM12(Action):
         with self.conn.cursor() as cur:
             try:
                 cur.execute(
+                    "DELETE FROM BUAControl WHERE run_type = %s AND run_date = %s",
+                    (run_type, run_date)
+                )
+                cur.execute(
                     "CALL bua_list_profile_nmis(%s, %s, %s, %s)",
                     (start_inclusive, end_exclusive, today, run_date)
                 )
@@ -121,7 +125,7 @@ class NEM12(Action):
                 status = "PASS"
                 reason = "No missing reads" if row_count == 0 else key
                 sql = """
-                REPLACE INTO BUAControl
+                INSERT INTO BUAControl
                 (run_type, identifier, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
@@ -134,7 +138,7 @@ class NEM12(Action):
                 status = "FAIL"
                 reason = str(ex)[0:255]
                 sql = """
-                REPLACE INTO BUAControl
+                INSERT INTO BUAControl
                 (run_type, identifier, start_inclusive, end_exclusive, today, run_date, identifier_type, row_count, status, reason)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
