@@ -1,15 +1,30 @@
 import json
+from typing import Dict
 
+from bua.site.action.nem12 import NEM12
 from bua.site.action.sitesegment import SiteSegment
 
 
 class BUASiteSegmentHandler:
     """AWS Lambda handler for bottom up accruals profile segment calculations"""
-    def __init__(self, table, queue, conn, debug=False):
+    def __init__(self, s3_client, bucket_name, table, queue, conn, debug=False):
+        self.s3_client = s3_client
+        self.bucket_name = bucket_name
         self.table = table
         self.queue = queue
         self.conn = conn
         self.debug = debug
+        self._handler = {
+            'SegmentJurisdictionAvgInclEst': self._handle_segment_jurisdiction_avg_incl_est,
+            'SegmentJurisdictionSumInclEst': self._handle_segment_jurisdiction_sum_incl_est,
+            'SegmentJurisdictionAvgExclEst': self._handle_segment_jurisdiction_avg_excl_est,
+            'SegmentJurisdictionSumExclEst': self._handle_segment_jurisdiction_sum_excl_est,
+            'SegmentTNIAvgInclEst': self._handle_segment_tni_avg_incl_est,
+            'SegmentTNISumInclEst': self._handle_segment_tni_sum_incl_est,
+            'SegmentTNIAvgExclEst': self._handle_segment_tni_avg_excl_est,
+            'SegmentTNISumExclEst': self._handle_segment_tni_sum_excl_est,
+            'NEM12': self._handle_nem12,
+        }
 
     def reconnect(self, conn):
         self.conn = conn
@@ -28,42 +43,78 @@ class BUASiteSegmentHandler:
         print(body)
         if 'entries' in body:
             for entry in body['entries']:
-                if 'run_type' in entry and 'run_date' in entry and 'source_date' in entry:
+                if 'run_type' in entry:
                     run_type: str = entry['run_type']
-                    run_date: str = entry['run_date']
-                    source_date: str = entry['source_date']
-                    if run_type == 'SegmentJurisdictionAvgInclEst':
-                        self.calculate_jurisdiction_segment(
-                            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=True
-                        )
-                    elif run_type == 'SegmentJurisdictionSumInclEst':
-                        self.calculate_jurisdiction_segment(
-                            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=True
-                        )
-                    elif run_type == 'SegmentJurisdictionAvgExclEst':
-                        self.calculate_jurisdiction_segment(
-                            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=False
-                        )
-                    elif run_type == 'SegmentJurisdictionSumExclEst':
-                        self.calculate_jurisdiction_segment(
-                            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=False
-                        )
-                    elif run_type == 'SegmentTNIAvgInclEst':
-                        self.calculate_tni_segment(
-                            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=True
-                        )
-                    elif run_type == 'SegmentTNISumInclEst':
-                        self.calculate_tni_segment(
-                            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=True
-                        )
-                    elif run_type == 'SegmentTNIAvgExclEst':
-                        self.calculate_tni_segment(
-                            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=False
-                        )
-                    elif run_type == 'SegmentTNISumExclEst':
-                        self.calculate_tni_segment(
-                            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=False
-                        )
+                    if run_type in self._handler:
+                        self._handler[run_type](run_type, entry, debug)
+
+    def _handle_segment_jurisdiction_avg_incl_est(self, run_type: str, entry: Dict, debug: bool):
+        run_date: str = entry['run_date']
+        source_date: str = entry['source_date']
+        self.calculate_jurisdiction_segment(
+            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=True
+        )
+
+    def _handle_segment_jurisdiction_sum_incl_est(self, run_type: str, entry: Dict, debug: bool):
+        run_date: str = entry['run_date']
+        source_date: str = entry['source_date']
+        self.calculate_jurisdiction_segment(
+            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=True
+        )
+
+    def _handle_segment_jurisdiction_avg_excl_est(self, run_type: str, entry: Dict, debug: bool):
+        run_date: str = entry['run_date']
+        source_date: str = entry['source_date']
+        self.calculate_jurisdiction_segment(
+            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=False
+        )
+
+    def _handle_segment_jurisdiction_sum_excl_est(self, run_type: str, entry: Dict, debug: bool):
+        run_date: str = entry['run_date']
+        source_date: str = entry['source_date']
+        self.calculate_jurisdiction_segment(
+            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=False
+        )
+
+    def _handle_segment_tni_avg_incl_est(self, run_type: str, entry: Dict, debug: bool):
+        run_date: str = entry['run_date']
+        source_date: str = entry['source_date']
+        self.calculate_tni_segment(
+            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=True
+        )
+
+    def _handle_segment_tni_sum_incl_est(self, run_type: str, entry: Dict, debug: bool):
+        run_date: str = entry['run_date']
+        source_date: str = entry['source_date']
+        self.calculate_tni_segment(
+            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=True
+        )
+
+    def _handle_segment_tni_avg_excl_est(self, run_type: str, entry: Dict, debug: bool):
+        run_date: str = entry['run_date']
+        source_date: str = entry['source_date']
+        self.calculate_tni_segment(
+            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=False
+        )
+
+    def _handle_segment_tni_sum_excl_est(self, run_type: str, entry: Dict, debug: bool):
+        run_date: str = entry['run_date']
+        source_date: str = entry['source_date']
+        self.calculate_tni_segment(
+            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=False
+        )
+
+    def _handle_nem12(self, run_type: str, entry: Dict, debug: bool):
+        nmi = entry['nmi']
+        start_inclusive = entry['start_inclusive']
+        end_exclusive = entry['end_exclusive']
+        today = entry['today']
+        run_date = entry['run_date']
+        identifier_type = entry['identifier_type']
+        action = NEM12(
+            queue=self.queue, conn=self.conn, debug=debug, s3_client=self.s3_client, bucket_name=self.bucket_name
+        )
+        action.nem12_file_generation(run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
 
     def calculate_jurisdiction_segment(self, run_type, run_date, source_date, entry,
                                        debug=False, avg_sum='Average', incl_est=True):

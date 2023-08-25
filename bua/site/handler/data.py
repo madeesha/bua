@@ -18,7 +18,6 @@ class BUASiteDataHandler:
         self._handlers = {
             'Utility': self._handle_utility,
             'Validate': self._handle_validate,
-            'NEM12': self._handle_nem12
         }
 
     def reconnect(self, conn):
@@ -73,15 +72,3 @@ class BUASiteDataHandler:
             start_inclusive=entry['start_inclusive'],
             end_exclusive=entry['end_exclusive']
         )
-
-    def _handle_nem12(self, entry, run_type, debug):
-        nmi = entry['nmi']
-        start_inclusive = entry['start_inclusive']
-        end_exclusive = entry['end_exclusive']
-        today = entry['today']
-        run_date = entry['run_date']
-        identifier_type = entry['identifier_type']
-        action = NEM12(
-            queue=self.queue, conn=self.conn, debug=debug, s3_client=self.s3_client, bucket_name=self.bucket_name
-        )
-        action.nem12_file_generation(run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)

@@ -108,7 +108,7 @@ class BUASiteInitiateHandler:
     def _initiate_nem12_files(self, body, debug, run_type):
         today: str = body['today']
         run_date: str = body['run_date']
-        action = NEM12(queue=self.data_queue, conn=self.conn, debug=debug)
+        action = NEM12(queue=self.segment_queue, conn=self.conn, debug=debug)
         identifier_type = body['identifier_type']
         start_inclusive = body.get('start_inclusive')
         end_exclusive = body.get('end_exclusive')
