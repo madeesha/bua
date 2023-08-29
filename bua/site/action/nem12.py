@@ -103,6 +103,7 @@ class NEM12Generator:
 
         self.rows_written = 0
         self.rows_counted = 0
+        self.non_zero_counted = 0
         self.reason = None
         self.extra = None
         self.status = 'PASS'
@@ -156,6 +157,9 @@ class NEM12Generator:
                     ]
                 if self.current_record is not None:
                     self._construct_read_row(writer)
+                if self.non_zero_counted == 0:
+                    if self.reason is None:
+                        self.reason = 'All rows are zero values'
                 writer.writerow(['900'])
                 if self.status == 'PASS':
                     self._write_nem12_file(self.file_name, output)
@@ -300,11 +304,10 @@ class NEM12Generator:
 
     def _construct_read_row(self, writer):
         total_value = sum(self.current_read_values)
-        if total_value == 0:
-            if self.reason is None:
-                self.reason = 'Some rows have zero profile data'
-        elif total_value < 0:
+        if total_value < 0:
             self.reason = 'Some rows have negative profile data'
+        elif total_value > 0:
+            self.non_zero_counted += 1
         if total_value >= 0:
             values = [f'{value:.06f}' for value in self.current_read_values]
             _interval_length = '30'
