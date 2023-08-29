@@ -101,8 +101,8 @@ class NEM12Generator:
         self.unique_id = f'{self.nmi}{self.file_date_time}'
         self.file_name = f'nem12#{self.unique_id}#bua#bua.csv'
 
-        self.rows_written = None
-        self.rows_counted = None
+        self.rows_written = 0
+        self.rows_counted = 0
         self.reason = None
         self.extra = None
         self.status = 'PASS'
