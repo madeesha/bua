@@ -3,7 +3,7 @@ import decimal
 import io
 import traceback
 from hashlib import md5
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Set, Any
 from datetime import datetime, timedelta, date
 
 from pymysql import Connection
@@ -71,133 +71,258 @@ class NEM12(Action):
             self, run_type: str, nmi: str, start_inclusive: str, end_exclusive: str,
             today: str, run_date: str, identifier_type: str
     ):
-        rows_counted = None
-        rows_written = None
-        key = None
+        NEM12Generator(
+            self.log, self.conn, self.s3_client, self.bucket_name, run_type, nmi,
+            start_inclusive, end_exclusive, today, run_date, identifier_type
+        ).generate()
+
+
+class NEM12Generator:
+    def __init__(
+            self, log, conn: Connection, s3_client, bucket_name, run_type: str, nmi: str,
+            start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str
+    ):
+        self.log = log
+        self.conn = conn
+        self.s3_client = s3_client
+        self.bucket_name = bucket_name
+        self.run_type = run_type
+        self.nmi = nmi
+        self.start_inclusive = start_inclusive
+        self.end_exclusive = end_exclusive
+        self.today = today
+        self.run_date = run_date
+        self.identifier_type = identifier_type
+
+        self.file_date_time = datetime.strptime(self.run_date, '%Y-%m-%d %H:%M:%S').strftime('%Y%m%d%H%M')
+        self.update_date_time = datetime.strptime(self.run_date, '%Y-%m-%d %H:%M:%S')
+        self.update_date_time = self.update_date_time - timedelta(days=36525)
+        self.update_date_time = self.update_date_time.strftime('%Y%m%d%H%M%S')
+        self.unique_id = f'{self.nmi}{self.file_date_time}'
+        self.file_name = f'nem12#{self.unique_id}#bua#bua.csv'
+
+        self.rows_written = None
+        self.rows_counted = None
+        self.reason = None
+        self.extra = None
+        self.status = 'PASS'
+        self.key = None
+
+        self.nmi_configurations: Dict[Any, Set] = dict()
+
+        self.current_record = None
+        self.current_read_values = self._default_read_values()
+
+    @staticmethod
+    def _default_read_values():
+        return [decimal.Decimal(0) for _ in range(48)]
+
+    def generate(self):
         with self.conn.cursor() as cur:
             try:
                 decimal.getcontext().prec = 6
-                cur.execute(
-                    "CALL bua_list_missing_periods(%s, %s, %s, %s, %s, %s)",
-                    (nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
-                )
-                records: List[Dict] = list(cur.fetchall())
-                rows_counted = len(records)
-                file_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S').strftime('%Y%m%d%H%M')
-                update_date_time = datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S')
-                update_date_time = update_date_time - timedelta(days=36525)
-                update_date_time = update_date_time.strftime('%Y%m%d%H%M%S')
-                unique_id = f'{nmi}{file_date_time}'
-                file_name = f'nem12#{unique_id}#bua#bua.csv'
+                records = self._fetch_missing_periods(cur)
                 output = io.StringIO()
                 writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(['100', 'NEM12', file_date_time, 'BUA', 'BUA'])
-                nmi_configuration = ''.join({row['suffix_id'] for row in records})
-                rows_written = 0
-                reason = None
-                extra = None
-                status = 'PASS'
-                if rows_counted == 0:
-                    reason = 'No missing reads'
+                writer.writerow(['100', 'NEM12', self.file_date_time, 'BUA', 'BUA'])
+                self._calculate_nmi_configurations(records)
                 for index, record in enumerate(records):
-                    register_id = record['register_id']
-                    suffix_id = record['suffix_id']
-                    serial = record['serial']
-                    unit_of_measure = record['unit_of_measure']
-                    read_date = record['read_date'].strftime('%Y%m%d')
-                    if register_id is None:
-                        status = 'FAIL'
-                        reason = 'No register id defined'
-                        extra = f'No register id defined for {nmi} {suffix_id} {serial} on {read_date}'
+                    start_row = record['start_row']
+                    end_row = record['end_row']
+                    if not self._valid_register(record):
                         break
-                    if suffix_id is None:
-                        status = 'FAIL'
-                        reason = 'No suffix defined'
-                        extra = f'No suffix defined for {nmi} {serial} {register_id} on {read_date}'
+                    if not self._valid_suffix(record):
                         break
-                    if unit_of_measure is None:
-                        status = 'FAIL'
-                        reason = 'No unit of measure defined'
-                        extra = f'No unit of measure defined for {nmi} {suffix_id} on {read_date}'
+                    if not self._valid_uom(record):
                         break
-                    if record['scalar'] is None:
-                        status = 'FAIL'
-                        reason = 'No scalar defined'
-                        extra = f'No scalar defined for {nmi} {suffix_id} on {read_date}'
+                    scalar = self._convert_scalar(record)
+                    if scalar is None:
                         break
-                    scalar = decimal.Decimal(record['scalar'])
-                    if scalar.is_zero():
-                        status = 'FAIL'
-                        reason = 'Scalar defined as zero'
-                        extra = f'Scalar defined as zero for {nmi} {suffix_id} on {read_date}'
+                    if not self._valid_time_set(record):
                         break
-                    if index > 0:
-                        if records[index-1]['read_date'] == record['read_date']:
-                            if records[index-1]['suffix_id'] == record['suffix_id']:
-                                status = 'FAIL'
-                                reason = 'Multiple scalar values defined'
-                                extra = f'Multiple scalar values defined for {nmi} {suffix_id} on {read_date}'
-                                break
-                    values = [decimal.Decimal(record[f'value_{index:02}']) * scalar for index in range(1, 49)]
-                    total_value = sum(values)
-                    if total_value == 0:
-                        if reason is None:
-                            reason = 'Some rows have zero profile data'
-                    elif total_value < 0:
-                        reason = 'Some rows have negative profile data'
-                    if total_value >= 0:
-                        values = [f'{value:.06f}' for value in values]
-                        row = [
-                            '200', nmi, nmi_configuration, register_id, suffix_id, suffix_id, serial,
-                            unit_of_measure, '30', ''
-                        ]
-                        writer.writerow(row)
-                        writer.writerow(['300', read_date, *values, 'AB', '', '', update_date_time, ''])
-                        rows_written += 1
+                    is_new = self._is_new_reading(record)
+                    if is_new:
+                        self._construct_read_row(writer)
+                        self.current_read_values = self._default_read_values()
+                    self.current_record = record
+                    values = [
+                        decimal.Decimal(record[f'value_{index:02}']) * scalar
+                        for index in range(start_row+1, end_row+1)
+                    ]
+                    self.current_read_values = [
+                        *self.current_read_values[0:start_row],
+                        *values,
+                        *self.current_read_values[end_row:]
+                    ]
+                if self.current_record is not None:
+                    self._construct_read_row(writer)
                 writer.writerow(['900'])
-                if status == 'PASS':
-                    if rows_written > 0:
-                        key = f'bua/{run_date}/{file_name}'
-                        body = output.getvalue().encode('utf-8')
-                        md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
-                        self.s3_client.put_object(
-                            Bucket=self.bucket_name,
-                            Key=key,
-                            ContentMD5=md5sum,
-                            ContentType='text/plain',
-                            Body=body,
-                            ContentLength=len(body)
-                        )
-                sql = """
-                INSERT INTO BUAControl
-                ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
-                , identifier_type, rows_counted, rows_written, status, reason, extra, s3_key)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                cur.execute(sql,
-                (run_type, nmi, start_inclusive, end_exclusive, today, run_date,
-                     identifier_type, rows_counted, rows_written, status, reason, extra, key)
-                )
-                self.log(f'{len(records)} {run_type} profiled estimates for {nmi}. {status} : {reason} : {extra}')
+                if self.status == 'PASS':
+                    self._write_nem12_file(self.file_name, output)
+                self.log(f'{len(records)} {self.run_type} '
+                         f'profiled estimates for '
+                         f'{self.nmi}. {self.status} : {self.reason} : {self.extra}')
                 self.conn.commit()
+                self._insert_control_record(cur)
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                try:
-                    status = "FAIL"
-                    reason = "Exception raised"
-                    extra = str(ex)[0:255]
-                    sql = """
+                self.status = "FAIL"
+                self.reason = "Exception raised"
+                self.extra = str(ex)[0:255]
+                self._insert_control_record(cur)
+
+    def _calculate_nmi_configurations(self, records: List[Dict]):
+        for record in records:
+            nmi_config = self.nmi_configurations.get(record['read_date'], set())
+            self.nmi_configurations[record['read_date']] = nmi_config
+            nmi_config.add(record['suffix_id'])
+
+    def _is_new_reading(self, record: Dict):
+        if self.current_record is None:
+            return False
+        if self.current_record['read_date'] != record['read_date']:
+            return True
+        if self.current_record['suffix_id'] != record['suffix_id']:
+            return True
+        if self.current_record['serial'] != record['serial']:
+            return True
+        if self.current_record['register_id'] != record['register_id']:
+            return True
+        if self.current_record['unit_of_measure'] != record['unit_of_measure']:
+            return True
+        return False
+
+    def _fetch_missing_periods(self, cur):
+        cur.execute(
+            "CALL bua_list_missing_periods(%s, %s, %s, %s, %s, %s)",
+            (self.nmi, self.start_inclusive, self.end_exclusive, self.today, self.run_date, self.identifier_type)
+        )
+        records: List[Dict] = list(cur.fetchall())
+        self.rows_counted = len(records)
+        if self.rows_counted == 0:
+            self.reason = 'No missing reads'
+        return records
+
+    def _insert_control_record(self, cur):
+        try:
+            sql = """
                     INSERT INTO BUAControl
                     ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
                     , identifier_type, rows_counted, rows_written, status, reason, extra, s3_key)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """
-                    cur.execute(sql,
-                    (run_type, nmi, start_inclusive, end_exclusive, today, run_date,
-                         identifier_type, rows_counted, rows_written, status, reason, extra, key)
-                    )
-                    self.conn.commit()
-                except Exception as e2:
-                    traceback.print_exception(e2)
-                    self.conn.rollback()
+            cur.execute(sql,
+                        (self.run_type, self.nmi, self.start_inclusive, self.end_exclusive, self.today, self.run_date,
+                         self.identifier_type, self.rows_counted, self.rows_written, self.status, self.reason,
+                         self.extra, self.key)
+                        )
+            self.conn.commit()
+        except Exception as e2:
+            traceback.print_exception(e2)
+            self.conn.rollback()
+
+    def _write_nem12_file(self, file_name, output):
+        if self.rows_written > 0:
+            self.key = f'bua/{self.run_date}/{file_name}'
+            body = output.getvalue().encode('utf-8')
+            md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
+            self.s3_client.put_object(
+                Bucket=self.bucket_name,
+                Key=self.key,
+                ContentMD5=md5sum,
+                ContentType='text/plain',
+                Body=body,
+                ContentLength=len(body)
+            )
+
+    def _valid_register(self, record: Dict):
+        if record['register_id'] is None:
+            self.status = 'FAIL'
+            self.reason = 'No register id defined'
+            suffix_id = record['suffix_id']
+            serial = record['serial']
+            read_date = record['read_date']
+            self.extra = f'No register id defined for {self.nmi} {suffix_id} {serial} on {read_date}'
+            return False
+        return True
+
+    def _valid_suffix(self, record: Dict):
+        if record['suffix_id'] is None:
+            self.status = 'FAIL'
+            self.reason = 'No suffix defined'
+            serial = record['serial']
+            register_id = record['register_id']
+            read_date = record['read_date']
+            self.extra = f'No suffix defined for {self.nmi} {serial} {register_id} on {read_date}'
+            return False
+        return True
+
+    def _valid_uom(self, record):
+        if record['unit_of_measure'] is None:
+            self.status = 'FAIL'
+            self.reason = 'No unit of measure defined'
+            suffix_id = record['suffix_id']
+            read_date = record['read_date']
+            self.extra = f'No unit of measure defined for {self.nmi} {suffix_id} on {read_date}'
+            return False
+        return True
+
+    def _convert_scalar(self, record):
+        scalar = record['scalar']
+        suffix_id = record['suffix_id']
+        read_date = record['read_date']
+        if scalar is None:
+            self.status = 'FAIL'
+            self.reason = 'No scalar defined'
+            self.extra = f'No scalar defined for {self.nmi} {suffix_id} on {read_date}'
+            return None
+        scalar = decimal.Decimal(scalar)
+        if scalar.is_zero():
+            self.status = 'FAIL'
+            self.reason = 'Scalar defined as zero'
+            self.extra = f'Scalar defined as zero for {self.nmi} {suffix_id} on {read_date}'
+            return None
+        return scalar
+
+    def _valid_time_set(self, record):
+        time_set_id = record['time_set_id']
+        start_row = record['start_row']
+        end_row = record['end_row']
+        if time_set_id is not None and start_row is None or end_row is None:
+            self.status = 'FAIL'
+            self.reason = 'No valid time periods'
+            suffix_id = record['suffix_id']
+            read_date = record['read_date']
+            self.extra = f'No time periods for {self.nmi} {suffix_id} on {read_date}'
+            return False
+        return True
+
+    def _construct_read_row(self, writer):
+        total_value = sum(self.current_read_values)
+        if total_value == 0:
+            if self.reason is None:
+                self.reason = 'Some rows have zero profile data'
+        elif total_value < 0:
+            self.reason = 'Some rows have negative profile data'
+        if total_value >= 0:
+            values = [f'{value:.06f}' for value in self.current_read_values]
+            _interval_length = '30'
+            _next_scheduled_read_date = ''
+            _nmi_configuration = ''.join(self.nmi_configurations[self.current_record['read_date']])
+            row = [
+                '200', self.nmi, _nmi_configuration, self.current_record['register_id'],
+                self.current_record['suffix_id'], self.current_record['suffix_id'], self.current_record['serial'],
+                self.current_record['unit_of_measure'], _interval_length, _next_scheduled_read_date
+            ]
+            writer.writerow(row)
+            _quality_method = 'AB'
+            _reason_code = ''
+            _reason_description = ''
+            _msats_load_date_time = ''
+            read_date = self.current_record['read_date'].strftime('%Y%m%d')
+            writer.writerow([
+                '300', read_date, *values, _quality_method, _reason_code, _reason_description,
+                self.update_date_time, _msats_load_date_time
+            ])
+            self.rows_written += 1
