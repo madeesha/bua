@@ -241,9 +241,9 @@ class NEM12Generator:
             )
 
     def _valid_register(self, record: Dict):
-        if record['register_id'] is None:
+        if len(record['register_id']) < 1:
             self.status = 'FAIL'
-            self.reason = 'No register id defined'
+            self.reason = 'Invalid register id defined'
             suffix_id = record['suffix_id']
             serial = record['serial']
             read_date = record['read_date']
@@ -252,9 +252,9 @@ class NEM12Generator:
         return True
 
     def _valid_suffix(self, record: Dict):
-        if record['suffix_id'] is None:
+        if not 1 <= len(record['suffix_id']) <= 2:
             self.status = 'FAIL'
-            self.reason = 'No suffix defined'
+            self.reason = 'Invalid suffix defined'
             serial = record['serial']
             register_id = record['register_id']
             read_date = record['read_date']
@@ -263,9 +263,9 @@ class NEM12Generator:
         return True
 
     def _valid_uom(self, record):
-        if record['unit_of_measure'] is None:
+        if len(record['unit_of_measure']) < 1:
             self.status = 'FAIL'
-            self.reason = 'No unit of measure defined'
+            self.reason = 'Invalid unit of measure defined'
             suffix_id = record['suffix_id']
             read_date = record['read_date']
             self.extra = f'No unit of measure defined for {self.nmi} {suffix_id} on {read_date}'
