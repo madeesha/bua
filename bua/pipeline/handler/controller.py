@@ -112,20 +112,31 @@ class BUAControllerHandler:
     def _handle_event(self, event):
         use_sqs = event['type'] == 'sqs'
         try:
-            if 'name' not in event:
-                raise Exception('[name] tag is missing from the event')
-            name = event['name']
-            if 'this' not in event:
-                raise Exception('[this] tag is missing from the event')
-            this = event['this']
-            if 'steps' in event:
-                self._handle_event_steps(event, name, this)
+            if 'action' in event:
+                self._handle_action(event)
             else:
-                self._handle_step(event, name, this, event)
-            if use_sqs:
-                self._handle_next_via_sqs(event)
+                self._handle_pipeline(event, use_sqs)
         except Exception as e:
             self._handle_step_failure(e, event, use_sqs)
+
+    def _handle_action(self, event):
+        name: str = event['action'].replace('_', ' ').title()
+        this: str = event['action']
+        self._handle_step(event, name, this, event)
+
+    def _handle_pipeline(self, event, use_sqs):
+        if 'name' not in event:
+            raise Exception('[name] tag is missing from the event')
+        name = event['name']
+        if 'this' not in event:
+            raise Exception('[this] tag is missing from the event')
+        this = event['this']
+        if 'steps' in event:
+            self._handle_event_steps(event, name, this)
+        else:
+            self._handle_step(event, name, this, event)
+        if use_sqs:
+            self._handle_next_via_sqs(event)
 
     def _handle_next_via_sqs(self, event):
         _next = event.get('next')
