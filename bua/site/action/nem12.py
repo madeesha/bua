@@ -228,7 +228,7 @@ class NEM12Generator:
 
     def _write_nem12_file(self, file_name, output):
         if self.rows_written > 0:
-            self.key = f'bua/{self.run_date}/{file_name}'
+            self.key = f'nem/bua/{self.run_date}/{file_name}'
             body = output.getvalue().encode('utf-8')
             md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
             self.s3_client.put_object(
