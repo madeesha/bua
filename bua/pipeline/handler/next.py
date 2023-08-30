@@ -1,4 +1,5 @@
 import base64
+import urllib.parse
 from hashlib import md5
 
 import yaml
@@ -33,7 +34,7 @@ class BUANextHandler:
 
     def _fetch_s3_object(self, record):
         bucket = record['s3']['bucket']['name']
-        key = record['s3']['object']['key']
+        key = urllib.parse.unquote(record['s3']['object']['key'])
         version = record['s3']['object']['versionId']
         print('Fetch S3 object', bucket, key, version)
         response = self.s3.get_object(Bucket=bucket, Key=key, VersionId=version)
