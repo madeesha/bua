@@ -41,9 +41,13 @@ class BUANextHandler:
         return text
 
     def _schedule_event(self, event):
-        schedule_name = event['name'].lower().replace(' ', '_')
-        next_step = event['this']
-        speed = event['steps'][next_step].get('speed', 'fast').lower()
+        if 'action' in event:
+            schedule_name: str = event['action'].lower().replace(' ', '_')
+            speed = event.get('speed', 'fast').lower()
+        else:
+            schedule_name = event['name'].lower().replace(' ', '_')
+            next_step = event['this']
+            speed = event['steps'][next_step].get('speed', 'fast').lower()
         key = f'schedule/{speed}/{schedule_name}.yml'
         body = yaml.dump(event).encode('utf-8')
         md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
