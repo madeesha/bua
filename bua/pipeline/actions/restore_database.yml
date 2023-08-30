@@ -12,11 +12,9 @@ data:
   schema: Turkey_BLU
   snapshot_arn: arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32
   suffix: bua-sql
-  update_id: '13'
+  update_id: '12'
   rdssecret: "cicd/tst-anstead/rds/bua"
   hosted_zone_id: "Z06477101FOH3N8B2WK6N"
-  run_date: '2023-08-17'
-  today: '2023-05-01'
 steps:
   01_restore_database:
     action: restore_database
