@@ -1,3 +1,4 @@
 action: trigger_restore
 args:
   this: 15_segment_jurisdiction_check
+  run_date: '2023-08-31'
