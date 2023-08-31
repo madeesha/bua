@@ -167,7 +167,19 @@ steps:
     retry_delay: 300
     'on':
       COMPLETE:
-        next: 15_profile_validation
+        next: 15_segment_jurisdiction_check
+  15_segment_jurisdiction_check:
+    action: bua_initiate
+    arg:
+      run_type: SegmentJurisdictionCheck
+    'on':
+      COMPLETE:
+        next: 15_wait_for_segment_jurisdiction_check
+  15_wait_for_segment_jurisdiction_check:
+    action: wait_for_empty_site_queues
+    retry_delay: 300
+    'on':
+      COMPLETE: {}
   15_profile_validation:
     action: bua_initiate
     args:

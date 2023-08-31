@@ -1,6 +1,7 @@
 import json
 from typing import Dict
 
+from bua.site.action.check import Check
 from bua.site.action.nem12 import NEM12
 from bua.site.action.scalar import MicroScalar
 from bua.site.action.sitesegment import SiteSegment
@@ -26,6 +27,7 @@ class BUASiteSegmentHandler:
             'SegmentTNISumExclEst': self._handle_segment_tni_sum_excl_est,
             'NEM12': self._handle_nem12,
             'MicroScalar': self._handle_microscalar,
+            'SegmentJurisdictionCheck': self._handle_segment_jurisdiction_check,
         }
 
     def reconnect(self, conn):
@@ -127,6 +129,13 @@ class BUASiteSegmentHandler:
             queue=self.queue, conn=self.conn, debug=debug
         )
         action.execute_microscalar_calculation(run_type, today, run_date, identifier_type, account_id)
+
+    def _handle_segment_jurisdiction_check(self, run_type: str, entry: Dict, debug: bool):
+        run_date = entry['run_date']
+        identifier_type = entry['identifier_type']
+        interval_date = entry['interval_date']
+        action = Check(queue=self.queue, conn=self.conn, debug=debug)
+        action.segment_jurisdiction_check(run_date, identifier_type, interval_date)
 
     def calculate_jurisdiction_segment(self, run_type, run_date, source_date, entry,
                                        debug=False, avg_sum='Average', incl_est=True):
