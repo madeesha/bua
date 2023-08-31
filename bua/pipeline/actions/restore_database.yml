@@ -191,7 +191,8 @@ steps:
       deployment: [ meterdata ]
       replicas: 6
     'on':
-      COMPLETE: {}
+      COMPLETE:
+        next: 18_execute_micro_scalar
   18_execute_micro_scalar:
     comment: Generate micro scalar values
     action: bua_initiate
@@ -206,7 +207,8 @@ steps:
     action: wait_for_empty_site_queues
     retry_delay: 300
     'on':
-      COMPLETE: {}
+      COMPLETE:
+        next: 19_generate_NEM12_files
   19_generate_NEM12_files:
     comment: Generate the missing electricity interval reads
     action: bua_initiate
