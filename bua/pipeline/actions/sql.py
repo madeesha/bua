@@ -78,6 +78,26 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
+    def bua_initiate_invoice_runs(self, step, data):
+        run_date = data.get('run_date')
+        try:
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
+                    con.commit()
+                    cur.execute(
+                        "CALL bua_initiate_invoice_runs(%s, NULL)",
+                        (run_date,)
+                    )
+                    con.commit()
+            return "COMPLETE", f'BUA initiate invoice runs, max wfi {workflow_instance_id}'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def bua_create_invoice_scalar(self, step, data):
         concurrency = int(data['concurrency'])
         start_inclusive = data.get('start_inclusive')
@@ -185,35 +205,61 @@ class SQL:
         return workflow_instance_id
 
     def wait_for_workflows(self, step, data):
-        workflow_name = data['workflow_name']
+        workflow_names = data['workflow_names']
         workflow_instance_id = int(data.get('workflow_instance_id', 0))
         try:
             con = self._connect(data)
             with con:
                 cur = con.cursor()
                 with cur:
-                    cur.execute("SELECT id FROM Workflows WHERE name = %s", (workflow_name,))
-                    workflow_id = int(cur.fetchall()[0]['id'])
-                    cur.execute(
-                        "SELECT status, COUNT(*) AS total "
-                        "FROM WorkflowInstance "
-                        "WHERE workflow_id = %s "
-                        "AND id > %s "
-                        "GROUP BY status",
-                        (workflow_id, workflow_instance_id)
-                    )
-                    for row in cur.fetchall():
-                        if 'NEW' in row['status']:
-                            return "RETRY", f'{row["total"]} workflow instances in NEW status'
-                        if 'READY' in row['status']:
-                            return "RETRY", f'{row["total"]} workflow instances in READY status'
-                        if 'INPROG' in row['status']:
-                            return "RETRY", f'{row["total"]} workflow instances in INPROG status'
-                        if 'ERROR' in row['status']:
-                            return "FAILED", f'{row["total"]} workflow instances in ERROR status'
-                        if 'HOLD' in row['status']:
-                            return "FAILED", f'{row["total"]} workflow instances in HOLD status'
+                    for workflow_name in workflow_names:
+                        cur.execute("SELECT id FROM Workflows WHERE name = %s", (workflow_name,))
+                        workflow_id = int(cur.fetchall()[0]['id'])
+                        cur.execute(
+                            "SELECT status, COUNT(*) AS total "
+                            "FROM WorkflowInstance "
+                            "WHERE workflow_id = %s "
+                            "AND id > %s "
+                            "GROUP BY status",
+                            (workflow_id, workflow_instance_id)
+                        )
+                        for row in cur.fetchall():
+                            if 'NEW' in row['status']:
+                                return "RETRY", f'{row["total"]} {workflow_name} workflow instances in NEW status'
+                            if 'READY' in row['status']:
+                                return "RETRY", f'{row["total"]} {workflow_name} workflow instances in READY status'
+                            if 'INPROG' in row['status']:
+                                return "RETRY", f'{row["total"]} {workflow_name} workflow instances in INPROG status'
+                            if 'ERROR' in row['status']:
+                                return "FAILED", f'{row["total"]} {workflow_name} workflow instances in ERROR status'
+                            if 'HOLD' in row['status']:
+                                return "FAILED", f'{row["total"]} {workflow_name} workflow instances in HOLD status'
             return "COMPLETE", f'No workflow instances in NEW/READY/INPROG remain'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
+    def wait_for_workflow_schedules(self, step, data):
+        workflow_names = data['workflow_names']
+        try:
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    for workflow_name in workflow_names:
+                        cur.execute(
+                            "SELECT COUNT(*) AS total "
+                            "FROM WorkflowSchedule "
+                            "WHERE workflow_id = (SELECT id FROM Workflows WHERE name = %s) "
+                            "AND enabled = 1 "
+                            "AND next_run_date < DATE_ADD(NOW(), INTERVAL 1 DAY)",
+                            (workflow_name,)
+                        )
+                        count = int(cur.fetchall()[0]['total'])
+                        if count > 0:
+                            return "RETRY", f'{count} {workflow_name} schedules still to execute'
+            return "COMPLETE", f'No workflow schedules still to execute'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
                 return "RETRY", f'{e}'

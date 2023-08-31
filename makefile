@@ -54,6 +54,9 @@ switch-dns-cli:
 19_generate_NEM12_files:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger_nem12_files.yml
 
+21_invoice_runs:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger_invoice_runs.yml
+
 # Upgrade Steps
 
 18-sync-passwords:

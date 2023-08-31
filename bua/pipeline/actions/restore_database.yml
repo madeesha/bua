@@ -118,7 +118,9 @@ steps:
     action: wait_for_workflows
     retry_delay: 300
     args:
-      workflow_name: EXECUTE_SQL
+      workflow_names:
+        - WARM_TABLE
+        - WARM_PARTITION
     'on':
       COMPLETE:
         next: 12_database_warming
@@ -134,7 +136,8 @@ steps:
     action: wait_for_workflows
     retry_delay: 300
     args:
-      workflow_name: EXECUTE_SQL
+      workflow_names:
+        - WARM_INDEX
     'on':
       COMPLETE:
         next: 13_utility_profiles
@@ -217,22 +220,55 @@ steps:
       identifier_type: SegmentJurisdictionAvgExclEst
     'on':
       COMPLETE:
-        next: 19_wait_for_generate_NEM12_files
-  19_wait_for_generate_NEM12_files:
+        next: 19_wait_for_generate_NEM12_files_1
+  19_wait_for_generate_NEM12_files_1:
     action: wait_for_empty_site_queues
     retry_delay: 300
+    'on':
+      COMPLETE:
+        next: 19_wait_for_generate_NEM12_files_2
+  19_wait_for_generate_NEM12_files_2:
+    comment: Wait until the aggregation workflows are complete
+    action: wait_for_workflows
+    retry_delay: 300
+    args:
+      workflow_names:
+        - ImportNem
+        - ImportGas
+        - AggregateReadNmiDate
+        - RegenerateProfile
+        - ValidateNEM13Read
     'on':
       COMPLETE: {}
   19_generate_missing_elec_basic_reads:
     comment: Generate all of the missing electricity basic reads
   20_generate_missing_gas_reads:
     comment: Generate all of the missing gas reads
-  20_wait_for_aggregations:
-    comment: Wait until the aggregation workflows are complete
   21_invoice_runs:
     comment: Initiate the invoice runs
-  21_wait_for_invoice_runs:
+    action: bua_initiate_invoice_runs
+    speed: slow
+    'on':
+      COMPLETE:
+        next: 21_wait_for_invoice_runs_1
+  21_wait_for_invoice_runs_1:
+    action: wait_for_workflow_schedules
+    args:
+      workflow_names:
+        - GENERATE_ILI
+    'on':
+      COMPLETE:
+        next: 21_wait_for_invoice_runs_2
+  21_wait_for_invoice_runs_2:
     comment: Wait until all invoicing runs are complete
+    action: wait_for_workflows
+    retry_delay: 300
+    args:
+      workflow_names:
+        - RUN_INVOICE_BATCH
+        - GENERATE_ILI
+    'on':
+      COMPLETE: {}
   22_extract_results_to_s3:
     comment: Extract the results of the invoice runs to S3
   23_scale_down_deployments:

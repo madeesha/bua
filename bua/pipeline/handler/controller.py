@@ -63,6 +63,7 @@ class BUAControllerHandler:
             'core_warm_database_statistics': sql_handler.core_warm_database_statistics,
             'core_warm_database_indexes': sql_handler.core_warm_database_indexes,
             'wait_for_workflows': sql_handler.wait_for_workflows,
+            'wait_for_workflow_schedules': sql_handler.wait_for_workflow_schedules,
             'stats_sample_pages': sql_handler.stats_sample_pages,
             'get_max_workflow_instance': sql_handler.get_max_workflow_instance,
             'truncate_workflow_instance': sql_handler.truncate_workflow_instance,
@@ -75,6 +76,7 @@ class BUAControllerHandler:
             'set_rds_dns_entry': dns_handler.set_rds_dns_entry,
             'trigger_restore': trigger_handler.trigger_restore,
             'bua_create_invoice_scalar': sql_handler.bua_create_invoice_scalar,
+            'bua_initiate_invoice_runs': sql_handler.bua_initiate_invoice_runs,
         }
 
     def handle_request(self, event):

@@ -547,7 +547,7 @@ class TestCase:
                 'step1': {
                     'action': 'wait_for_workflows',
                     'args': {
-                        'workflow_name': 'ExecuteSQL'
+                        'workflow_names': ['ExecuteSQL']
                     }
                 }
             }
