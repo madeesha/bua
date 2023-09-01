@@ -1,4 +1,4 @@
-name: Restore Database V18
+name: Restore Database
 this: 01_restore_database
 instance: ''
 type: sqs
