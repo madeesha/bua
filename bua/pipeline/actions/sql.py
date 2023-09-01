@@ -32,6 +32,8 @@ class SQL:
             host=host, user=username, password=password, database=schema,
             cursorclass=pymysql.cursors.DictCursor, autocommit=False
         )
+        with con.cursor() as cur:
+            cur.execute("SET SESSION innodb_lock_wait_timeout = 60")
         return con
 
     def insert_event_log(self, step, data):

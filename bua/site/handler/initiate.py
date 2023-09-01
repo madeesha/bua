@@ -32,9 +32,15 @@ class BUASiteInitiateHandler:
             'MicroScalar': self._initiate_microscalar,
             'SegmentJurisdictionCheck': self._initiate_segment_jurisdiction_check,
         }
+        self._initialise_connection()
 
     def reconnect(self, conn):
         self.conn = conn
+        self._initialise_connection()
+
+    def _initialise_connection(self):
+        with self.conn.cursor() as cur:
+            cur.execute("SET SESSION innodb_lock_wait_timeout = 60")
 
     def handle_request(self, event):
         if 'Records' in event:

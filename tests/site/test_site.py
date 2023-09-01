@@ -258,16 +258,17 @@ class Database:
     def __exit__(self, exc_type, exc_val, exc_tb):
         return
 
-    def execute(self, sql, args):
+    def execute(self, sql, args=None):
         self.executions.append((sql, args))
         try:
-            sql % tuple(args)
+            if args is not None:
+                sql % tuple(args)
         except TypeError as te:
             traceback.print_exception(te)
             print(sql)
             print(args)
             sql_arg_count = (len(sql) - len(sql.replace('%s', '')))//2
-            print('Required', sql_arg_count, 'args but received ', len(args), 'arguments')
+            print('Required', sql_arg_count, 'args but received ', len(args) if args is not None else 0, 'arguments')
             raise
 
     def commit(self):
