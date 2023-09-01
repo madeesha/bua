@@ -140,7 +140,7 @@ steps:
         - WARM_INDEX
     'on':
       COMPLETE:
-        next: 13_utility_profiles
+        delay: 120
   13_utility_profiles:
     action: bua_initiate
     args:
@@ -154,7 +154,7 @@ steps:
     retry_delay: 300
     'on':
       COMPLETE:
-        next: 14_jurisdiction_segments
+        delay: 120
   14_jurisdiction_segments:
     action: bua_initiate
     args:
@@ -168,7 +168,7 @@ steps:
     retry_delay: 300
     'on':
       COMPLETE:
-        next: 15_segment_jurisdiction_check
+        delay: 120
   15_segment_jurisdiction_check:
     action: bua_initiate
     arg:
@@ -181,7 +181,8 @@ steps:
     action: wait_for_empty_site_queues
     retry_delay: 300
     'on':
-      COMPLETE: {}
+      COMPLETE:
+        delay: 120
   15_profile_validation:
     action: bua_initiate
     args:
@@ -195,13 +196,12 @@ steps:
     retry_delay: 300
     'on':
       COMPLETE:
-        next: 16_resolve_variances
+        delay: 120
   16_resolve_variances:
     comment: bua_resolve_variances
     'on':
       COMPLETE:
         delay: 120
-        next: 17_scale_up_meterdata
   17_scale_up_meterdata:
     comment: kubectl -n core scale --replicas=6 deployment meterdata
     action: scale_replicas
@@ -212,7 +212,6 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 18_execute_micro_scalar
   18_execute_micro_scalar:
     comment: Generate micro scalar values
     action: bua_initiate
@@ -229,7 +228,7 @@ steps:
     retry_delay: 300
     'on':
       COMPLETE:
-        next: 19_generate_NEM12_files
+        delay: 120
   19_generate_NEM12_files:
     comment: Generate the missing electricity interval reads
     action: bua_initiate
@@ -259,7 +258,8 @@ steps:
         - RegenerateProfile
         - ValidateNEM13Read
     'on':
-      COMPLETE: {}
+      COMPLETE:
+        delay: 120
   19_generate_missing_elec_basic_reads:
     comment: Generate all of the missing electricity basic reads
   20_generate_missing_gas_reads:
@@ -290,7 +290,8 @@ steps:
         - RUN_INVOICE_BATCH
         - GENERATE_ILI
     'on':
-      COMPLETE: {}
+      COMPLETE:
+        delay: 120
   22_extract_results_to_s3:
     comment: Extract the results of the invoice runs to S3
   23_scale_down_deployments:
@@ -299,4 +300,5 @@ steps:
       namespace: core
       deployment: [ workflow , meterdata ]
     'on':
-      COMPLETE: {}
+      COMPLETE:
+        delay: 120
