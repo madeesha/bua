@@ -43,25 +43,25 @@ switch-dns-cli:
 # Trigger Restore Pipeline
 
 01_restore_database:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_restore.yml s3://tst-anstead-s3-bua/schedule/next/trigger_restore.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_restore.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 13_utility_profiles:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_utility_profiles.yml s3://tst-anstead-s3-bua/schedule/next/trigger_utility_profiles.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_utility_profiles.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 14_jurisdiction_segments:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_segments.yml s3://tst-anstead-s3-bua/schedule/next/trigger_segments.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_segments.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 15_segment_jurisdiction_check:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_segment_check.yml s3://tst-anstead-s3-bua/schedule/next/trigger_segment_check.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_segment_check.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 18_execute_micro_scalar:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_micro_scalar.yml s3://tst-anstead-s3-bua/schedule/next/trigger_micro_scalar.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_micro_scalar.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 19_generate_NEM12_files:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger_nem12_files.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 21_invoice_runs:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_invoice_runs.yml s3://tst-anstead-s3-bua/schedule/next/trigger_invoice_runs.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_invoice_runs.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 # Upgrade Steps
 
