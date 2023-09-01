@@ -48,8 +48,11 @@ switch-dns-cli:
 13_utility_profiles:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_utility_profiles.yml s3://tst-anstead-s3-bua/schedule/next/trigger_utility_profiles.yml
 
+14_jurisdiction_segments:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_segments.yml s3://tst-anstead-s3-bua/schedule/next/trigger_segments.yml
+
 15_segment_jurisdiction_check:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_utility_profiles.yml s3://tst-anstead-s3-bua/schedule/next/trigger_segment_check.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_segment_check.yml s3://tst-anstead-s3-bua/schedule/next/trigger_segment_check.yml
 
 18_execute_micro_scalar:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_micro_scalar.yml s3://tst-anstead-s3-bua/schedule/next/trigger_micro_scalar.yml
@@ -58,7 +61,7 @@ switch-dns-cli:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger_nem12_files.yml
 
 21_invoice_runs:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger_invoice_runs.yml
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_invoice_runs.yml s3://tst-anstead-s3-bua/schedule/next/trigger_invoice_runs.yml
 
 # Upgrade Steps
 
