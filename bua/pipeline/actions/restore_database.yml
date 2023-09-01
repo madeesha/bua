@@ -173,6 +173,7 @@ steps:
     action: bua_initiate
     arg:
       run_type: SegmentJurisdictionCheck
+      identifier_type: SegmentJurisdictionAvgExclEst
     'on':
       COMPLETE:
         delay: 120
