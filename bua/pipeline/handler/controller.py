@@ -5,6 +5,7 @@ import traceback
 from typing import Dict, Any
 from datetime import datetime, timezone, timedelta
 
+from bua.pipeline.actions.choice import Choice
 from bua.pipeline.actions.dns import DNS
 from bua.pipeline.actions.kube import KubeCtl
 from bua.pipeline.actions.profiles import Profiles
@@ -44,6 +45,8 @@ class BUAControllerHandler:
         route53 = Route53(r53_client=r53_client)
         dns_handler = DNS(config=config, route53=route53)
         trigger_handler = Trigger(config=config, sqs=self.sqs)
+        choice_handler = Choice()
+
         self.handlers: Dict[str, Any] = {
             'restore_database': restore_handler.restore_database,
             'check_restore_database': restore_handler.check_restore_database,
@@ -77,6 +80,7 @@ class BUAControllerHandler:
             'trigger_restore': trigger_handler.trigger_restore,
             'bua_create_invoice_scalar': sql_handler.bua_create_invoice_scalar,
             'bua_initiate_invoice_runs': sql_handler.bua_initiate_invoice_runs,
+            'choice': choice_handler.choice,
         }
 
     def handle_request(self, event):
