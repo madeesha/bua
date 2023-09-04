@@ -1,5 +1,5 @@
 name: Restore Database
-this: 01_restore_database
+this: 010_restore_database
 instance: ''
 type: sqs
 retry_delay: 120
@@ -16,54 +16,54 @@ data:
   rdssecret: "cicd/tst-anstead/rds/bua"
   hosted_zone_id: "Z06477101FOH3N8B2WK6N"
 steps:
-  01_restore_database:
+  010_restore_database:
     action: restore_database
     'on':
       COMPLETE:
-        next: 01_wait_for_restore_database
+        next: 010_wait_for_restore_database
       FAILED:
-        next: 02_destroy_database
+        next: 012_destroy_database
     retries: 1
-  01_wait_for_restore_database:
+  010_wait_for_restore_database:
     action: check_restore_database
     'on':
       COMPLETE:
-        next: 03_reset_rds_password
-  02_destroy_database:
+        next: 030_reset_rds_password
+  012_destroy_database:
     action: destroy_database
     'on':
       COMPLETE:
-        next: 02_wait_for_destroy_database
-  02_wait_for_destroy_database:
+        next: 012_wait_for_destroy_database
+  012_wait_for_destroy_database:
     action: check_destroy_database
     'on':
       COMPLETE:
-        next: 01_restore_database
-  03_reset_rds_password:
+        next: 010_restore_database
+  030_reset_rds_password:
     action: reset_password
     'on':
       COMPLETE:
         delay: 120
-        next: 04_disable_workflow_schedules
-  04_disable_workflow_schedules:
+        next: 040_disable_workflow_schedules
+  040_disable_workflow_schedules:
     action: disable_workflow_schedules
     'on':
       COMPLETE:
-        next: 05_disable_workflow_instances
-  05_disable_workflow_instances:
+        next: 050_disable_workflow_instances
+  050_disable_workflow_instances:
     action: disable_workflow_instances
     'on':
       COMPLETE:
-        next: 06_set_user_passwords
-  06_set_user_passwords:
+        next: 060_set_user_passwords
+  060_set_user_passwords:
     comment: set the user passwords
     action: execute_sql
     args:
       sqlsecret: "cicd/tst-anstead/rds/bua/passwords"
     'on':
       COMPLETE:
-        next: 07_stats_sample_pages
-  07_stats_sample_pages:
+        next: 070_stats_sample_pages
+  070_stats_sample_pages:
     action: stats_sample_pages
     speed: slow
     args:
@@ -72,8 +72,8 @@ steps:
           sample_pages: 1600
     'on':
       COMPLETE:
-        next: 08_scale_down_deployments
-  08_scale_down_deployments:
+        next: 080_scale_down_deployments
+  080_scale_down_deployments:
     comment: kubectl -n core scale --replicas=0 deployment --all
     action: scale_replicas
     args:
@@ -83,8 +83,8 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 09_switch_dns
-  09_switch_dns:
+        next: 090_switch_dns
+  090_switch_dns:
     comment: need to update route53 entries with the rds server endpoint
     action: set_rds_dns_entry
     args:
@@ -94,8 +94,8 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 10_scale_up_workflow
-  10_scale_up_workflow:
+        next: 100_scale_up_workflow
+  100_scale_up_workflow:
     comment: kubectl -n core scale --replicas=3 deployment workflow
     action: scale_replicas
     args:
@@ -105,16 +105,16 @@ steps:
     'on':
       COMPLETE:
         delay: 300
-        next: 11_analyse_statistics
-  11_analyse_statistics:
+        next: 110_analyse_statistics
+  110_analyse_statistics:
     action: core_warm_database_statistics
     args:
       concurrency: 32
     'on':
       COMPLETE:
         delay: 120
-        next: 11_wait_for_analyse_statistics
-  11_wait_for_analyse_statistics:
+        next: 110_wait_for_analyse_statistics
+  110_wait_for_analyse_statistics:
     action: wait_for_workflows
     retry_delay: 300
     args:
@@ -123,16 +123,16 @@ steps:
         - WARM_PARTITION
     'on':
       COMPLETE:
-        next: 12_database_warming
-  12_database_warming:
+        next: 120_database_warming
+  120_database_warming:
     action: core_warm_database_indexes
     args:
       concurrency: 32
     'on':
       COMPLETE:
         delay: 120
-        next: 12_wait_for_database_warming
-  12_wait_for_database_warming:
+        next: 120_wait_for_database_warming
+  120_wait_for_database_warming:
     action: wait_for_workflows
     retry_delay: 300
     args:
@@ -141,35 +141,35 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-  13_utility_profiles:
+  130_utility_profiles:
     action: bua_initiate
     args:
       run_type: Utility
     'on':
       COMPLETE:
         delay: 120
-        next: 13_wait_for_utility_profiles
-  13_wait_for_utility_profiles:
+        next: 130_wait_for_utility_profiles
+  130_wait_for_utility_profiles:
     action: wait_for_empty_site_queues
     retry_delay: 300
     'on':
       COMPLETE:
         delay: 120
-  14_jurisdiction_segments:
+  140_jurisdiction_segments:
     action: bua_initiate
     args:
       run_type: SegmentJurisdictionAvgExclEst
     'on':
       COMPLETE:
         delay: 120
-        next: 14_wait_for_jurisdiction_segments
-  14_wait_for_jurisdiction_segments:
+        next: 140_wait_for_jurisdiction_segments
+  140_wait_for_jurisdiction_segments:
     action: wait_for_empty_site_queues
     retry_delay: 300
     'on':
       COMPLETE:
         delay: 120
-  15_segment_jurisdiction_check:
+  150_segment_jurisdiction_check:
     action: bua_initiate
     args:
       run_type: SegmentJurisdictionCheck
@@ -177,33 +177,33 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 15_wait_for_segment_jurisdiction_check
-  15_wait_for_segment_jurisdiction_check:
+        next: 150_wait_for_segment_jurisdiction_check
+  150_wait_for_segment_jurisdiction_check:
     action: wait_for_empty_site_queues
     retry_delay: 300
     'on':
       COMPLETE:
         delay: 120
-  15_profile_validation:
+  160_profile_validation:
     action: bua_initiate
     args:
       run_type: Validate
     'on':
       COMPLETE:
         delay: 120
-        next: 15_wait_for_profile_validation
-  15_wait_for_profile_validation:
+        next: 160_wait_for_profile_validation
+  160_wait_for_profile_validation:
     action: wait_for_empty_site_queues
     retry_delay: 300
     'on':
       COMPLETE:
         delay: 120
-  16_resolve_variances:
+  170_resolve_variances:
     comment: bua_resolve_variances
     'on':
       COMPLETE:
         delay: 120
-  17_scale_up_meterdata:
+  180_scale_up_meterdata:
     comment: kubectl -n core scale --replicas=6 deployment meterdata
     action: scale_replicas
     args:
@@ -213,7 +213,7 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-  18_execute_micro_scalar:
+  190_execute_micro_scalar:
     comment: Generate micro scalar values
     action: bua_initiate
     speed: slow
@@ -223,14 +223,14 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 18_wait_for_execute_micro_scalar
-  18_wait_for_execute_micro_scalar:
+        next: 190_wait_for_execute_micro_scalar
+  190_wait_for_execute_micro_scalar:
     action: wait_for_empty_site_queues
     retry_delay: 300
     'on':
       COMPLETE:
         delay: 120
-  19_generate_NEM12_files:
+  200_generate_NEM12_files:
     comment: Generate the missing electricity interval reads
     action: bua_initiate
     args:
@@ -239,15 +239,15 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 19_wait_for_generate_NEM12_files_1
-  19_wait_for_generate_NEM12_files_1:
+        next: 200_wait_for_generate_NEM12_files_1
+  200_wait_for_generate_NEM12_files_1:
     action: wait_for_empty_site_queues
     retry_delay: 300
     'on':
       COMPLETE:
         delay: 120
-        next: 19_wait_for_generate_NEM12_files_2
-  19_wait_for_generate_NEM12_files_2:
+        next: 201_wait_for_generate_NEM12_files_2
+  201_wait_for_generate_NEM12_files_2:
     comment: Wait until the aggregation workflows are complete
     action: wait_for_workflows
     retry_delay: 300
@@ -261,19 +261,19 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-  19_generate_missing_elec_basic_reads:
+  210_generate_missing_elec_basic_reads:
     comment: Generate all of the missing electricity basic reads
-  20_generate_missing_gas_reads:
+  220_generate_missing_gas_reads:
     comment: Generate all of the missing gas reads
-  21_invoice_runs:
+  230_invoice_runs:
     comment: Initiate the invoice runs
     action: bua_initiate_invoice_runs
     speed: slow
     'on':
       COMPLETE:
         delay: 120
-        next: 21_wait_for_invoice_runs_1
-  21_wait_for_invoice_runs_1:
+        next: 230_wait_for_invoice_runs_1
+  230_wait_for_invoice_runs_1:
     action: wait_for_workflow_schedules
     args:
       workflow_names:
@@ -281,8 +281,8 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 21_wait_for_invoice_runs_2
-  21_wait_for_invoice_runs_2:
+        next: 231_wait_for_invoice_runs_2
+  231_wait_for_invoice_runs_2:
     comment: Wait until all invoicing runs are complete
     action: wait_for_workflows
     retry_delay: 300
@@ -293,9 +293,9 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-  22_extract_results_to_s3:
+  240_extract_results_to_s3:
     comment: Extract the results of the invoice runs to S3
-  23_scale_down_deployments:
+  250_scale_down_deployments:
     comment: kubectl -n core scale --replicas=0 deployment --all
     args:
       namespace: core
@@ -303,3 +303,5 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+  260_terminate_db_instance:
+    comment: Delete the CF stack that created the database

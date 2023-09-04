@@ -1,4 +1,4 @@
 action: trigger_restore
 args:
-  this: 15_profile_validation
+  this: 130_utility_profiles
   run_date: '2023-08-31'
