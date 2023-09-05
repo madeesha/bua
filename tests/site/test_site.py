@@ -156,7 +156,7 @@ class TestClass:
         assert len(conn.executions) == count
         assert conn.commits == [True]
 
-    @pytest.mark.parametrize('run_type,jurisdiction_name,tni_name,res_bus,stream_type,avg_sum,incl_est,aggregator,filter,identifier_type', [
+    @pytest.mark.parametrize('identifier_type,jurisdiction_name,tni_name,res_bus,stream_type,avg_sum,incl_est,aggregator,filter,identifier', [
         ('SegmentTNIAvgIncl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Average', True, 'AVG', None, 'VIC|NSLP|RES|PRIMARY'),
         ('SegmentTNISumIncl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Sum', True, 'SUM', None, 'VIC|NSLP|RES|PRIMARY'),
         ('SegmentTNIAvgExcl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Average', False, 'AVG', 'IF(SUBSTR(quality', 'VIC|NSLP|RES|PRIMARY'),
@@ -166,8 +166,8 @@ class TestClass:
         ('SegmentJurisdictionAvgExcl', 'VIC', None, 'RES', 'PRIMARY', 'Average', False, 'AVG', 'IF(SUBSTR(quality', 'VIC|RES|PRIMARY'),
         ('SegmentJurisdictionSumExcl', 'VIC', None, 'RES', 'PRIMARY', 'Sum', False, 'SUM', 'IF(SUBSTR(quality', 'VIC|RES|PRIMARY'),
     ])
-    def test_calculate_segment(self, run_type, jurisdiction_name, tni_name, res_bus, stream_type,
-                                                avg_sum, incl_est, aggregator, filter, identifier_type):
+    def test_calculate_segment(self, identifier_type, jurisdiction_name, tni_name, res_bus, stream_type,
+                                                avg_sum, incl_est, aggregator, filter, identifier):
         table = {}
         queue = {}
         conn = Database(rowcount=10)
@@ -175,7 +175,7 @@ class TestClass:
         printer = Printer()
         site.log = printer.print
         site.calculate_profile_segment(
-            run_type=run_type,
+            identifier_type=identifier_type,
             run_date='2023-06-01 00:00:00',
             source_date='2023-06-01 00:00:00',
             jurisdiction_name=jurisdiction_name,
@@ -192,7 +192,7 @@ class TestClass:
             assert filter in conn.executions[2][0]
         assert conn.commits == [True]
         assert len(printer.prints) == 1
-        assert printer.prints[0][0] == f'Imported 10 records for segment {identifier_type} on 2022-06-01'
+        assert printer.prints[0][0] == f'Imported 10 records for segment {identifier} on 2022-06-01'
 
     def test_validate_site_data(self):
         table = {}

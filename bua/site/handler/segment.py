@@ -17,17 +17,11 @@ class BUASiteSegmentHandler:
         self.conn = conn
         self.debug = debug
         self._handler = {
-            'SegmentJurisdictionAvgInclEst': self._handle_segment_jurisdiction_avg_incl_est,
-            'SegmentJurisdictionSumInclEst': self._handle_segment_jurisdiction_sum_incl_est,
-            'SegmentJurisdictionAvgExclEst': self._handle_segment_jurisdiction_avg_excl_est,
-            'SegmentJurisdictionSumExclEst': self._handle_segment_jurisdiction_sum_excl_est,
-            'SegmentTNIAvgInclEst': self._handle_segment_tni_avg_incl_est,
-            'SegmentTNISumInclEst': self._handle_segment_tni_sum_incl_est,
-            'SegmentTNIAvgExclEst': self._handle_segment_tni_avg_excl_est,
-            'SegmentTNISumExclEst': self._handle_segment_tni_sum_excl_est,
+            'SegmentJurisdiction': self._handle_segment_jurisdiction,
+            'SegmentTNI': self._handle_segment_tni,
+            'SegmentJurisdictionCheck': self._handle_segment_jurisdiction_check,
             'NEM12': self._handle_nem12,
             'MicroScalar': self._handle_microscalar,
-            'SegmentJurisdictionCheck': self._handle_segment_jurisdiction_check,
         }
         self._initialise_connection()
 
@@ -58,60 +52,24 @@ class BUASiteSegmentHandler:
                     if run_type in self._handler:
                         self._handler[run_type](run_type, entry, debug)
 
-    def _handle_segment_jurisdiction_avg_incl_est(self, run_type: str, entry: Dict, debug: bool):
+    def _handle_segment_jurisdiction(self, _run_type: str, entry: Dict, debug: bool):
         run_date: str = entry['run_date']
         source_date: str = entry['source_date']
+        identifier_type: str = entry['identifier_type']
+        avg_sum: str = entry['avg_sum']
+        incl_est: bool = entry['incl_est']
         self.calculate_jurisdiction_segment(
-            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=True
+            identifier_type, run_date, source_date, entry, debug=debug, avg_sum=avg_sum, incl_est=incl_est
         )
 
-    def _handle_segment_jurisdiction_sum_incl_est(self, run_type: str, entry: Dict, debug: bool):
+    def _handle_segment_tni(self, _run_type: str, entry: Dict, debug: bool):
         run_date: str = entry['run_date']
         source_date: str = entry['source_date']
-        self.calculate_jurisdiction_segment(
-            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=True
-        )
-
-    def _handle_segment_jurisdiction_avg_excl_est(self, run_type: str, entry: Dict, debug: bool):
-        run_date: str = entry['run_date']
-        source_date: str = entry['source_date']
-        self.calculate_jurisdiction_segment(
-            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=False
-        )
-
-    def _handle_segment_jurisdiction_sum_excl_est(self, run_type: str, entry: Dict, debug: bool):
-        run_date: str = entry['run_date']
-        source_date: str = entry['source_date']
-        self.calculate_jurisdiction_segment(
-            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=False
-        )
-
-    def _handle_segment_tni_avg_incl_est(self, run_type: str, entry: Dict, debug: bool):
-        run_date: str = entry['run_date']
-        source_date: str = entry['source_date']
+        identifier_type: str = entry['identifier_type']
+        avg_sum: str = entry['avg_sum']
+        incl_est: bool = entry['incl_est']
         self.calculate_tni_segment(
-            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=True
-        )
-
-    def _handle_segment_tni_sum_incl_est(self, run_type: str, entry: Dict, debug: bool):
-        run_date: str = entry['run_date']
-        source_date: str = entry['source_date']
-        self.calculate_tni_segment(
-            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=True
-        )
-
-    def _handle_segment_tni_avg_excl_est(self, run_type: str, entry: Dict, debug: bool):
-        run_date: str = entry['run_date']
-        source_date: str = entry['source_date']
-        self.calculate_tni_segment(
-            run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=False
-        )
-
-    def _handle_segment_tni_sum_excl_est(self, run_type: str, entry: Dict, debug: bool):
-        run_date: str = entry['run_date']
-        source_date: str = entry['source_date']
-        self.calculate_tni_segment(
-            run_type, run_date, source_date, entry, debug, avg_sum='Sum', incl_est=False
+            identifier_type, run_date, source_date, entry, debug=debug, avg_sum=avg_sum, incl_est=incl_est
         )
 
     def _handle_nem12(self, run_type: str, entry: Dict, debug: bool):
@@ -136,33 +94,34 @@ class BUASiteSegmentHandler:
         )
         action.execute_microscalar_calculation(run_type, today, run_date, identifier_type, account_id)
 
-    def _handle_segment_jurisdiction_check(self, run_type: str, entry: Dict, debug: bool):
+    def _handle_segment_jurisdiction_check(self, _run_type: str, entry: Dict, debug: bool):
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
         interval_date = entry['interval_date']
         action = Check(queue=self.queue, conn=self.conn, debug=debug)
         action.segment_jurisdiction_check(run_date, identifier_type, interval_date)
 
-    def calculate_jurisdiction_segment(self, run_type, run_date, source_date, entry,
+    def calculate_jurisdiction_segment(self, identifier_type, run_date, source_date, entry,
                                        debug=False, avg_sum='Average', incl_est=True):
         site = SiteSegment(table=self.table, queue=self.queue, conn=self.conn, debug=debug)
         jurisdiction_name = entry['jurisdiction_name']
         res_bus = entry['res_bus']
         stream_type = entry['stream_type']
         interval_date = entry['interval_date']
-        site.calculate_profile_segment(run_type=run_type, run_date=run_date, source_date=source_date,
+        site.calculate_profile_segment(identifier_type=identifier_type, run_date=run_date, source_date=source_date,
                                        jurisdiction_name=jurisdiction_name,
                                        res_bus=res_bus, stream_type=stream_type, interval_date=interval_date,
                                        avg_sum=avg_sum, incl_est=incl_est)
 
-    def calculate_tni_segment(self, run_type, run_date, source_date, entry, debug, avg_sum='Average', incl_est=True):
+    def calculate_tni_segment(self, identifier_type, run_date, source_date, entry,
+                              debug=False, avg_sum='Average', incl_est=True):
         site = SiteSegment(table=self.table, queue=self.queue, conn=self.conn, debug=debug)
         jurisdiction_name = entry['jurisdiction_name']
         tni_name = entry['tni_name']
         res_bus = entry['res_bus']
         stream_type = entry['stream_type']
         interval_date = entry['interval_date']
-        site.calculate_profile_segment(run_type=run_type, run_date=run_date, source_date=source_date,
+        site.calculate_profile_segment(identifier_type=identifier_type, run_date=run_date, source_date=source_date,
                                        jurisdiction_name=jurisdiction_name,
                                        tni_name=tni_name, res_bus=res_bus, stream_type=stream_type,
                                        interval_date=interval_date, avg_sum=avg_sum, incl_est=incl_est)

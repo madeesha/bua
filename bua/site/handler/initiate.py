@@ -25,18 +25,12 @@ class BUASiteInitiateHandler:
         self._handlers = {
             'Utility': self._initiate_site_data_processing,
             'Validate': self._initiate_site_data_processing,
-            'SegmentJurisdictionAvgInclEst': self._initiate_segment_jurisdiction_calculation,
-            'SegmentJurisdictionSumInclEst': self._initiate_segment_jurisdiction_calculation,
-            'SegmentJurisdictionAvgExclEst': self._initiate_segment_jurisdiction_calculation,
-            'SegmentJurisdictionSumExclEst': self._initiate_segment_jurisdiction_calculation,
-            'SegmentTNIAvgInclEst': self._initiate_segment_tni_calculation,
-            'SegmentTNISumInclEst': self._initiate_segment_tni_calculation,
-            'SegmentTNIAvgExclEst': self._initiate_segment_tni_calculation,
-            'SegmentTNISumExclEst': self._initiate_segment_tni_calculation,
+            'SegmentJurisdiction': self._initiate_segment_jurisdiction_calculation,
+            'SegmentTNI': self._initiate_segment_tni_calculation,
+            'SegmentJurisdictionCheck': self._initiate_segment_jurisdiction_check,
             'Requeue': self._initiate_requeue,
             'NEM12': self._initiate_nem12_files,
             'MicroScalar': self._initiate_microscalar,
-            'SegmentJurisdictionCheck': self._initiate_segment_jurisdiction_check,
         }
         self._initialise_connection()
 
@@ -77,6 +71,7 @@ class BUASiteInitiateHandler:
     def _initiate_segment_tni_calculation(self, body, debug, run_type):
         run_date: str = body['run_date']
         source_date: str = body['source_date']
+        identifier_type: str = body['identifier_type']
         site = SegmentTNI(
             table=self.table, queue=self.segment_queue, conn=self.conn,
             debug=debug, batch_size=self.tni_batch_size
@@ -86,12 +81,14 @@ class BUASiteInitiateHandler:
             run_date=run_date,
             start_inclusive=body['start_inclusive'],
             end_exclusive=body['end_exclusive'],
-            source_date=source_date
+            source_date=source_date,
+            identifier_type=identifier_type
         )
 
     def _initiate_segment_jurisdiction_calculation(self, body, debug, run_type):
         run_date: str = body['run_date']
         source_date: str = body['source_date']
+        identifier_type: str = body['identifier_type']
         site = SegmentJurisdiction(
             table=self.table, queue=self.segment_queue, conn=self.conn,
             debug=debug, batch_size=self.jur_batch_size
@@ -101,7 +98,8 @@ class BUASiteInitiateHandler:
             run_date=run_date,
             start_inclusive=body['start_inclusive'],
             end_exclusive=body['end_exclusive'],
-            source_date=source_date
+            source_date=source_date,
+            identifier_type=identifier_type
         )
 
     def _initiate_segment_jurisdiction_check(self, body, debug, run_type):

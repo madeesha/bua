@@ -14,23 +14,23 @@ class SegmentTNI(Action):
         self.check_nem = check_nem
         self.check_aggread = check_aggread
 
-    def initiate_segment_tni_calculation(self, run_type, run_date, start_inclusive, end_exclusive, source_date):
+    def initiate_segment_tni_calculation(self, run_type, run_date, start_inclusive, end_exclusive, source_date, identifier_type):
         """Initiate the calculation of tni profile segments"""
         bodies = []
-        self.auto_exclude_nmis(run_date, run_type, source_date)
+        self.auto_exclude_nmis(run_date, identifier_type, source_date)
         with self.conn.cursor() as cur:
             try:
                 cur.execute(
                     "DELETE FROM UtilityProfileSummary "
                     "WHERE run_date = %s "
                     "AND identifier_type = %s",
-                    (run_date, run_type)
+                    (run_date, identifier_type)
                 )
                 cur.execute(
                     "DELETE FROM UtilityProfileSegment "
                     "WHERE run_date = %s "
                     "AND identifier_type = %s",
-                    (run_date, run_type)
+                    (run_date, identifier_type)
                 )
                 cur.execute(
                     "SELECT DISTINCT jurisdiction_name, tni_name, res_bus, stream_type, interval_date "
@@ -51,12 +51,15 @@ class SegmentTNI(Action):
                     body = {
                         'run_type': run_type,
                         'run_date': run_date,
+                        'identifier_type': identifier_type,
                         'jurisdiction_name': jurisdiction_name,
                         'tni_name': tni_name,
                         'res_bus': res_bus,
                         'stream_type': stream_type,
                         'interval_date': interval_date.strftime('%Y%m%d'),
-                        'source_date': source_date
+                        'source_date': source_date,
+                        'avg_sum': 'Average' if 'Avg' in identifier_type else 'Sum',
+                        'incl_est': 'InclEst' in identifier_type
                     }
                     bodies.append(body)
                     self.send_if_needed(bodies, batch_size=self.batch_size)
@@ -65,7 +68,7 @@ class SegmentTNI(Action):
                 cur.execute(
                     "INSERT INTO UtilityProfileLog (run_date, run_type, source_date, total_entries) "
                     "VALUES (%s,%s,%s,%s)",
-                    (run_date, run_type, source_date, total)
+                    (run_date, identifier_type, source_date, total)
                 )
                 self.log(f'{total} tni profile segment calculations initiated')
                 self.conn.commit()

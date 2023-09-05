@@ -14,7 +14,7 @@ class Action:
     def log(self, *args, **kwargs):
         print(*args, **kwargs)
 
-    def auto_exclude_nmis(self, run_date, run_type, source_date):
+    def auto_exclude_nmis(self, run_date, identifier_type, source_date):
         with self.conn.cursor() as cur:
             try:
                 cur.execute(
@@ -31,7 +31,7 @@ class Action:
                     AND up.identifier_type = 'Utility'
                     AND ud.utility_classification IN ('GENERATR', 'EPROFILE')
                     """,
-                    (run_date, run_type, source_date)
+                    (run_date, identifier_type, source_date)
                 )
                 self.conn.commit()
             except Exception as ex:
@@ -69,10 +69,10 @@ class Action:
                     self.log(f'Sent {len(response["Successful"])} messages')
 
     @staticmethod
-    def record_processing_summary(cur, run_date, run_type, identifier, interval_date, rows_affected):
+    def record_processing_summary(cur, run_date, identifier_type, identifier, interval_date, rows_affected):
         cur.execute(
             "INSERT INTO UtilityProfileSummary "
             "(run_date, identifier_type, identifier, interval_date, total_records) "
             "VALUES (%s, %s, %s, %s, %s)",
-            (run_date, run_type, identifier, interval_date, rows_affected)
+            (run_date, identifier_type, identifier, interval_date, rows_affected)
         )

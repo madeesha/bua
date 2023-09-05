@@ -15,7 +15,7 @@ class SiteSegment(Action):
         self.check_nem = check_nem
         self.check_aggread = check_aggread
 
-    def calculate_profile_segment(self, run_type, run_date, source_date, jurisdiction_name, res_bus, stream_type,
+    def calculate_profile_segment(self, identifier_type, run_date, source_date, jurisdiction_name, res_bus, stream_type,
                                   interval_date,
                                   tni_name=None, avg_sum='Average', incl_est=True):
         """Calculate a profile segment"""
@@ -26,7 +26,7 @@ class SiteSegment(Action):
                     identifier = f'{jurisdiction_name}|{tni_name}|{res_bus}|{stream_type}'
                 else:
                     identifier = f'{jurisdiction_name}|{res_bus}|{stream_type}'
-                SiteSegment._cleanup_existing_segment_records(cur, run_date, run_type, identifier, interval_date)
+                SiteSegment._cleanup_existing_segment_records(cur, run_date, identifier_type, identifier, interval_date)
                 sql = """
                 INSERT INTO UtilityProfileSegment
                 ( run_date, identifier_type, identifier, jurisdiction_name, 
@@ -112,13 +112,13 @@ class SiteSegment(Action):
                     GROUP BY jurisdiction_name, res_bus, stream_type, interval_date
                     """
                 if by_tni:
-                    cur.execute(sql, (run_date, run_type, identifier, source_date, jurisdiction_name, tni_name,
-                                      res_bus, stream_type, interval_date, run_type, run_date))
+                    cur.execute(sql, (run_date, identifier_type, identifier, source_date, jurisdiction_name, tni_name,
+                                      res_bus, stream_type, interval_date, identifier_type, run_date))
                 else:
-                    cur.execute(sql, (run_date, run_type, identifier, source_date, jurisdiction_name,
-                                      res_bus, stream_type, interval_date, run_type, run_date))
+                    cur.execute(sql, (run_date, identifier_type, identifier, source_date, jurisdiction_name,
+                                      res_bus, stream_type, interval_date, identifier_type, run_date))
                 rows_affected = cur.rowcount
-                Action.record_processing_summary(cur, run_date, run_type, identifier, interval_date,
+                Action.record_processing_summary(cur, run_date, identifier_type, identifier, interval_date,
                                                 rows_affected)
                 self.log('Imported', rows_affected, 'records for segment', identifier, 'on', interval_date)
                 self.conn.commit()
