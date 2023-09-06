@@ -1,7 +1,5 @@
 name: Restore Database
 this: 000_restore_database
-instance: ''
-type: sqs
 retry_delay: 120
 data:
   domain: cmil2mssslzz.ap-southeast-2.rds.amazonaws.com
@@ -404,9 +402,9 @@ steps:
     action: bua_initiate_invoice_runs
     speed: slow
     args:
-      num_batches: 40
-      concurrent_batches: 2
-      schedule_gap: 10
+      num_batches: 80
+      concurrent_batches: 4
+      schedule_gap: 15
       min_days: 1
     'on':
       COMPLETE:

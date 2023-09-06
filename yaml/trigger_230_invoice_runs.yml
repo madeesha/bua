@@ -1,4 +1,4 @@
 action: trigger_restore
 args:
   this: 230_invoice_runs
-  run_date: '2023-08-31'
+  run_date: '2023-09-01'
