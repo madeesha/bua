@@ -1,15 +1,28 @@
 {
   "Comment": "BUA Controller",
-  "StartAt": "call_controller",
+  "StartAt": "next_state",
   "States": {
-    "call_controller": {
+    "call_fast_controller": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "FunctionName": "${ControllerFunction}",
+        "FunctionName": "${FastControllerFunction}",
         "Payload.$": "$"
       },
-      "TimeoutSeconds": 60,
+      "TimeoutSeconds": 180,
+      "InputPath": "$",
+      "ResultPath": "$",
+      "OutputPath": "$",
+      "Next": "next_state"
+    },
+    "call_slow_controller": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlowControllerFunction}",
+        "Payload.$": "$"
+      },
+      "TimeoutSeconds": 900,
       "InputPath": "$",
       "ResultPath": "$",
       "OutputPath": "$",
@@ -21,7 +34,7 @@
         {
           "Variable": "$.next",
           "StringEquals": "",
-          "Next": "restore_done"
+          "Next": "execution_done"
         },
         {
           "Variable": "$.delay",
@@ -37,12 +50,29 @@
       "Next": "next_transition"
     },
     "next_transition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.speed",
+          "StringEquals": "slow",
+          "Next": "next_transition_slow"
+        }
+      ],
+      "Default": "next_transition_fast"
+    },
+    "next_transition_fast": {
       "Type": "Pass",
       "Result": "$.next",
       "ResultPath": "$.this",
-      "Next": "call_controller"
+      "Next": "call_fast_controller"
     },
-    "restore_done": {
+    "next_transition_slow": {
+      "Type": "Pass",
+      "Result": "$.next",
+      "ResultPath": "$.this",
+      "Next": "call_slow_controller"
+    },
+    "execution_done": {
       "Type": "Succeed"
     }
   }

@@ -31,6 +31,7 @@ class BUANextHandler:
                             self._schedule_event(event)
         else:
             self._schedule_event(event)
+            return event
 
     def _fetch_s3_object(self, record):
         bucket = record['s3']['bucket']['name']
@@ -47,17 +48,22 @@ class BUANextHandler:
             speed = event.get('speed', 'fast').lower()
         else:
             schedule_name = event['name'].lower().replace(' ', '_')
-            next_step = event['this']
-            speed = event['steps'][next_step].get('speed', 'fast').lower()
-        key = f'schedule/{speed}/{schedule_name}.yml'
-        body = yaml.dump(event).encode('utf-8')
-        md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
-        print('Schedule event', key)
-        self.s3.put_object(
-            Bucket=self.config['bucket_name'],
-            Key=key,
-            ContentMD5=md5sum,
-            ContentType='text/plain',
-            Body=body,
-            ContentLength=len(body)
-        )
+            if 'speed' in event:
+                speed = event['speed']
+            else:
+                next_step = event['this']
+                speed = event['steps'][next_step].get('speed', 'fast').lower()
+        event['speed'] = speed
+        if event.get('type', 'sqs') == 'sqs':
+            key = f'schedule/{speed}/{schedule_name}.yml'
+            body = yaml.dump(event).encode('utf-8')
+            md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
+            print('Schedule S3 event', key)
+            self.s3.put_object(
+                Bucket=self.config['bucket_name'],
+                Key=key,
+                ContentMD5=md5sum,
+                ContentType='text/plain',
+                Body=body,
+                ContentLength=len(body)
+            )

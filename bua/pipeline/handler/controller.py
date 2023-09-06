@@ -98,12 +98,10 @@ class BUAControllerHandler:
                         if 'Records' in body:
                             self.handle_request(body)
                         else:
-                            if 'type' not in body:
-                                body['type'] = 'sqs'
+                            body['type'] = body.get('type', 'sqs')
                             self._handle_event(body)
         else:
-            if 'type' not in event:
-                event['type'] = 'sqs'
+            event['type'] = event.get('type', 'sqs')
             self._handle_event(event)
             return event
 
@@ -167,14 +165,16 @@ class BUAControllerHandler:
 
     def _handle_step(self, event, name, this, step):
         event['next'] = ''
+        event['speed'] = 'fast'
+        event['delay'] = 0
         data = self._get_data(event)
         self._process_args(data, step)
         instance = self._determine_instance(event)
         log_item = self._log_processing_start(instance, name, this)
         reason, status = self._perform_action(data, log_item, step, this)
         status = self._check_retries_exceeded(status, step, log_item)
+        status, reason = self._determine_next_step(event, log_item, status, step, reason)
         self._record_result(event, log_item, reason, status, this)
-        self._determine_next_step(event, log_item, status, step)
         self.ddb_table.put_item(Item=log_item)
         if status == 'ABORT':
             raise Exception(reason)
@@ -276,24 +276,31 @@ class BUAControllerHandler:
         data = event['data']
         return data
 
-    def _determine_next_step(self, event, log_item, status, step):
+    def _determine_next_step(self, event, log_item, status, step, reason):
         if 'on' in step:
             if status in step['on']:
                 if 'next' in step['on'][status]:
                     event['next'] = step['on'][status]['next']
                     event['delay'] = int(step['on'][status].get('delay', 0))
-                    self._log_next_step(event, log_item)
+                    if event['next'] in event['steps']:
+                        event['speed'] = event['steps'][event['next']].get('speed', 'fast')
+                        self._log_next_step(event, log_item)
+                    else:
+                        status = 'ABORT'
+                        reason = f"Misconfigured next step {event['next']}"
+                        self._no_next_step(event, log_item)
                 else:
                     self._no_next_step(event, log_item)
-                return
+                return status, reason
         if status == 'RETRY':
             event['next'] = event['this']
             event['delay'] = int(step.get('retry_delay', event.get('retry_delay', 60)))
             self._log_next_step(event, log_item)
-            return
+            return status, reason
         if status != 'ABORT':
             log_item['WARNING'] = f'Unhandled state transition {status}'
         self._no_next_step(event, log_item)
+        return status, reason
 
     def _check_retries_exceeded(self, status, step, log_item):
         if status not in ('COMPLETE', 'ABORT'):

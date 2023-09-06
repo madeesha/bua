@@ -18,6 +18,9 @@ class SQSClientStub:
         for message in self.messages:
             assert message['QueueUrl'] != self.failure_queue_url
 
+    def assert_no_messages(self):
+        assert len(self.messages) == 0
+
     def assert_retry_status(self):
         for message in self.messages:
             body = yaml.load(message['MessageBody'], yaml.Loader)
