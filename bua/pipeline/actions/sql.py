@@ -83,6 +83,8 @@ class SQL:
     def bua_initiate_invoice_runs(self, step, data):
         run_date = data.get('run_date')
         aws_account = self.config['aws_account']
+        schedule_gap = data['schedule_gap']
+        min_days = data['min_days']
         num_batches = data.get('num_batches')
         concurrent_batches = data.get('concurrent_batches')
         try:
@@ -105,8 +107,8 @@ class SQL:
                         )
                     con.commit()
                     cur.execute(
-                        "CALL bua_initiate_invoice_runs(%s, %s)",
-                        (run_date, aws_account)
+                        "CALL bua_initiate_invoice_runs(%s, %s, %s, %s)",
+                        (run_date, aws_account, schedule_gap, min_days)
                     )
                     con.commit()
             return "COMPLETE", f'BUA initiate invoice runs, max wfi {workflow_instance_id}'

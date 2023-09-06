@@ -405,7 +405,9 @@ steps:
     speed: slow
     args:
       num_batches: 40
-      concurrent_batches: 4
+      concurrent_batches: 2
+      schedule_gap: 10
+      min_days: 1
     'on':
       COMPLETE:
         delay: 120
