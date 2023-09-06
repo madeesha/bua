@@ -403,6 +403,9 @@ steps:
     comment: Initiate the invoice runs
     action: bua_initiate_invoice_runs
     speed: slow
+    args:
+      num_batches: 40
+      concurrent_batches: 4
     'on':
       COMPLETE:
         delay: 120
