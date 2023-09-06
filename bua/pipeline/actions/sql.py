@@ -83,10 +83,11 @@ class SQL:
     def bua_initiate_invoice_runs(self, step, data):
         run_date = data.get('run_date')
         aws_account = self.config['aws_account']
-        schedule_gap = data['schedule_gap']
-        min_days = data['min_days']
-        num_batches = data.get('num_batches')
-        concurrent_batches = data.get('concurrent_batches')
+        schedule_gap = data.get('schedule_gap', 15)
+        min_days = data.get('min_days', 1)
+        num_batches = data.get('num_batches', 80)
+        concurrent_batches = data.get('concurrent_batches', 4)
+        num_groups = data.get('num_groups', 8)
         try:
             con = self._connect(data)
             with con:
@@ -94,21 +95,19 @@ class SQL:
                 with cur:
                     workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
                     con.commit()
-                    if num_batches is not None:
-                        cur.execute(
-                            "UPDATE GlobalSetting SET value = %s WHERE name = %s",
-                            (num_batches, "INVRUN_BATCHES")
-                        )
-                        con.commit()
-                    if concurrent_batches is not None:
-                        cur.execute(
-                            "UPDATE GlobalSetting SET value = %s WHERE name = %s",
-                            (concurrent_batches, "INVRUN_CONCURRENT_BATCH")
-                        )
+                    cur.execute(
+                        "UPDATE GlobalSetting SET value = %s WHERE name = %s",
+                        (num_batches, "INVRUN_BATCHES")
+                    )
                     con.commit()
                     cur.execute(
-                        "CALL bua_initiate_invoice_runs(%s, %s, %s, %s)",
-                        (run_date, aws_account, schedule_gap, min_days)
+                        "UPDATE GlobalSetting SET value = %s WHERE name = %s",
+                        (concurrent_batches, "INVRUN_CONCURRENT_BATCH")
+                    )
+                    con.commit()
+                    cur.execute(
+                        "CALL bua_initiate_invoice_runs(%s, %s, %s, %s, %s)",
+                        (run_date, aws_account, schedule_gap, min_days, num_groups)
                     )
                     con.commit()
             return "COMPLETE", f'BUA initiate invoice runs, max wfi {workflow_instance_id}'

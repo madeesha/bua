@@ -402,6 +402,7 @@ steps:
     action: bua_initiate_invoice_runs
     speed: slow
     args:
+      num_groups: 8
       num_batches: 80
       concurrent_batches: 4
       schedule_gap: 15
