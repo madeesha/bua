@@ -243,6 +243,7 @@ Resources:
           nextQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-next-queue" ] ]
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-failure-queue" ] ]
           awsRegion: !Ref "AWS::Region"
+          awsAccount: !Ref "AWS::AccountId"
       Code:
         ZipFile: |
           import os
@@ -290,6 +291,7 @@ Resources:
               'cluster': os.environ['className'],
               'env': os.environ['environmentName'],
               'region': os.environ['awsRegion'],
+              'aws_account': os.environ['awsAccount'],
               'next_queue_url': os.environ['nextQueueURL'],
               'failure_queue_url': os.environ['failureQueueURL'],
               'bucket_name': os.environ['bucketName']
@@ -343,6 +345,7 @@ Resources:
           nextQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-next-queue" ] ]
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-failure-queue" ] ]
           awsRegion: !Ref "AWS::Region"
+          awsAccount: !Ref "AWS::AccountId"
       Code:
         ZipFile: |
           import os
@@ -390,6 +393,7 @@ Resources:
               'cluster': os.environ['className'],
               'env': os.environ['environmentName'],
               'region': os.environ['awsRegion'],
+              'aws_account': os.environ['awsAccount'],
               'next_queue_url': os.environ['nextQueueURL'],
               'failure_queue_url': os.environ['failureQueueURL'],
               'bucket_name': os.environ['bucketName']

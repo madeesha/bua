@@ -82,6 +82,7 @@ class SQL:
 
     def bua_initiate_invoice_runs(self, step, data):
         run_date = data.get('run_date')
+        aws_account = self.config['aws_account']
         try:
             con = self._connect(data)
             with con:
@@ -90,8 +91,8 @@ class SQL:
                     workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
                     con.commit()
                     cur.execute(
-                        "CALL bua_initiate_invoice_runs(%s, NULL)",
-                        (run_date,)
+                        "CALL bua_initiate_invoice_runs(%s, %s)",
+                        (run_date, aws_account)
                     )
                     con.commit()
             return "COMPLETE", f'BUA initiate invoice runs, max wfi {workflow_instance_id}'
