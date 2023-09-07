@@ -444,9 +444,11 @@ steps:
         next: 234_wait_for_invoice_runs
       FAILED:
         next: 233_reschedule_failed_workflows
+      ONHOLD:
+        comment: Stop processing
   233_reschedule_failed_workflows:
     comment: Reschedule any failed workflows
-    retries: 5
+    retries: 1
     action: resubmit_failed_workflows
     retry_delay: 120
     args:

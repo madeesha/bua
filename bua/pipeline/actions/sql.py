@@ -251,7 +251,7 @@ class SQL:
                             if 'ERROR' in row['status']:
                                 return "FAILED", f'{row["total"]} {workflow_name} workflow instances in ERROR status'
                             if 'HOLD' in row['status']:
-                                return "FAILED", f'{row["total"]} {workflow_name} workflow instances in HOLD status'
+                                return "ONHOLD", f'{row["total"]} {workflow_name} workflow instances in HOLD status'
             return "COMPLETE", f'No workflow instances in NEW/READY/INPROG remain'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):

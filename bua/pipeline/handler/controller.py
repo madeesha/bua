@@ -172,9 +172,10 @@ class BUAControllerHandler:
         self._process_args(data, step)
         instance = self._determine_instance(event)
         log_item = self._log_processing_start(instance, name, this)
-        reason, status = self._perform_action(data, log_item, step, this)
-        status = self._check_retries_exceeded(status, step, log_item)
-        status, reason = self._determine_next_step(event, log_item, status, step, reason)
+        status, reason = self._check_retries_exceeded(step)
+        if status == 'OK':
+            reason, status = self._perform_action(data, log_item, step, this)
+            status, reason = self._determine_next_step(event, log_item, status, step, reason)
         self._record_result(event, log_item, reason, status, this)
         self.ddb_table.put_item(Item=log_item)
         if status == 'ABORT':
@@ -303,16 +304,17 @@ class BUAControllerHandler:
         self._no_next_step(event, log_item)
         return status, reason
 
-    def _check_retries_exceeded(self, status, step, log_item):
-        if status not in ('COMPLETE', 'ABORT', 'TERMINATE'):
-            if 'retries' in step:
-                retries = int(step['retries'])
-                if retries > 0:
-                    step['retries'] = retries - 1
-                else:
-                    status = 'TERMINATE'
-                    log_item['WARNING'] = f'Retries exceeded'
-        return status
+    def _check_retries_exceeded(self, step):
+        status = 'OK'
+        reason = None
+        if 'retries' in step:
+            retries = int(step['retries'])
+            if retries > 0:
+                step['retries'] = retries - 1
+            else:
+                status = 'TERMINATE'
+                reason = f'Retries exceeded'
+        return status, reason
 
     def _log_next_step(self, event, log_item):
         if len(event['next']) > 0:
