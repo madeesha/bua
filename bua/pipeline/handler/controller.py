@@ -66,6 +66,7 @@ class BUAControllerHandler:
             'core_warm_database_statistics': sql_handler.core_warm_database_statistics,
             'core_warm_database_indexes': sql_handler.core_warm_database_indexes,
             'wait_for_workflows': sql_handler.wait_for_workflows,
+            'resubmit_failed_workflows': sql_handler.resubmit_failed_workflows,
             'wait_for_workflow_schedules': sql_handler.wait_for_workflow_schedules,
             'stats_sample_pages': sql_handler.stats_sample_pages,
             'get_max_workflow_instance': sql_handler.get_max_workflow_instance,
@@ -286,7 +287,7 @@ class BUAControllerHandler:
                         event['speed'] = event['steps'][event['next']].get('speed', 'fast')
                         self._log_next_step(event, log_item)
                     else:
-                        status = 'ABORT'
+                        status = 'TERMINATE'
                         reason = f"Misconfigured next step {event['next']}"
                         self._no_next_step(event, log_item)
                 else:
@@ -297,19 +298,19 @@ class BUAControllerHandler:
             event['delay'] = int(step.get('retry_delay', event.get('retry_delay', 60)))
             self._log_next_step(event, log_item)
             return status, reason
-        if status != 'ABORT':
+        if status not in ('ABORT', 'TERMINATE'):
             log_item['WARNING'] = f'Unhandled state transition {status}'
         self._no_next_step(event, log_item)
         return status, reason
 
     def _check_retries_exceeded(self, status, step, log_item):
-        if status not in ('COMPLETE', 'ABORT'):
+        if status not in ('COMPLETE', 'ABORT', 'TERMINATE'):
             if 'retries' in step:
                 retries = int(step['retries'])
                 if retries > 0:
                     step['retries'] = retries - 1
                 else:
-                    status = 'ABORT'
+                    status = 'TERMINATE'
                     log_item['WARNING'] = f'Retries exceeded'
         return status
 

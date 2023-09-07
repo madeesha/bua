@@ -31,6 +31,7 @@ steps:
         next: 011_restore_database
   010_restore_database:
     comment: MySQL 8.0 restore
+    retries: 1
     action: restore_database
     args:
       instance_class: DBInstanceClassR6i
@@ -40,9 +41,9 @@ steps:
         next: 010_wait_for_restore_database
       FAILED:
         next: 012_destroy_database
-    retries: 1
   011_restore_database:
     comment: MySQL 5.7 restore
+    retries: 1
     action: restore_database
     args:
       instance_class: DBInstanceClassR5
@@ -52,7 +53,6 @@ steps:
         next: 011_wait_for_restore_database
       FAILED:
         next: 012_destroy_database
-    retries: 1
   010_wait_for_restore_database:
     comment: MySQL 8.0 restore
     action: check_restore_database
@@ -410,8 +410,8 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 230_wait_for_invoice_runs_1
-  230_wait_for_invoice_runs_1:
+        next: 230_wait_for_invoice_runs
+  230_wait_for_invoice_runs:
     action: wait_for_workflow_schedules
     args:
       workflow_names:
@@ -419,18 +419,67 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 231_wait_for_invoice_runs_2
-  231_wait_for_invoice_runs_2:
+        next: 231_wait_for_invoice_runs
+  231_wait_for_invoice_runs:
+    comment: Wait until all invoicing runs are complete
+    action: wait_for_workflows
+    retry_delay: 120
+    args:
+      workflow_names:
+        - GENERATE_ILI
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 232_wait_for_invoice_runs
+  232_wait_for_invoice_runs:
     comment: Wait until all invoicing runs are complete
     action: wait_for_workflows
     retry_delay: 120
     args:
       workflow_names:
         - RUN_INVOICE_BATCH
-        - GENERATE_ILI
     'on':
       COMPLETE:
         delay: 120
+        next: 234_wait_for_invoice_runs
+      FAILED:
+        next: 233_reschedule_failed_workflows
+  233_reschedule_failed_workflows:
+    comment: Reschedule any failed workflows
+    retries: 2
+    action: resubmit_failed_workflows
+    retry_delay: 120
+    args:
+      workflow_names:
+        - RUN_INVOICE_BATCH
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 232_wait_for_invoice_runs
+  234_wait_for_invoice_runs:
+    comment: Wait until all invoicing runs are complete
+    action: wait_for_workflows
+    retry_delay: 120
+    args:
+      workflow_names:
+        - INVOICEGEN
+    'on':
+      COMPLETE:
+        delay: 120
+      FAILED:
+        next: 235_reschedule_failed_workflows
+  235_reschedule_failed_workflows:
+    comment: Reschedule any failed workflows
+    retries: 1
+    action: resubmit_failed_workflows
+    retry_delay: 120
+    args:
+      workflow_names:
+        - INVOICEGEN
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 234_wait_for_invoice_runs
   240_extract_results_to_s3:
     comment: Extract the results of the invoice runs to S3
   250_scale_down_deployments:

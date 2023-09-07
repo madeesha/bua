@@ -258,6 +258,35 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
+    def resubmit_failed_workflows(self, step, data):
+        workflow_names = data['workflow_names']
+        workflow_instance_id = int(data.get('workflow_instance_id', 0))
+        try:
+            total = 0
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    for workflow_name in workflow_names:
+                        cur.execute("SELECT id FROM Workflows WHERE name = %s", (workflow_name,))
+                        workflow_id = int(cur.fetchall()[0]['id'])
+                        cur.execute(
+                            "UPDATE WorkflowInstance "
+                            "SET status = 'NEW' "
+                            "WHERE status = 'ERROR' "
+                            "AND workflow_id = %s "
+                            "AND id > %s ",
+                            (workflow_id, workflow_instance_id)
+                        )
+                        row_count = con.affected_rows()
+                        total += row_count
+                        print(f'Resubmitted {row_count} {workflow_name} workflow instances')
+            return "COMPLETE", f'Resubmitted {total} workflow instances'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def wait_for_workflow_schedules(self, step, data):
         workflow_names = data['workflow_names']
         try:
