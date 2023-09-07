@@ -404,8 +404,8 @@ steps:
     args:
       num_groups: 15
       num_batches: 90
-      concurrent_batches: 3
-      schedule_gap: 5
+      concurrent_batches: 1
+      schedule_gap: 1
       min_days: 1
     'on':
       COMPLETE:
@@ -446,7 +446,7 @@ steps:
         next: 233_reschedule_failed_workflows
   233_reschedule_failed_workflows:
     comment: Reschedule any failed workflows
-    retries: 2
+    retries: 5
     action: resubmit_failed_workflows
     retry_delay: 120
     args:
