@@ -255,6 +255,10 @@ steps:
     'on':
       COMPLETE:
         next: 120_database_warming
+      FAILED:
+        comment: Stop processing
+      ONHOLD:
+        comment: Stop processing
   120_database_warming:
     action: core_warm_database_indexes
     args:
@@ -272,6 +276,10 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+      FAILED:
+        comment: Stop processing
+      ONHOLD:
+        comment: Stop processing
   130_utility_profiles:
     action: bua_initiate
     args:
@@ -393,6 +401,10 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+      FAILED:
+        comment: Stop processing
+      ONHOLD:
+        comment: Stop processing
   210_generate_missing_elec_basic_reads:
     comment: Generate all of the missing electricity basic reads
   220_generate_missing_gas_reads:
@@ -431,6 +443,10 @@ steps:
       COMPLETE:
         delay: 120
         next: 232_wait_for_invoice_runs
+      FAILED:
+        comment: Stop processing
+      ONHOLD:
+        comment: Stop processing
   232_wait_for_invoice_runs:
     comment: Wait until all invoicing runs are complete
     action: wait_for_workflows
@@ -470,6 +486,8 @@ steps:
         delay: 120
       FAILED:
         next: 235_reschedule_failed_workflows
+      ONHOLD:
+        comment: Stop processing
   235_reschedule_failed_workflows:
     comment: Reschedule any failed workflows
     retries: 1
