@@ -409,6 +409,16 @@ steps:
     comment: Generate all of the missing electricity basic reads
   220_generate_missing_gas_reads:
     comment: Generate all of the missing gas reads
+  230_prepare_invoice_runs:
+    action: execute_sql
+    args:
+      sql:
+        - "UPDATE Workflows SET priority = 'XHIGH' WHERE name = 'GENERATE_ILI'"
+        - "UPDATE Workflows SET priority = 'HIGH' WHERE name = 'RUN_INVOICE_BATCH'"
+        - "UPDATE Workflows SET priority = 'NORMAL' WHERE name = 'INVOICEGEN'"
+    'on':
+      COMPLETE:
+        next: 230_invoice_runs
   230_invoice_runs:
     comment: Initiate the invoice runs
     action: bua_initiate_invoice_runs
