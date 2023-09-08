@@ -426,7 +426,7 @@ steps:
     args:
       num_groups: 16
       num_batches: 90
-      concurrent_batches: 9
+      concurrent_batches: 18
       schedule_gap: 1
       min_days: 1
     'on':
