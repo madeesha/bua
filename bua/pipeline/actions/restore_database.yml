@@ -403,8 +403,8 @@ steps:
     speed: slow
     args:
       num_groups: 16
-      num_batches: 2
-      concurrent_batches: 1
+      num_batches: 90
+      concurrent_batches: 9
       schedule_gap: 1
       min_days: 1
     'on':
