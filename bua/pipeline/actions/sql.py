@@ -225,6 +225,7 @@ class SQL:
     def wait_for_workflows(self, step, data):
         workflow_names = data['workflow_names']
         workflow_instance_id = int(data.get('workflow_instance_id', 0))
+        acceptable_error_rate = int(data.get('acceptable_error_rate', 0))
         try:
             con = self._connect(data)
             with con:
@@ -241,18 +242,23 @@ class SQL:
                             "GROUP BY status",
                             (workflow_id, workflow_instance_id)
                         )
-                        for row in cur.fetchall():
-                            if 'NEW' in row['status']:
-                                return "RETRY", f'{row["total"]} {workflow_name} workflow instances in NEW status'
-                            if 'READY' in row['status']:
-                                return "RETRY", f'{row["total"]} {workflow_name} workflow instances in READY status'
-                            if 'INPROG' in row['status']:
-                                return "RETRY", f'{row["total"]} {workflow_name} workflow instances in INPROG status'
-                            if 'ERROR' in row['status']:
-                                return "FAILED", f'{row["total"]} {workflow_name} workflow instances in ERROR status'
-                            if 'HOLD' in row['status']:
-                                return "ONHOLD", f'{row["total"]} {workflow_name} workflow instances in HOLD status'
-            return "COMPLETE", f'No workflow instances in NEW/READY/INPROG remain'
+                        results = {row['status']: row['total'] for row in cur.fetchall()}
+                        if 'NEW' in results:
+                            return "RETRY", f'{results["NEW"]} {workflow_name} workflows in NEW status'
+                        if 'READY' in results:
+                            return "RETRY", f'{results["READY"]} {workflow_name} workflows in READY status'
+                        if 'INPROG' in results:
+                            return "RETRY", f'{results["INPROG"]} {workflow_name} workflows in INPROG status'
+                        if 'ERROR' in results:
+                            total_errors = results.get('ERROR', 0)
+                            total_done = results.get('DONE', 0)
+                            total_instances = total_done + total_errors
+                            acceptable_errors = total_instances * acceptable_error_rate / 100
+                            if total_errors > acceptable_errors:
+                                return "FAILED", f'{results["ERROR"]} {workflow_name} workflows in ERROR status'
+                        if 'HOLD' in results:
+                            return "ONHOLD", f'{results["HOLD"]} {workflow_name} workflows in HOLD status'
+            return "COMPLETE", f'No workflows in NEW/READY/INPROG remain'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
                 return "RETRY", f'{e}'

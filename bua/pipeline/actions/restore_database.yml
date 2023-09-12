@@ -489,6 +489,7 @@ steps:
     action: wait_for_workflows
     retry_delay: 120
     args:
+      acceptable_error_rate: 1
       workflow_names:
         - INVOICEGEN
     'on':
