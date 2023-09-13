@@ -1,0 +1,3 @@
+action: trigger_restore
+args:
+  this: 260_scale_down_nodegroup

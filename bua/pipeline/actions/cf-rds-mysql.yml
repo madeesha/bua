@@ -112,7 +112,10 @@ Mappings:
 Conditions:
   isProduction: !Equals
     - !Ref EnvironmentName
-    - 'prd'    
+    - 'prd'
+  IsOrWasReplica: !Equals
+    - !Ref WasReplica
+    - 'Yes'
   HasReplicaReference: !Not
     - !Equals
       - !Ref ReadReplicaOf
@@ -137,38 +140,14 @@ Conditions:
           - !Ref MySQLVersion
       - '0'
   WasReadReplica: !Or
-    - !Equals
-      - !Ref WasReplica
-      - 'Yes'
-    - !Not
-      - !Equals
-        - !Ref ReadReplicaOf
-        - ''
+    - !Condition IsOrWasReplica
+    - !Condition HasReplicaReference
   WasReadReplicaOrSnapshot: !Or
-      - !Equals
-        - !Ref WasReplica
-        - 'Yes'
-      - !Not
-        - !Equals
-          - !Ref ReadReplicaOf
-          - ''
-      - !Not
-        - !Equals
-          - !Ref SnapshotIdentifier
-          - ''
+    - !Condition IsOrWasReplica
+    - !Condition HasReplicaReference
+    - !Condition HasSnapshotIdentifier
   WasNotReadReplicaOrSnapshot: !Not
-    - !Or
-      - !Equals
-        - !Ref WasReplica
-        - 'Yes'
-      - !Not
-        - !Equals
-          - !Ref ReadReplicaOf
-          - ''
-      - !Not
-        - !Equals
-          - !Ref SnapshotIdentifier
-          - ''
+    - !Condition WasReadReplicaOrSnapshot
 
 Resources:
 

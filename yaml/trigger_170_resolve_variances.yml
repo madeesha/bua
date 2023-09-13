@@ -1,4 +1,4 @@
 action: trigger_restore
 args:
-  this: 230_prepare_invoice_runs
+  this: 170_resolve_variances
   run_date: '2023-09-01'

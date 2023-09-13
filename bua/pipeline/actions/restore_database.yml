@@ -243,7 +243,6 @@ steps:
         comment: Failed to scale node group
       COMPLETE:
         delay: 300
-        next: 102_scale_up_workflow
   101_wait_for_scale_up_nodegroup:
     action: wait_for_scale_nodegroup
     'on':
@@ -253,8 +252,7 @@ steps:
         comment: Failed to scale node group
       COMPLETE:
         delay: 300
-        next: 102_scale_up_workflow
-  102_scale_up_workflow:
+  105_scale_up_workflow:
     comment: kubectl -n core scale --replicas=3 deployment workflow
     action: scale_replicas
     args:
@@ -264,7 +262,6 @@ steps:
     'on':
       COMPLETE:
         delay: 300
-        next: 110_analyse_statistics
   110_analyse_statistics:
     action: core_warm_database_statistics
     args:

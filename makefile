@@ -42,8 +42,17 @@ switch-dns-cli:
 
 # Trigger Restore Pipeline
 
-010_restore_database:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_010_restore.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+000_restore_database:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_000_restore.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
+100_scale_up_nodegroup:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_100_scale_up_nodegroup.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
+105_scale_up_workflow:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_105_scale_up_workflow.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
+110_analyse_statistics:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_110_analyse_statistics.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 130_utility_profiles:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_130_utility_profiles.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
@@ -57,6 +66,12 @@ switch-dns-cli:
 160_profile_validation:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_160_validation.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
+170_resolve_variances:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_170_resolve_variances.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
+180_scale_up_meterdata:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_180_scale_up_meterdata.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
 190_execute_micro_scalar:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_190_micro_scalar.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
@@ -65,6 +80,12 @@ switch-dns-cli:
 
 230_invoice_runs:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_230_invoice_runs.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
+250_scale_down_deployments:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_250_scale_down_deployments.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
+260_scale_down_nodegroup:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_260_scale_down_nodegroup.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 # Upgrade Steps
 

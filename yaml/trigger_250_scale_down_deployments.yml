@@ -1,0 +1,3 @@
+action: trigger_restore
+args:
+  this: 250_scale_down_deployments
