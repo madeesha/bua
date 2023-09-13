@@ -82,6 +82,8 @@ class BUAControllerHandler:
             'bua_create_invoice_scalar': sql_handler.bua_create_invoice_scalar,
             'bua_initiate_invoice_runs': sql_handler.bua_initiate_invoice_runs,
             'choice': choice_handler.choice,
+            'scale_nodegroup': kubectl_handler.scale_nodegroup,
+            'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup,
         }
 
     def handle_request(self, event):

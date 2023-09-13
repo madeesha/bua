@@ -148,3 +148,52 @@ class KubeCtl:
                 deployment.spec.replicas = 0
                 apps_api.patch_namespaced_deployment(name=name, namespace=namespace, body=deployment)
         return "COMPLETE", f"{','.join(deployments)} scaled down to 0 replicas"
+
+    def scale_nodegroup(self, step, data):
+        cluster_name = data['cluster_name']
+        node_group_name = data['node_group_name']
+        min_size = data['min_size']
+        max_size = data['max_size']
+        desired_size = data['desired_size']
+        response = self.eks.update_nodegroup_config(
+            clusterName=cluster_name,
+            nodeGroupName=node_group_name,
+            scalingConfig={
+                'minSize': min_size,
+                'maxSize': max_size,
+                'desiredSize': desired_size
+            }
+        )
+        print(response)
+        data['eks_update_id'] = response['update']['id']
+        status = response['update']['status']
+        if 'InProgress' == status:
+            return "RUNNING", f'Update nodegroup in progress'
+        if 'Failed' == status:
+            return "FAILED", f'Update nodegroup failed'
+        if 'Cancelled' == status:
+            return "FAILED", f'Update nodegroup was cancelled'
+        if 'Successful' == status:
+            return "COMPLETE", f'Updated nodegroup configuration'
+        return "TERMINATE", f'Unknown status {response["update"]["status"]}'
+
+    def wait_for_scale_nodegroup(self, step, data):
+        cluster_name = data['cluster_name']
+        node_group_name = data['node_group_name']
+        eks_update_id = data['eks_update_id']
+        response = self.eks.describe_update(
+            name=cluster_name,
+            updateId=eks_update_id,
+            nodegroupName=node_group_name
+        )
+        print(response)
+        status = response['update']['status']
+        if 'InProgress' == status:
+            return "RETRY", f'Update nodegroup in progress'
+        if 'Failed' == status:
+            return "FAILED", f'Update nodegroup failed'
+        if 'Cancelled' == status:
+            return "FAILED", f'Update nodegroup was cancelled'
+        if 'Successful' == status:
+            return "COMPLETE", f'Updated nodegroup configuration'
+        return "TERMINATE", f'Unknown status {response["update"]["status"]}'
