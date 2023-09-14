@@ -14,7 +14,7 @@ data:
   rdssecret: "cicd/tst-anstead/rds/bua"
   hosted_zone_id: "Z06477101FOH3N8B2WK6N"
   cluster_name: anstead
-  node_group_name: 'managed-ng-anstead-demand-1-22-v20230105'
+  node_group_name: 'managed-ng-anstead-demand-1-22-v20230914'
 steps:
   000_restore_database:
     action: choice
