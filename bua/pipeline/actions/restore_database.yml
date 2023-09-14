@@ -540,9 +540,11 @@ steps:
     comment: Extract the results of the invoice runs to S3
   250_scale_down_deployments:
     comment: kubectl -n core scale --replicas=0 deployment --all
+    action: scale_replicas
     args:
       namespace: core
       deployment: [ workflow , meterdata ]
+      replicas: 0
     'on':
       COMPLETE:
         delay: 120
