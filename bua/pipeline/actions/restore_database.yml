@@ -231,9 +231,9 @@ steps:
   100_scale_up_nodegroup:
     action: scale_nodegroup
     args:
-      min_size: 9
-      max_size: 9
-      desired_size: 9
+      min_size: 10
+      max_size: 10
+      desired_size: 10
     'on':
       RUNNING:
         next: 101_wait_for_scale_up_nodegroup
