@@ -210,6 +210,12 @@ Resources:
                   - 'route53:ChangeResourceRecordSets'
                 Resource:
                   - 'arn:aws:route53:::hostedzone/*'
+              - Sid: AllowNodeGroupConfigChanges
+                Effect: Allow
+                Action:
+                  - 'eks:UpdateNodegroupConfig'
+                Resource:
+                  - 'arn:aws:eks:ap-southeast-2:561082505378:nodegroup/anstead/*'
 
   BUAFastControllerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
