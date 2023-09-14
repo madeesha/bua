@@ -1,6 +1,7 @@
 import json
 from typing import Dict
 
+from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
 from bua.site.action.nem12 import NEM12
 from bua.site.action.scalar import MicroScalar
@@ -22,6 +23,7 @@ class BUASiteSegmentHandler:
             'SegmentJurisdictionCheck': self._handle_segment_jurisdiction_check,
             'NEM12': self._handle_nem12,
             'MicroScalar': self._handle_microscalar,
+            'BasicRead': self._handle_basic_read,
         }
         self._initialise_connection()
 
@@ -93,6 +95,16 @@ class BUASiteSegmentHandler:
             queue=self.queue, conn=self.conn, debug=debug
         )
         action.execute_microscalar_calculation(run_type, today, run_date, identifier_type, account_id)
+
+    def _handle_basic_read(self, run_type: str, entry: Dict, debug: bool):
+        account_id = entry['account_id']
+        today = entry['today']
+        run_date = entry['run_date']
+        identifier_type = entry['identifier_type']
+        action = BasicRead(
+            queue=self.queue, conn=self.conn, debug=debug
+        )
+        action.execute_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
 
     def _handle_segment_jurisdiction_check(self, _run_type: str, entry: Dict, debug: bool):
         run_date = entry['run_date']

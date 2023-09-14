@@ -78,6 +78,9 @@ switch-dns-cli:
 200_generate_NEM12_files:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_200_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
+210_execute_basic_reads:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_210_basic_reads.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
 230_invoice_runs:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_230_invoice_runs.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
