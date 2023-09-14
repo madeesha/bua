@@ -216,6 +216,11 @@ Resources:
                   - 'eks:UpdateNodegroupConfig'
                 Resource:
                   - 'arn:aws:eks:ap-southeast-2:561082505378:nodegroup/anstead/*'
+              - Sid: AllowNodeGroupDescribeUpdate
+                Effect: Allow
+                Action:
+                  - 'eks:DescribeUpdate'
+                Resource: "*"
 
   BUAFastControllerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
