@@ -157,7 +157,7 @@ class KubeCtl:
         desired_size = data['desired_size']
         response = self.eks.update_nodegroup_config(
             clusterName=cluster_name,
-            nodeGroupName=node_group_name,
+            nodegroupName=node_group_name,
             scalingConfig={
                 'minSize': min_size,
                 'maxSize': max_size,
