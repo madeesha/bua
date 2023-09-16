@@ -33,6 +33,7 @@ class BUASiteInitiateHandler:
             'NEM12': self._initiate_nem12_files,
             'MicroScalar': self._initiate_microscalar,
             'BasicRead': self._initiate_basic_read,
+            'ResetBasicRead': self._initiate_reset_basic_read,
         }
         self._initialise_connection()
 
@@ -169,6 +170,18 @@ class BUASiteInitiateHandler:
         action = BasicRead(queue=self.segment_queue, conn=self.conn, debug=debug)
         identifier_type = body['identifier_type']
         action.initiate_basic_read_calculation(
+            run_type=run_type,
+            today=today,
+            run_date=run_date,
+            identifier_type=identifier_type
+        )
+
+    def _initiate_reset_basic_read(self, body, debug, run_type):
+        today: str = body['today']
+        run_date: str = body['run_date']
+        action = BasicRead(queue=self.segment_queue, conn=self.conn, debug=debug)
+        identifier_type = body['identifier_type']
+        action.initiate_reset_basic_read_calculation(
             run_type=run_type,
             today=today,
             run_date=run_date,

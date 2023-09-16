@@ -27,6 +27,7 @@ class BUASiteSegmentHandler:
             'NEM12': self._handle_nem12,
             'MicroScalar': self._handle_microscalar,
             'BasicRead': self._handle_basic_read,
+            'ResetBasicRead': self._handle_reset_basic_read,
         }
         self._initialise_connection()
         self.failure_sqs = SQS(failure_queue, debug)
@@ -121,6 +122,16 @@ class BUASiteSegmentHandler:
             queue=self.segment_queue, conn=self.conn, debug=debug
         )
         return action.execute_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
+
+    def _handle_reset_basic_read(self, run_type: str, entry: Dict, debug: bool) -> Dict:
+        account_id = entry['account_id']
+        today = entry['today']
+        run_date = entry['run_date']
+        identifier_type = entry['identifier_type']
+        action = BasicRead(
+            queue=self.segment_queue, conn=self.conn, debug=debug
+        )
+        return action.execute_reset_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
 
     def _handle_segment_jurisdiction_check(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
         run_date = entry['run_date']

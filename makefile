@@ -81,6 +81,9 @@ switch-dns-cli:
 210_execute_basic_reads:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_210_basic_reads.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
+220_reset_basic_reads:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_220_reset_basic_reads.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
 230_invoice_runs:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_230_invoice_runs.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
