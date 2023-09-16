@@ -15,15 +15,23 @@ class BasicRead(Action, Accounts):
         Accounts.__init__(self, queue, conn, batch_size, debug)
 
     def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
+        self._reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type)
 
     def initiate_reset_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
+        self._reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type)
+
+    def _reset_control_records(self, run_type: str, today: str, run_date: str, identifier_type: str):
+        with self.conn.cursor() as cur:
+            control = Control(run_type, today, today, today, run_date, identifier_type)
+            control.reset_control_records(cur)
+            self.conn.commit()
 
     def execute_basic_read_calculation(
             self, run_type: str, today: str, run_date: str, identifier_type: str, account_id: int
     ) -> Dict:
-        control = Control(run_type, str(account_id), today, today, today, run_date, identifier_type)
+        control = Control(run_type, today, today, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             try:
                 self.log(f'Executing {run_type} for account {account_id}')
@@ -40,14 +48,14 @@ class BasicRead(Action, Accounts):
                 cur.execute(sql, (today, account_id, run_date, identifier_type))
                 cur.fetchall()
                 self.conn.commit()
-                control.insert_control_record(self.conn, cur, STATUS_DONE)
+                control.insert_control_record(self.conn, cur, str(account_id), STATUS_DONE)
                 return {
                     'status': STATUS_DONE
                 }
             except IntegrityError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.insert_control_record(self.conn, cur, STATUS_FAIL, reason='IntegrityError', extra=str(ex))
+                control.insert_control_record(self.conn, cur, str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex)
@@ -60,7 +68,7 @@ class BasicRead(Action, Accounts):
     def execute_reset_basic_read_calculation(
             self, run_type: str, today: str, run_date: str, identifier_type: str, account_id: int
     ) -> Dict:
-        control = Control(run_type, str(account_id), today, today, today, run_date, identifier_type)
+        control = Control(run_type, today, today, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             try:
                 self.log(f'Executing {run_type} for account {account_id}')
@@ -69,14 +77,14 @@ class BasicRead(Action, Accounts):
                 cur.execute(sql, (account_id,))
                 cur.fetchall()
                 self.conn.commit()
-                control.insert_control_record(self.conn, cur, STATUS_DONE)
+                control.insert_control_record(self.conn, cur, str(account_id), STATUS_DONE)
                 return {
                     'status': STATUS_DONE
                 }
             except IntegrityError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.insert_control_record(self.conn, cur, STATUS_FAIL, reason='IntegrityError', extra=str(ex))
+                control.insert_control_record(self.conn, cur, str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex)

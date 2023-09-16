@@ -30,12 +30,10 @@ class NEM12(Action):
             end_exclusive: Optional[str],
             identifier_type: str
     ):
+        control = Control(run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             try:
-                cur.execute(
-                    "DELETE FROM BUAControl WHERE run_type = %s AND run_date = %s",
-                    (run_type, run_date)
-                )
+                control.reset_control_records(cur)
                 cur.execute(
                     "CALL bua_list_profile_nmis(%s, %s, %s, %s)",
                     (start_inclusive, end_exclusive, today, run_date)
@@ -83,7 +81,8 @@ class NEM12Generator(Control):
             self, log, conn: Connection, s3_client, bucket_name, run_type: str, nmi: str,
             start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str
     ):
-        Control.__init__(self, run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        Control.__init__(self, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        self.identifier = nmi
         self.log = log
         self.conn = conn
         self.s3_client = s3_client
@@ -164,7 +163,7 @@ class NEM12Generator(Control):
                          f'{self.identifier}. {self.status} : {self.reason} : {self.extra}')
                 self.conn.commit()
                 self.insert_control_record(
-                    self.conn, cur, self.status,
+                    self.conn, cur, self.identifier, self.status,
                     rows_counted=self.rows_counted, rows_written=self.rows_written,
                     reason=self.reason, extra=self.extra, key=self.key
                 )
@@ -178,7 +177,7 @@ class NEM12Generator(Control):
                 self.reason = "Exception raised"
                 self.extra = str(ex)[0:255]
                 self.insert_control_record(
-                    self.conn, cur, self.status,
+                    self.conn, cur, self.identifier, self.status,
                     rows_counted=self.rows_counted, rows_written=self.rows_written,
                     reason=self.reason, extra=self.extra, key=self.key
                 )
