@@ -4,61 +4,23 @@ from typing import Dict
 from pymysql import Connection, IntegrityError
 
 from bua.site.action import Action
+from bua.site.action.accounts import Accounts
+from bua.site.action.control import Control
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
-class BasicRead(Action):
+class BasicRead(Action, Accounts):
     def __init__(self, queue, conn: Connection, debug=False, batch_size=100):
-        super().__init__(queue, conn, debug)
-        self.batch_size = batch_size
+        Action.__init__(self, queue, conn, debug)
+        Accounts.__init__(self, queue, conn, batch_size, debug)
 
-    def initiate_basic_read_calculation(
-        self,
-        run_type: str,
-        today: str,
-        run_date: str,
-        identifier_type: str
-    ):
-        with self.conn.cursor() as cur:
-            try:
-
-                sql = """
-                SELECT DISTINCT ac.id
-                FROM Account ac
-                JOIN AccountBilling ab ON ac.id = ab.account_id
-                WHERE ac.commence_date <= COALESCE(ac.closed_date, %s)
-                AND COALESCE(ac.closed_date, %s) >= DATE_SUB(%s, INTERVAL 1 YEAR)"""
-
-                cur.execute(sql, (today, today, today))
-
-                total = 0
-                bodies = []
-                body = None
-                for record in cur.fetchall_unbuffered():
-                    account_id = record['id']
-                    if body is not None:
-                        self.send_if_needed(bodies, force=False, batch_size=self.batch_size)
-                    body = {
-                        'account_id': account_id,
-                        'run_type': run_type,
-                        'today': today,
-                        'run_date': run_date,
-                        'identifier_type': identifier_type
-                    }
-                    bodies.append(body)
-                    total += 1
-                self.send_if_needed(bodies, force=True, batch_size=self.batch_size)
-
-                self.log(f'{total} accounts to generate {run_type} data')
-                self.conn.commit()
-            except Exception as ex:
-                traceback.print_exception(ex)
-                self.conn.rollback()
-                raise
+    def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type)
 
     def execute_basic_read_calculation(
             self, run_type: str, today: str, run_date: str, identifier_type: str, account_id: int
     ) -> Dict:
+        control = Control(run_type, str(account_id), today, today, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             try:
                 self.log(f'Executing {run_type} for account {account_id}')
@@ -75,10 +37,14 @@ class BasicRead(Action):
                 cur.execute(sql, (today, account_id, run_date, identifier_type))
                 cur.fetchall()
                 self.conn.commit()
+                control.insert_control_record(self.conn, cur, STATUS_DONE)
                 return {
                     'status': STATUS_DONE
                 }
             except IntegrityError as ex:
+                traceback.print_exception(ex)
+                self.conn.rollback()
+                control.insert_control_record(self.conn, cur, STATUS_FAIL, reason='IntegrityError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex)

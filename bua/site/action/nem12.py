@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, date
 from pymysql import Connection
 import csv
 from bua.site.action import Action
+from bua.site.action.control import Control
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
@@ -77,37 +78,32 @@ class NEM12(Action):
         return generator.generate()
 
 
-class NEM12Generator:
+class NEM12Generator(Control):
     def __init__(
             self, log, conn: Connection, s3_client, bucket_name, run_type: str, nmi: str,
             start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str
     ):
+        Control.__init__(self, run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
         self.log = log
         self.conn = conn
         self.s3_client = s3_client
         self.bucket_name = bucket_name
-        self.run_type = run_type
-        self.nmi = nmi
-        self.start_inclusive = start_inclusive
-        self.end_exclusive = end_exclusive
-        self.today = today
-        self.run_date = run_date
-        self.identifier_type = identifier_type
 
         self.file_date_time = datetime.strptime(self.run_date, '%Y-%m-%d %H:%M:%S').strftime('%Y%m%d%H%M')
         self.update_date_time = datetime.strptime(self.run_date, '%Y-%m-%d %H:%M:%S')
         self.update_date_time = self.update_date_time - timedelta(days=36525)
         self.update_date_time = self.update_date_time.strftime('%Y%m%d%H%M%S')
-        self.unique_id = f'{self.nmi}{self.file_date_time}'
+        self.unique_id = f'{self.identifier}{self.file_date_time}'
         self.file_name = f'nem12#{self.unique_id}#bua#bua.csv'
 
-        self.rows_written = 0
         self.rows_counted = 0
-        self.non_zero_counted = 0
+        self.rows_written = 0
+        self.status = 'PASS'
         self.reason = None
         self.extra = None
-        self.status = 'PASS'
         self.key = None
+
+        self.non_zero_counted = 0
 
         self.nmi_configurations: Dict[Any, Set] = dict()
 
@@ -165,9 +161,13 @@ class NEM12Generator:
                     self._write_nem12_file(self.file_name, output)
                 self.log(f'{len(records)} {self.run_type} '
                          f'profiled estimates for '
-                         f'{self.nmi}. {self.status} : {self.reason} : {self.extra}')
+                         f'{self.identifier}. {self.status} : {self.reason} : {self.extra}')
                 self.conn.commit()
-                self._insert_control_record(cur)
+                self.insert_control_record(
+                    self.conn, cur, self.status,
+                    rows_counted=self.rows_counted, rows_written=self.rows_written,
+                    reason=self.reason, extra=self.extra, key=self.key
+                )
                 return {
                     'status': STATUS_DONE
                 }
@@ -177,10 +177,14 @@ class NEM12Generator:
                 self.status = "FAIL"
                 self.reason = "Exception raised"
                 self.extra = str(ex)[0:255]
-                self._insert_control_record(cur)
+                self.insert_control_record(
+                    self.conn, cur, self.status,
+                    rows_counted=self.rows_counted, rows_written=self.rows_written,
+                    reason=self.reason, extra=self.extra, key=self.key
+                )
                 return {
                     'status': STATUS_FAIL,
-                    'cause': ex
+                    'cause': str(ex)
                 }
 
     def _calculate_nmi_configurations(self, records: List[Dict]):
@@ -207,31 +211,13 @@ class NEM12Generator:
     def _fetch_missing_periods(self, cur):
         cur.execute(
             "CALL bua_list_missing_periods(%s, %s, %s, %s, %s, %s)",
-            (self.nmi, self.start_inclusive, self.end_exclusive, self.today, self.run_date, self.identifier_type)
+            (self.identifier, self.start_inclusive, self.end_exclusive, self.today, self.run_date, self.identifier_type)
         )
         records: List[Dict] = list(cur.fetchall())
         self.rows_counted = len(records)
         if self.rows_counted == 0:
             self.reason = 'No missing reads'
         return records
-
-    def _insert_control_record(self, cur):
-        try:
-            sql = """
-                    INSERT INTO BUAControl
-                    ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
-                    , identifier_type, rows_counted, rows_written, status, reason, extra, s3_key)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """
-            cur.execute(sql,
-                        (self.run_type, self.nmi, self.start_inclusive, self.end_exclusive, self.today, self.run_date,
-                         self.identifier_type, self.rows_counted, self.rows_written, self.status, self.reason,
-                         self.extra, self.key)
-                        )
-            self.conn.commit()
-        except Exception as e2:
-            traceback.print_exception(e2)
-            self.conn.rollback()
 
     def _write_nem12_file(self, file_name, output):
         if self.rows_written > 0:
@@ -254,7 +240,7 @@ class NEM12Generator:
             suffix_id = record['suffix_id']
             serial = record['serial']
             read_date = record['read_date']
-            self.extra = f'No register id defined for {self.nmi} {suffix_id} {serial} on {read_date}'
+            self.extra = f'No register id defined for {self.identifier} {suffix_id} {serial} on {read_date}'
             return False
         return True
 
@@ -265,7 +251,7 @@ class NEM12Generator:
             serial = record['serial']
             register_id = record['register_id']
             read_date = record['read_date']
-            self.extra = f'No suffix defined for {self.nmi} {serial} {register_id} on {read_date}'
+            self.extra = f'No suffix defined for {self.identifier} {serial} {register_id} on {read_date}'
             return False
         return True
 
@@ -275,7 +261,7 @@ class NEM12Generator:
             self.reason = 'Invalid unit of measure defined'
             suffix_id = record['suffix_id']
             read_date = record['read_date']
-            self.extra = f'No unit of measure defined for {self.nmi} {suffix_id} on {read_date}'
+            self.extra = f'No unit of measure defined for {self.identifier} {suffix_id} on {read_date}'
             return False
         return True
 
@@ -286,13 +272,13 @@ class NEM12Generator:
         if scalar is None:
             self.status = 'FAIL'
             self.reason = 'No scalar defined'
-            self.extra = f'No scalar defined for {self.nmi} {suffix_id} on {read_date}'
+            self.extra = f'No scalar defined for {self.identifier} {suffix_id} on {read_date}'
             return None
         scalar = decimal.Decimal(scalar)
         if scalar.is_zero():
             self.status = 'FAIL'
             self.reason = 'Scalar defined as zero'
-            self.extra = f'Scalar defined as zero for {self.nmi} {suffix_id} on {read_date}'
+            self.extra = f'Scalar defined as zero for {self.identifier} {suffix_id} on {read_date}'
             return None
         return scalar
 
@@ -305,7 +291,7 @@ class NEM12Generator:
             self.reason = 'No valid time periods'
             suffix_id = record['suffix_id']
             read_date = record['read_date']
-            self.extra = f'No time periods for {self.nmi} {suffix_id} on {read_date}'
+            self.extra = f'No time periods for {self.identifier} {suffix_id} on {read_date}'
             return False
         return True
 
@@ -321,7 +307,7 @@ class NEM12Generator:
             _next_scheduled_read_date = ''
             _nmi_configuration = ''.join(self.nmi_configurations[self.current_record['read_date']])
             row = [
-                '200', self.nmi, _nmi_configuration, self.current_record['register_id'],
+                '200', self.identifier, _nmi_configuration, self.current_record['register_id'],
                 self.current_record['suffix_id'], self.current_record['suffix_id'], self.current_record['serial'],
                 self.current_record['unit_of_measure'], _interval_length, _next_scheduled_read_date
             ]
