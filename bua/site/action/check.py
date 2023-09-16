@@ -3,6 +3,7 @@ import traceback
 from pymysql import Connection
 
 from bua.site.action import Action
+from bua.site.handler import STATUS_DONE
 
 
 class Check(Action):
@@ -53,6 +54,9 @@ class Check(Action):
                     count = record['total_invalid_entries']
                     self.log(f'{count} invalid entries')
                 self.conn.commit()
+                return {
+                    'status': STATUS_DONE
+                }
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

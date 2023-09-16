@@ -3,6 +3,7 @@ import traceback
 from pymysql import Connection
 
 from bua.site.action import Action
+from bua.site.handler import STATUS_DONE
 
 
 class SiteSegment(Action):
@@ -122,6 +123,9 @@ class SiteSegment(Action):
                                                 rows_affected)
                 self.log('Imported', rows_affected, 'records for segment', identifier, 'on', interval_date)
                 self.conn.commit()
+                return {
+                    'status': STATUS_DONE
+                }
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

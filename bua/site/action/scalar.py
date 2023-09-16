@@ -3,6 +3,7 @@ import traceback
 from pymysql import Connection
 
 from bua.site.action import Action
+from bua.site.handler import STATUS_DONE
 
 
 class MicroScalar(Action):
@@ -73,6 +74,9 @@ class MicroScalar(Action):
                 cur.execute(sql, (today, account_id, run_date, identifier_type))
                 cur.fetchall()
                 self.conn.commit()
+                return {
+                    'status': STATUS_DONE
+                }
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

@@ -1,8 +1,10 @@
 import traceback
+from typing import Dict
 
-from pymysql import Connection
+from pymysql import Connection, IntegrityError
 
 from bua.site.action import Action
+from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
 class BasicRead(Action):
@@ -54,7 +56,9 @@ class BasicRead(Action):
                 self.conn.rollback()
                 raise
 
-    def execute_basic_read_calculation(self, run_type, today, run_date, identifier_type, account_id):
+    def execute_basic_read_calculation(
+            self, run_type: str, today: str, run_date: str, identifier_type: str, account_id: int
+    ) -> Dict:
         with self.conn.cursor() as cur:
             try:
                 self.log(f'Executing {run_type} for account {account_id}')
@@ -71,6 +75,14 @@ class BasicRead(Action):
                 cur.execute(sql, (today, account_id, run_date, identifier_type))
                 cur.fetchall()
                 self.conn.commit()
+                return {
+                    'status': STATUS_DONE
+                }
+            except IntegrityError as ex:
+                return {
+                    'status': STATUS_FAIL,
+                    'cause': str(ex)
+                }
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

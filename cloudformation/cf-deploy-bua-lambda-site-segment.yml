@@ -136,7 +136,8 @@ Resources:
       Environment:
         Variables:
           tableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-meterdata" ] ]
-          queueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-segment-queue" ] ]
+          segmentQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-segment-queue" ] ]
+          failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-segment-dlqueue" ] ]
           rdsSecretName: !Join [ "/" , [ "cicd", !Ref ResourcePrefix , "rds" , !Ref RDSName ] ]
           debugEnabled: !Ref DebugEnabled
           bucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "meterdata" ] ]
@@ -157,7 +158,8 @@ Resources:
           
           sqs_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
           sqs = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
-          queue = sqs.Queue(os.environ['queueURL'])
+          segment_queue = sqs.Queue(os.environ['segmentQueueURL'])
+          failure_queue = sqs.Queue(os.environ['failureQueueURL'])
           
           rdssecret = os.environ['rdsSecretName']
           session = boto3.Session()
@@ -176,7 +178,7 @@ Resources:
           s3_client = boto3.client('s3', config=s3_config)
           bucket_name = os.environ['bucketName']
 
-          handler = BUASiteSegmentHandler(s3_client=s3_client, bucket_name=bucket_name, table=table, queue=queue, conn=conn, debug=debug)
+          handler = BUASiteSegmentHandler(s3_client=s3_client, bucket_name=bucket_name, table=table, segment_queue=segment_queue, failure_queue=failure_queue, conn=conn, debug=debug)
 
           def lambda_handler(event, context):
               try:

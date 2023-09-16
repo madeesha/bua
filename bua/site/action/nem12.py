@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, date
 from pymysql import Connection
 import csv
 from bua.site.action import Action
+from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
 class NEM12(Action):
@@ -71,10 +72,9 @@ class NEM12(Action):
             self, run_type: str, nmi: str, start_inclusive: str, end_exclusive: str,
             today: str, run_date: str, identifier_type: str
     ):
-        NEM12Generator(
-            self.log, self.conn, self.s3_client, self.bucket_name, run_type, nmi,
-            start_inclusive, end_exclusive, today, run_date, identifier_type
-        ).generate()
+        generator = NEM12Generator(self.log, self.conn, self.s3_client, self.bucket_name, run_type, nmi,
+                                   start_inclusive, end_exclusive, today, run_date, identifier_type)
+        return generator.generate()
 
 
 class NEM12Generator:
@@ -168,6 +168,9 @@ class NEM12Generator:
                          f'{self.nmi}. {self.status} : {self.reason} : {self.extra}')
                 self.conn.commit()
                 self._insert_control_record(cur)
+                return {
+                    'status': STATUS_DONE
+                }
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -175,6 +178,10 @@ class NEM12Generator:
                 self.reason = "Exception raised"
                 self.extra = str(ex)[0:255]
                 self._insert_control_record(cur)
+                return {
+                    'status': STATUS_FAIL,
+                    'cause': ex
+                }
 
     def _calculate_nmi_configurations(self, records: List[Dict]):
         for record in records:
