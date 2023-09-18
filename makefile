@@ -69,11 +69,14 @@ switch-dns-cli:
 170_resolve_variances:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_170_resolve_variances.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
-180_scale_up_meterdata:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_180_scale_up_meterdata.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+180_execute_micro_scalar:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_180_micro_scalar.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
-190_execute_micro_scalar:
-	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_190_micro_scalar.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+190_scale_up_nodegroup:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_190_scale_up_nodegroup.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
+195_scale_up_meterdata:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_195_scale_up_meterdata.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
 200_generate_NEM12_files:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_200_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml

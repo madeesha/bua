@@ -231,9 +231,9 @@ steps:
   100_scale_up_nodegroup:
     action: scale_nodegroup
     args:
-      min_size: 10
-      max_size: 10
-      desired_size: 10
+      min_size: 1
+      max_size: 1
+      desired_size: 1
     'on':
       RUNNING:
         next: 101_wait_for_scale_up_nodegroup
@@ -368,17 +368,7 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-  180_scale_up_meterdata:
-    comment: kubectl -n core scale --replicas=6 deployment meterdata
-    action: scale_replicas
-    args:
-      namespace: core
-      deployment: [ meterdata ]
-      replicas: 8
-    'on':
-      COMPLETE:
-        delay: 120
-  190_execute_micro_scalar:
+  180_execute_micro_scalar:
     comment: Generate micro scalar values
     action: bua_initiate
     speed: slow
@@ -388,10 +378,44 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 190_wait_for_execute_micro_scalar
-  190_wait_for_execute_micro_scalar:
+        next: 180_wait_for_execute_micro_scalar
+  180_wait_for_execute_micro_scalar:
     action: wait_for_empty_site_queues
     retry_delay: 120
+    'on':
+      COMPLETE:
+        delay: 120
+  190_scale_up_nodegroup:
+    action: scale_nodegroup
+    args:
+      min_size: 10
+      max_size: 10
+      desired_size: 10
+    'on':
+      RUNNING:
+        next: 191_wait_for_scale_up_nodegroup
+      FAILED:
+        comment: Failed to scale node group
+      TERMINATE:
+        comment: Failed to scale node group
+      COMPLETE:
+        delay: 300
+  191_wait_for_scale_up_nodegroup:
+    action: wait_for_scale_nodegroup
+    'on':
+      FAILED:
+        comment: Failed to scale node group
+      TERMINATE:
+        comment: Failed to scale node group
+      COMPLETE:
+        delay: 300
+  195_scale_up_meterdata:
+    comment: kubectl -n core scale --replicas=6 deployment meterdata
+    action: scale_replicas
+    args:
+      namespace: core
+      deployment: [ meterdata ]
+      replicas: 8
     'on':
       COMPLETE:
         delay: 120

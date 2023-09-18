@@ -1,0 +1,3 @@
+action: trigger_restore
+args:
+  this: 190_scale_up_nodegroup
