@@ -1,4 +1,4 @@
 action: trigger_restore
 args:
-  this: 130_utility_profiles
+  this: 130_clear_error_queues
   run_date: '2023-09-01'

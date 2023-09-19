@@ -1,4 +1,4 @@
 action: trigger_restore
 args:
-  this: 200_generate_NEM12_files
+  this: 200_clear_error_queues
   run_date: '2023-09-01'

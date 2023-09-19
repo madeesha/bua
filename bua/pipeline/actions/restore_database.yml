@@ -315,6 +315,12 @@ steps:
         comment: Stop processing
       ONHOLD:
         comment: Stop processing
+  130_clear_error_queues:
+    action: empty_site_errors_queues
+    'on':
+      COMPLETE:
+        delay: 60
+        next: 130_utility_profiles
   130_utility_profiles:
     action: bua_initiate
     args:
@@ -329,6 +335,12 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+  140_clear_error_queues:
+    action: empty_site_errors_queues
+    'on':
+      COMPLETE:
+        delay: 60
+        next: 140_jurisdiction_segments
   140_jurisdiction_segments:
     action: bua_initiate
     args:
@@ -344,6 +356,12 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+  150_clear_error_queues:
+    action: empty_site_errors_queues
+    'on':
+      COMPLETE:
+        delay: 60
+        next: 150_segment_jurisdiction_check
   150_segment_jurisdiction_check:
     action: bua_initiate
     args:
@@ -359,6 +377,12 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+  160_clear_error_queues:
+    action: empty_site_errors_queues
+    'on':
+      COMPLETE:
+        delay: 60
+        next: 160_profile_validation
   160_profile_validation:
     action: bua_initiate
     args:
@@ -378,6 +402,12 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+  180_clear_error_queues:
+    action: empty_site_errors_queues
+    'on':
+      COMPLETE:
+        delay: 60
+        next: 180_execute_micro_scalar
   180_execute_micro_scalar:
     comment: Generate micro scalar values
     action: bua_initiate
@@ -439,6 +469,12 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+  200_clear_error_queues:
+    action: empty_site_errors_queues
+    'on':
+      COMPLETE:
+        delay: 60
+        next: 200_generate_NEM12_files
   200_generate_NEM12_files:
     comment: Generate the missing electricity interval reads
     action: bua_initiate
@@ -474,6 +510,12 @@ steps:
         comment: Stop processing
       ONHOLD:
         comment: Stop processing
+  210_clear_error_queues:
+    action: empty_site_errors_queues
+    'on':
+      COMPLETE:
+        delay: 60
+        next: 210_reset_missing_basic_reads
   210_reset_missing_basic_reads:
     comment: Reset all of the missing basic reads
     action: bua_initiate
@@ -491,6 +533,12 @@ steps:
     'on':
       COMPLETE:
         delay: 120
+  220_clear_error_queues:
+    action: empty_site_errors_queues
+    'on':
+      COMPLETE:
+        delay: 60
+        next: 220_generate_missing_basic_reads
   220_generate_missing_basic_reads:
     comment: Generate all of the missing basic reads
     action: bua_initiate

@@ -54,3 +54,6 @@ class SQS:
                     total += attributes[name]
             attributes['Total'] = total
         return queues
+
+    def empty_queue(self, queue_url):
+        self.sqs.purge_queue(QueueUrl=queue_url)
