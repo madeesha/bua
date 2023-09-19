@@ -262,7 +262,7 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 105_wait_for_scale_up_workflows
+        next: 105_wait_for_scale_up_workflow
   105_wait_for_scale_up_workflow:
     action: check_replicas
     args:
