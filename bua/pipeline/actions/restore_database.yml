@@ -506,6 +506,8 @@ steps:
     action: wait_for_empty_site_queues
     retry_delay: 120
     'on':
+      FAILED:
+        comment: Terminate pipeline
       COMPLETE:
         delay: 120
   230_prepare_invoice_runs:
