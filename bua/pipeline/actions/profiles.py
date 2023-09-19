@@ -15,6 +15,8 @@ class Profiles:
             queue_name = queue_url.split('/')[-1]
             total = attributes['Total']
             if total > 0:
+                if queue_name.endswith('-failure-queue'):
+                    return "FAILED", f'Queue {queue_name} has about {total} messages'
                 if queue_name.endswith('-dlqueue'):
                     return "FAILED", f'Queue {queue_name} has about {total} messages'
                 return "RETRY", f'Queue {queue_name} has about {total} messages'
