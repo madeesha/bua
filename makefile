@@ -78,6 +78,9 @@ switch-dns-cli:
 195_scale_up_meterdata:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_195_scale_up_meterdata.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 
+195_wait_for_scale_up_meterdata:
+	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_195_wait_for_scale_up_meterdata.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
+
 200_generate_NEM12_files:
 	@aws --profile anstead --region ap-southeast-2 s3 cp yaml/trigger_200_nem12_files.yml s3://tst-anstead-s3-bua/schedule/next/trigger.yml
 

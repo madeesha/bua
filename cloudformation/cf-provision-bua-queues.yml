@@ -155,6 +155,23 @@ Resources:
         - Key: resource-class
           Value: data
 
+  BUASiteSegmentFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-segment-failure-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
   BUAControllerFailureQueue:
     Type: AWS::SQS::Queue
     Properties:
