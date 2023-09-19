@@ -454,24 +454,7 @@ steps:
         comment: Stop processing
       ONHOLD:
         comment: Stop processing
-  210_generate_missing_basic_reads:
-    comment: Generate all of the missing basic reads
-    action: bua_initiate
-    speed: slow
-    args:
-      run_type: BasicRead
-      identifier_type: SegmentJurisdictionAvgExclEst
-    'on':
-      COMPLETE:
-        delay: 120
-        next: 210_wait_for_generate_missing_basic_reads
-  210_wait_for_generate_missing_basic_reads:
-    action: wait_for_empty_site_queues
-    retry_delay: 120
-    'on':
-      COMPLETE:
-        delay: 120
-  220_reset_missing_basic_reads:
+  210_reset_missing_basic_reads:
     comment: Reset all of the missing basic reads
     action: bua_initiate
     speed: slow
@@ -481,8 +464,25 @@ steps:
     'on':
       COMPLETE:
         delay: 120
-        next: 220_wait_for_reset_missing_basic_reads
-  220_wait_for_reset_missing_basic_reads:
+        next: 210_wait_for_reset_missing_basic_reads
+  210_wait_for_reset_missing_basic_reads:
+    action: wait_for_empty_site_queues
+    retry_delay: 120
+    'on':
+      COMPLETE:
+        delay: 120
+  220_generate_missing_basic_reads:
+    comment: Generate all of the missing basic reads
+    action: bua_initiate
+    speed: slow
+    args:
+      run_type: BasicRead
+      identifier_type: SegmentJurisdictionAvgExclEst
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 220_wait_for_generate_missing_basic_reads
+  220_wait_for_generate_missing_basic_reads:
     action: wait_for_empty_site_queues
     retry_delay: 120
     'on':
