@@ -261,7 +261,7 @@ steps:
       replicas: 1
     'on':
       COMPLETE:
-        delay: 120
+        delay: 60
         next: 105_wait_for_scale_up_workflow
   105_wait_for_scale_up_workflow:
     action: check_replicas
@@ -428,7 +428,7 @@ steps:
       replicas: 8
     'on':
       COMPLETE:
-        delay: 120
+        delay: 60
         next: 195_wait_for_scale_up_meterdata
   195_wait_for_scale_up_meterdata:
     action: check_replicas
