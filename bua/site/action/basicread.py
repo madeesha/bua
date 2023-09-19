@@ -19,7 +19,7 @@ class BasicRead(Action, Accounts):
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type)
 
     def initiate_reset_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
-        self._reset_control_records(run_type, today, run_date, identifier_type)
+        self._reset_control_records('BasicRead', today, run_date, identifier_type)
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type)
 
     def _reset_control_records(self, run_type: str, today: str, run_date: str, identifier_type: str):
