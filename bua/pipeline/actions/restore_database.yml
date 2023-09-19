@@ -261,7 +261,17 @@ steps:
       replicas: 1
     'on':
       COMPLETE:
-        delay: 300
+        delay: 120
+        next: 105_wait_for_scale_up_workflows
+  105_wait_for_scale_up_workflow:
+    action: check_replicas
+    args:
+      namespace: core
+      deployment: [ workflow ]
+      replicas: 1
+    'on':
+      COMPLETE:
+        delay: 120
   110_analyse_statistics:
     action: core_warm_database_statistics
     args:
@@ -412,6 +422,16 @@ steps:
   195_scale_up_meterdata:
     comment: kubectl -n core scale --replicas=6 deployment meterdata
     action: scale_replicas
+    args:
+      namespace: core
+      deployment: [ meterdata ]
+      replicas: 8
+    'on':
+      COMPLETE:
+        delay: 120
+        next: 195_wait_for_scale_up_meterdata
+  195_wait_for_scale_up_meterdata:
+    action: check_replicas
     args:
       namespace: core
       deployment: [ meterdata ]

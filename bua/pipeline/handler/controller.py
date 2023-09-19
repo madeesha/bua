@@ -72,6 +72,7 @@ class BUAControllerHandler:
             'get_max_workflow_instance': sql_handler.get_max_workflow_instance,
             'truncate_workflow_instance': sql_handler.truncate_workflow_instance,
             'scale_replicas': kubectl_handler.scale_replicas,
+            'check_replicas': kubectl_handler.check_replicas,
             'bua_initiate': sql_handler.bua_initiate,
             'bua_resolve_variances': sql_handler.bua_resolve_variances,
             'wait_for_empty_site_queues': profiles_handler.wait_for_empty_site_queues,

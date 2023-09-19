@@ -135,6 +135,18 @@ class KubeCtl:
                 apps_api.patch_namespaced_deployment(name=name, namespace=namespace, body=deployment)
         return "COMPLETE", f"{','.join(deployments)} scaled to {replicas} replicas"
 
+    def check_replicas(self, step, data):
+        self._create_kube_config(self.cluster)
+        deployments = data['deployment']
+        namespace = data['namespace']
+        replicas = int(data['replicas'])
+        self.kubes.config.load_kube_config(KubeCtl.KUBE_FILEPATH)
+        apps_api = self.kubes.client.AppsV1Api()
+        for name in deployments:
+            deployment = apps_api.read_namespaced_deployment(name=name, namespace=namespace)
+            print(deployment)
+        return "COMPLETE", f"Checked replicas"
+
     def scale_down(self, step, data):
         self._create_kube_config(self.cluster)
         deployments = data['deployment']
