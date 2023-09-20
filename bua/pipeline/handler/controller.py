@@ -1,3 +1,5 @@
+from zoneinfo import ZoneInfo
+
 import kubernetes
 import pymysql
 import yaml
@@ -172,8 +174,17 @@ class BUAControllerHandler:
         event['next'] = ''
         event['speed'] = 'fast'
         event['delay'] = 0
+
         data = self._get_data(event)
         self._process_args(data, step)
+
+        run_date = datetime.now(ZoneInfo('Australia/Sydney'))
+        if 'run_date' not in data:
+            data['run_date'] = run_date.strftime('%Y-%m-%d')
+        if 'today' not in data:
+            today = run_date - timedelta(days=run_date.day - 1)
+            data['today'] = today.strftime('%Y-%m-%d')
+
         instance = self._determine_instance(event)
         log_item = self._log_processing_start(instance, name, this)
         status, reason = self._check_retries_exceeded(step)
