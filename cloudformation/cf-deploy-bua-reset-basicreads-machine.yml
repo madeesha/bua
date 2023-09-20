@@ -12,6 +12,12 @@ Parameters:
   ResourcePrefix:
     Description: Prefix to assign to resources
     Type: String
+  ResourcePrefixIAM:
+    Description: Prefix to assign to resources
+    Type: String
+  ResourcePrefixPath:
+    Description: Prefix to assign to resources
+    Type: String
 
 Resources:
 
