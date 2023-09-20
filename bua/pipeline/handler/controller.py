@@ -166,7 +166,7 @@ class BUAControllerHandler:
 
     def _handle_event_steps(self, event, name, this):
         if this not in event['steps']:
-            raise Exception('There is no step definition for [{this}] in the event')
+            raise Exception(f'There is no step definition for [{this}] in the event')
         step = event['steps'][this]
         self._handle_step(event, name, this, step)
 

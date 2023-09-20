@@ -117,14 +117,24 @@
     },
     "NextTransitionSlow": {
       "Type": "Pass",
-      "Result": "$.next",
-      "ResultPath": "$.this",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
       "Next": "SlowController"
     },
     "NextTransitionFast": {
       "Type": "Pass",
-      "Result": "$.next",
-      "ResultPath": "$.this",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
       "Next": "FastController"
     }
   }
