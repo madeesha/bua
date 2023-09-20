@@ -1,4 +1,4 @@
-name: Restore Database
+name: BUA Restore
 this: 000_restore_database
 retry_delay: 120
 data:
@@ -531,6 +531,8 @@ steps:
     action: wait_for_empty_site_queues
     retry_delay: 120
     'on':
+      FAILED:
+        comment: Stop processing
       COMPLETE:
         delay: 120
   220_clear_error_queues:
