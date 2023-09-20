@@ -316,7 +316,9 @@ Resources:
 
           def lambda_handler(event, context):
               print(event)
-              handler.handle_request(event)
+              result = handler.handle_request(event)
+              print(result)
+              return result
 
       Runtime: python3.10
       Timeout: 180
@@ -418,7 +420,9 @@ Resources:
 
           def lambda_handler(event, context):
               print(event)
-              handler.handle_request(event)
+              result = handler.handle_request(event)
+              print(result)
+              return result
 
       Runtime: python3.10
       Timeout: 900
