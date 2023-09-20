@@ -179,9 +179,9 @@ class BUAControllerHandler:
         self._process_args(data, step)
 
         run_date = datetime.now(ZoneInfo('Australia/Sydney'))
-        if 'run_date' not in data:
+        if 'run_date' not in data or data['run_date'] is None or len(data['run_date']) == 0:
             data['run_date'] = run_date.strftime('%Y-%m-%d')
-        if 'today' not in data:
+        if 'today' not in data or data['today'] is None or len(data['today']) == 0:
             today = run_date - timedelta(days=run_date.day - 1)
             data['today'] = today.strftime('%Y-%m-%d')
 
