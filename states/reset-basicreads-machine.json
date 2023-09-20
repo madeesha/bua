@@ -4,12 +4,17 @@
   "States": {
     "ResetReads": {
       "Type": "Pass",
-      "Result": {
+      "Parameters": {
         "type": "step",
         "name": "Reset Reads",
         "next": "210_clear_error_queues",
         "speed": "slow",
-        "data": {},
+        "data": {
+          "update_id": "12",
+          "suffix": "bua-sql",
+          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
+          "schema": "Turkey_BLU"
+        },
         "steps": {
           "210_clear_error_queues": {
             "action": "empty_site_errors_queues",
