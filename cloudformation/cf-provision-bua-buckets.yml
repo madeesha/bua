@@ -73,6 +73,18 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
+          - Sid: AllowDeployToManageStateMachines
+            Action:
+              - "s3:Get*"
+              - "s3:List*"
+              - "s3:Put*"
+            Effect: Allow
+            Resource:
+              - !GetAtt Bucket.Arn
+              - !Sub "${Bucket.Arn}/states/*"
+            Principal:
+              AWS:
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/${ResourcePrefixIAM}_CloudformationDeployRole"
           - Sid: AllowDeployToReadLambdaLayers
             Action:
               - "s3:Get*"
