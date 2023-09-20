@@ -9,6 +9,7 @@
         "name": "Reset Reads",
         "next": "210_clear_error_queues",
         "speed": "slow",
+        "data": {},
         "steps": {
           "210_clear_error_queues": {
             "action": "empty_site_errors_queues",
