@@ -28,7 +28,6 @@ provision:
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-buckets
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-secrets
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-dynamodb
-      python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-reset-basicreads-machine
     - |
       # Package python for aws lambda layers
       rm -fr ./target/packages
@@ -66,6 +65,9 @@ deploy:
     - |
       # Clean up old lambda layers
       python3 -m cicd --cmd clean-layers --version-id $CI_PARENT_PIPELINE_ID --version $CI_PARENT_PIPELINE_ID --layer "layer-bua-python-libs"
+    - |
+      # Deploy the reset basic reads state machine
+      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-reset-basicreads-machine
   variables:
     CF_ROLE: CloudformationDeployRole
     SLEEP_INTERVAL: 5
