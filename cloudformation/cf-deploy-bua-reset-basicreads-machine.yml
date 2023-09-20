@@ -18,6 +18,9 @@ Parameters:
   ResourcePrefixPath:
     Description: Prefix to assign to resources
     Type: String
+  ProjectVersion:
+    Description: The version of the project being released
+    Type: String
 
 Resources:
 
@@ -49,8 +52,8 @@ Resources:
     Properties:
       StateMachineName: !Sub "${ResourcePrefix}-bua-reset-basicreads"
       DefinitionS3Location:
-        Bucket: !Sub "${ResourcePrefix}-bua"
-        Key: "states/reset-basicreads-machine.json"
+        Bucket: !Sub "${ResourcePrefix}-s3-bua"
+        Key: !Sub "states/reset-basicreads-machine.json/${ProjectVersion}"
       DefinitionSubstitutions:
         SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
         FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
