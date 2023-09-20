@@ -30,6 +30,7 @@ provision:
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-dynamodb
     - |
       # Upload stepfunction definitions
+      python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file basicreads-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file reset-basicreads-machine.json
     - |
       # Package python for aws lambda layers
@@ -70,7 +71,7 @@ deploy:
       python3 -m cicd --cmd clean-layers --version-id $CI_PARENT_PIPELINE_ID --version $CI_PARENT_PIPELINE_ID --layer "layer-bua-python-libs"
     - |
       # Deploy the reset basic reads state machine
-      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-reset-basicreads-machine
+      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-state-machines
   variables:
     CF_ROLE: CloudformationDeployRole
     SLEEP_INTERVAL: 5
