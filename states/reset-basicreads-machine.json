@@ -86,7 +86,7 @@
         },
         {
           "Variable": "$.delay",
-          "NumericGreaterThan": "0",
+          "NumericGreaterThan": 0,
           "Next": "WaitForNext"
         }
       ],
