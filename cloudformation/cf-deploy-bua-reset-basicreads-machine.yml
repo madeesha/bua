@@ -33,7 +33,7 @@ Resources:
                 - !Sub "states.${AWS::Region}.amazonaws.com"
             Action: "sts:AssumeRole"
       RoleName: !Join [ "_" , [ !Ref ResourcePrefixIAM , "BUA" , "BUAResetBasicReadsStatesExecRole" ] ]
-      Path: !Join [ "" , [ "/" , !Ref ResourcePrefixPath , "/lambda/" ] ]
+      Path: !Join [ "" , [ "/" , !Ref ResourcePrefixPath , "/states/" ] ]
       Policies:
         - PolicyName: StatesExecutionPolicy
           PolicyDocument:

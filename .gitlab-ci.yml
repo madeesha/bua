@@ -3,7 +3,7 @@ variables:
 
 default:
   image:
-    name: 307973494033.dkr.ecr.ap-southeast-2.amazonaws.com/dev/serverless/maven-build-centos:v25030
+    name: 307973494033.dkr.ecr.ap-southeast-2.amazonaws.com/dev/serverless/maven-build-centos:v25031
     pull_policy: [if-not-present, always]
   before_script:
     - |
