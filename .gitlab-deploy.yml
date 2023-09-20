@@ -29,6 +29,9 @@ provision:
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-secrets
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-dynamodb
     - |
+      # Upload stepfunction definitions
+      python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file reset-basicreads-machine.json
+    - |
       # Package python for aws lambda layers
       rm -fr ./target/packages
       pip3 install --target ./target/packages --ignore-installed -r runtime-requirements.txt

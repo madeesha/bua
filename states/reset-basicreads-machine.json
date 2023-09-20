@@ -1,0 +1,131 @@
+{
+  "Comment": "Reset Basic Reads",
+  "StartAt": "ResetReads",
+  "States": {
+    "ResetReads": {
+      "Type": "Pass",
+      "Result": {
+        "type": "step",
+        "name": "Reset Reads",
+        "next": "210_clear_error_queues",
+        "speed": "slow",
+        "steps": {
+          "210_clear_error_queues": {
+            "action": "empty_site_errors_queues",
+            "on": {
+              "COMPLETE": {
+                "delay": 60,
+                "next": "210_reset_missing_basic_reads"
+              }
+            }
+          },
+          "210_reset_missing_basic_reads": {
+            "action": "bua_initiate",
+            "args": {
+              "run_type": "ResetBasicRead",
+              "identifier_type": "SegmentJurisdictionAvgExclEst"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "210_wait_for_reset_missing_basic_reads"
+              }
+            }
+          },
+          "210_wait_for_reset_missing_basic_reads": {
+            "action": "wait_for_empty_site_queues",
+            "on": {
+              "COMPLETE": {},
+              "FAILED": {}
+            }
+          }
+        }
+      },
+      "Next": "NextTransition"
+    },
+    "FastController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FastControllerFunction}",
+        "Payload.$": "$"
+      },
+      "TimeoutSeconds": 180,
+      "Next": "WhatNext"
+    },
+    "SlowController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlowControllerFunction}",
+        "Payload.$": "$"
+      },
+      "TimeoutSeconds": 900,
+      "Next": "WhatNext"
+    },
+    "WhatNext": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.next",
+              "StringEquals": ""
+            },
+            {
+              "Variable": "$.result.status",
+              "StringEquals": "COMPLETE"
+            }
+          ],
+          "Next": "ExecutionDone"
+        },
+        {
+          "Variable": "$.next",
+          "StringEquals": "",
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$.delay",
+          "NumericGreaterThan": "0",
+          "Next": "WaitForNext"
+        }
+      ],
+      "Default": "NextTransition"
+    },
+    "ExecutionDone": {
+      "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "Step not COMPLETE"
+    },
+    "WaitForNext": {
+      "Type": "Wait",
+      "SecondsPath": "$.delay",
+      "Next": "NextTransition"
+    },
+    "NextTransition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.speed",
+          "StringEquals": "slow",
+          "Next": "NextTransitionSlow"
+        }
+      ],
+      "Default": "NextTransitionFast"
+    },
+    "NextTransitionSlow": {
+      "Type": "Pass",
+      "Result": "$.next",
+      "ResultPath": "$.this",
+      "Next": "SlowController"
+    },
+    "NextTransitionFast": {
+      "Type": "Pass",
+      "Result": "$.next",
+      "ResultPath": "$.this",
+      "Next": "FastController"
+    }
+  }
+}
