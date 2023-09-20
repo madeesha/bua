@@ -42,7 +42,7 @@ Resources:
     Properties:
       StateMachineName: !Sub "${ResourcePrefix}-bua-controller"
       DefinitionS3Location:
-        Bucket: !Sub "${ResourcePrefix}-bua"
+        Bucket: !Sub "${ResourcePrefix}-s3-bua"
         Key: "statemachines/controller_state_machine.json"
       DefinitionSubstitutions:
         ControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller"
