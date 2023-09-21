@@ -11,6 +11,9 @@
         "speed": "slow",
         "retry_delay": 120,
         "data": {
+          "run_date.$": "$.data.run_date",
+          "today.$": "$.data.today",
+          "stepfunction.$": "$.data.stepfunction",
           "update_id": "12",
           "suffix": "bua-sql",
           "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",

@@ -51,8 +51,11 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "run_date.$": "$.data.run_date",
-          "today.$": "$.data.today",
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today",
+            "stepfunction.$": "$.data.stepfunction"
+          },
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$": "$.data.stepfunction.bua-reset-basicreads",
@@ -66,8 +69,11 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "run_date.$": "$.data.run_date",
-          "today.$": "$.data.today",
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today",
+            "stepfunction.$": "$.data.stepfunction"
+          },
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.data.stepfunction.bua-basicreads",
@@ -81,8 +87,11 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "run_date.$": "$.data.run_date",
-          "today.$": "$.data.today",
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today",
+            "stepfunction.$": "$.data.stepfunction"
+          },
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.data.stepfunction.bua-invoiceruns",
