@@ -148,7 +148,7 @@ class BUAControllerHandler:
             self._handle_step_failure(e, event, use_sqs)
 
     def _handle_action(self, event):
-        name: str = event['action'].replace('_', ' ').title()
+        name: str = event.get('name', event['action'].replace('_', ' ').title())
         this: str = event['action']
         self._handle_step(event, name, this, event)
 
