@@ -1,0 +1,60 @@
+{
+  "Comment": "Bottom Up Accruals",
+  "StartAt": "BUA",
+  "States": {
+    "BUA": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FastControllerFunction}",
+        "Payload": {
+          "type": "step",
+          "name": "BUA",
+          "action": "get_stepfunction_arns",
+          "data": {
+            "stepfunction": {
+              "bua-reset-basicreads": "",
+              "bua-basicreads": ""
+            }
+          }
+        }
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 180,
+      "Next": "ResetBasicReads"
+    },
+    "ResetBasicReads": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "run_date.$": "$.data.run_date",
+          "today.$": "$.data.today",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$": "$.data.stepfunction.bua-reset-basicreads",
+        "Name": "ExecutionName"
+      },
+      "OutputPath": "$.Output",
+      "Next": "BasicReads"
+    },
+    "BasicReads": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "run_date.$": "$.data.run_date",
+          "today.$": "$.data.today",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.data.stepfunction.bua-basicreads",
+        "Name":"ExecutionName"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
+    },
+    "ExecutionDone": {
+      "Type": "Succeed"
+    }
+  }
+}

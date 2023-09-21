@@ -50,6 +50,8 @@ class BUAControllerHandler:
         choice_handler = Choice()
 
         self.handlers: Dict[str, Any] = {
+            'get_config': self.get_config,
+            'get_stepfunction_arns': self.get_stepfunction_arns,
             'restore_database': restore_handler.restore_database,
             'check_restore_database': restore_handler.check_restore_database,
             'destroy_database': destroy_handler.destroy_database,
@@ -90,6 +92,20 @@ class BUAControllerHandler:
             'scale_nodegroup': kubectl_handler.scale_nodegroup,
             'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup,
         }
+
+    def get_config(self, step, data):
+        data['config'] = dict(self.config)
+        data['config']['states_prefix'] = f'arn:aws:states:{data["config"]["region"]}:{data["config"]["aws_account"]}:stateMachine:{data["config"]["prefix"]}")'
+        return "COMPLETE", f'Retrieved config values'
+
+    def get_stepfunction_arns(self, step, data):
+        region = self.config['region']
+        account_id = self.config['aws_account']
+        prefix = self.config['prefix']
+        stepfunctions = data.get('stepfunction', dict())
+        for name in stepfunctions:
+            data['stepfunction'][name] = f'arn:aws:states:{region}:{account_id}:stateMachine:{prefix}-{name}'
+        return "COMPLETE", f'Calculated {len(stepfunctions)} stepfunction names'
 
     def handle_request(self, event):
         print('ProjectVersion', self.config['version'])

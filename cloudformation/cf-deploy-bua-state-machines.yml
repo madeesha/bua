@@ -42,10 +42,49 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: Allow
+              - Sid: AllowInvocationOfLambda
+                Effect: Allow
                 Action:
                   - "lambda:InvokeFunction"
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-*"
+              - Sid: AllowInvocationOfStepFunctions
+                Effect: Allow
+                Action:
+                  - "states:DescribeExecution"
+                  - "states:StartExecution"
+                  - "states:StopExecution"
+                Resource:
+                  - !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${ResourcePrefix}-*"
+              - Sid: AllowMonitoringOfStepFunctions
+                Effect: Allow
+                Action:
+                  - "events:PutTargets"
+                  - "events:PutRule"
+                  - "events:DescribeRule"
+                Resource:
+                  - !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForStepFunctionsExecutionRule"
+
+  BUAMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      StateMachineName: !Sub "${ResourcePrefix}-bua"
+      DefinitionS3Location:
+        Bucket: !Sub "${ResourcePrefix}-s3-bua"
+        Key: !Sub "states/bua-machine.json/${ProjectVersion}"
+      DefinitionSubstitutions:
+        SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
+        FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
+      RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: stepfunction
+        - Key: resource-class
+          Value: data
 
   ResetBasicReadsMachine:
     Type: "AWS::StepFunctions::StateMachine"
