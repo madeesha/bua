@@ -12,6 +12,7 @@
           "name": "BUA",
           "action": "get_stepfunction_arns",
           "data": {
+            "start": "ResetBasicReads",
             "stepfunction": {
               "bua-reset-basicreads": "",
               "bua-basicreads": "",
@@ -22,7 +23,28 @@
       },
       "OutputPath": "$.Payload",
       "TimeoutSeconds": 180,
-      "Next": "ResetBasicReads"
+      "Next": "WhatNext"
+    },
+    "WhatNext": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.data.start",
+          "StringEquals": "ResetBasicReads",
+          "Next": "ResetBasicReads"
+        },
+        {
+          "Variable": "$.data.start",
+          "StringEquals": "BasicReads",
+          "Next": "BasicReads"
+        },
+        {
+          "Variable": "$.data.start",
+          "StringEquals": "InvoiceRuns",
+          "Next": "InvoiceRuns"
+        }
+      ],
+      "Default": "ResetBasicReads"
     },
     "ResetBasicReads": {
       "Type": "Task",
