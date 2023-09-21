@@ -14,7 +14,8 @@
           "data": {
             "stepfunction": {
               "bua-reset-basicreads": "",
-              "bua-basicreads": ""
+              "bua-basicreads": "",
+              "bua-invoiceruns": ""
             }
           }
         }
@@ -48,6 +49,21 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.data.stepfunction.bua-basicreads",
+        "Name":"ExecutionName"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
+    },
+    "InvoiceRuns": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "run_date.$": "$.data.run_date",
+          "today.$": "$.data.today",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.data.stepfunction.bua-invoiceruns",
         "Name":"ExecutionName"
       },
       "OutputPath": "$.Output",
