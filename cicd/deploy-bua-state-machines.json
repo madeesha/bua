@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "ResetBasicReadsVersion",
+    "ParameterValue": "{{ RESET_BASICREADS_MACHINE_VER }}"
+  },
+  {
+    "ParameterKey": "BasicReadsVersion",
+    "ParameterValue": "{{ BASICREADS_MACHINE_VER }}"
+  },
+  {
+    "ParameterKey": "InvoiceRunsVersion",
+    "ParameterValue": "{{ INVOICERUNS_MACHINE_VER }}"
+  },
+  {
+    "ParameterKey": "BUAMachineVersion",
+    "ParameterValue": "{{ BUA_MACHINE_VER }}"
+  }
+]
