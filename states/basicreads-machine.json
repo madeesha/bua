@@ -9,6 +9,7 @@
         "name": "Basic Reads",
         "next": "220_clear_error_queues",
         "speed": "slow",
+        "retry_delay": 120,
         "data": {
           "update_id": "12",
           "suffix": "bua-sql",
@@ -21,7 +22,7 @@
             "action": "empty_site_errors_queues",
             "on": {
               "COMPLETE": {
-                "delay": 60,
+                "delay": 120,
                 "next": "220_generate_missing_basic_reads"
               }
             }
