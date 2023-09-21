@@ -233,7 +233,8 @@ class SQL:
                 with cur:
                     sql = "SELECT status, COUNT(*) AS total " \
                           "FROM BUAControl " \
-                          "WHERE run_type = %s AND run_date = %s"
+                          "WHERE run_type = %s AND run_date = %s " \
+                          "GROUP BY status "
                     params = (run_type, run_date)
                     cur.execute(sql, params)
                     results = {row['status']: row['total'] for row in cur.fetchall()}
