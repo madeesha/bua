@@ -59,7 +59,7 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$": "$.data.stepfunction.bua-reset-basicreads",
-        "Name": "ExecutionName"
+        "Name.$": "States.UUID()"
       },
       "OutputPath": "$.Output",
       "Next": "BasicReads"
@@ -77,7 +77,7 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.data.stepfunction.bua-basicreads",
-        "Name":"ExecutionName"
+        "Name.$":"States.UUID()"
       },
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
@@ -95,7 +95,7 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.data.stepfunction.bua-invoiceruns",
-        "Name":"ExecutionName"
+        "Name.$":"States.UUID()"
       },
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
