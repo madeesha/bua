@@ -9,6 +9,9 @@ Parameters:
   ClassName:
     Description: The class of the environment to deploy into
     Type: String
+  ProjectVersion:
+    Description: The version of the project being released
+    Type: String
   ResourcePrefix:
     Description: Prefix to assign to resources
     Type: String
@@ -17,18 +20,6 @@ Parameters:
     Type: String
   ResourcePrefixPath:
     Description: Prefix to assign to resources
-    Type: String
-  ResetBasicReadsVersion:
-    Description: The version of the reset basic reads machine definition
-    Type: String
-  BasicReadsVersion:
-    Description: The version of the basic reads machine definition
-    Type: String
-  InvoiceRunsVersion:
-    Description: The version of the invoice runs machine definition
-    Type: String
-  BUAMachineVersion:
-    Description: The version of the bua machine definition
     Type: String
 
 Resources:
@@ -80,7 +71,7 @@ Resources:
       StateMachineName: !Sub "${ResourcePrefix}-bua"
       DefinitionS3Location:
         Bucket: !Sub "${ResourcePrefix}-s3-bua"
-        Key: !Sub "states/bua-machine.json/${BUAMachineVersion}"
+        Key: !Sub "states/bua-machine.json/${ProjectVersion}"
       DefinitionSubstitutions:
         SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
         FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
@@ -101,7 +92,7 @@ Resources:
       StateMachineName: !Sub "${ResourcePrefix}-bua-reset-basicreads"
       DefinitionS3Location:
         Bucket: !Sub "${ResourcePrefix}-s3-bua"
-        Key: !Sub "states/reset-basicreads-machine.json/${ResetBasicReadsVersion}"
+        Key: !Sub "states/reset-basicreads-machine.json/${ProjectVersion}"
       DefinitionSubstitutions:
         SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
         FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
@@ -122,7 +113,7 @@ Resources:
       StateMachineName: !Sub "${ResourcePrefix}-bua-basicreads"
       DefinitionS3Location:
         Bucket: !Sub "${ResourcePrefix}-s3-bua"
-        Key: !Sub "states/basicreads-machine.json/${BasicReadsVersion}"
+        Key: !Sub "states/basicreads-machine.json/${ProjectVersion}"
       DefinitionSubstitutions:
         SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
         FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
@@ -143,7 +134,7 @@ Resources:
       StateMachineName: !Sub "${ResourcePrefix}-bua-invoiceruns"
       DefinitionS3Location:
         Bucket: !Sub "${ResourcePrefix}-s3-bua"
-        Key: !Sub "states/invoiceruns-machine.json/${InvoiceRunsVersion}"
+        Key: !Sub "states/invoiceruns-machine.json/${ProjectVersion}"
       DefinitionSubstitutions:
         SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
         FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
