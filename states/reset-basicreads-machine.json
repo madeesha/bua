@@ -23,11 +23,11 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "210_reset_missing_basic_reads"
+                "next": "211_reset_missing_basic_reads"
               }
             }
           },
-          "210_reset_missing_basic_reads": {
+          "211_reset_missing_basic_reads": {
             "action": "bua_initiate",
             "args": {
               "run_type": "ResetBasicRead",
@@ -36,12 +36,25 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "210_wait_for_reset_missing_basic_reads"
+                "next": "212_wait_for_reset_basic_reads"
               }
             }
           },
-          "210_wait_for_reset_missing_basic_reads": {
+          "212_wait_for_reset_basic_reads": {
             "action": "wait_for_empty_site_queues",
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "213_check_bua_control"
+              },
+              "FAILED": {}
+            }
+          },
+          "213_check_bua_control": {
+            "action": "check_bua_control",
+            "args": {
+              "run_type": "ResetBasicRead"
+            },
             "on": {
               "COMPLETE": {},
               "FAILED": {}

@@ -222,6 +222,34 @@ class SQL:
         print(f'Max workflow_instance_id is {workflow_instance_id}')
         return workflow_instance_id
 
+    def check_bua_control(self, step, data):
+        run_type = data['run_type']
+        run_date = data['run_date']
+        acceptable_error_rate = int(data.get('acceptable_error_rate', 0))
+        try:
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    sql = "SELECT status, COUNT(*) AS total " \
+                          "FROM BUAControl " \
+                          "WHERE run_type = %s AND run_date = %s"
+                    params = (run_type, run_date)
+                    cur.execute(sql, params)
+                    results = {row['status']: row['total'] for row in cur.fetchall()}
+                    if 'FAIL' in results:
+                        total_errors = results.get('FAIL', 0)
+                        total_done = results.get('DONE', 0)
+                        total_instances = total_done + total_errors
+                        acceptable_errors = total_instances * acceptable_error_rate / 100
+                        if total_errors > acceptable_errors:
+                            return "FAILED", f'{results["FAIL"]} {run_type} in FAIL status for {run_date}'
+            return "COMPLETE", f'No {run_type} in FAIL status for {run_date}'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def wait_for_workflows(self, step, data):
         workflow_names = data['workflow_names']
         workflow_instance_id = int(data.get('workflow_instance_id', 0))

@@ -68,6 +68,7 @@ class BUAControllerHandler:
             'core_warm_database_statistics': sql_handler.core_warm_database_statistics,
             'core_warm_database_indexes': sql_handler.core_warm_database_indexes,
             'wait_for_workflows': sql_handler.wait_for_workflows,
+            'check_bua_control': sql_handler.check_bua_control,
             'resubmit_failed_workflows': sql_handler.resubmit_failed_workflows,
             'wait_for_workflow_schedules': sql_handler.wait_for_workflow_schedules,
             'stats_sample_pages': sql_handler.stats_sample_pages,
