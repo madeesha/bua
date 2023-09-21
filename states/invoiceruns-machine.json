@@ -9,6 +9,7 @@
         "name": "Invoice Runs",
         "next": "230_prepare_invoice_runs",
         "speed": "fast",
+        "retry_delay": 120,
         "data": {
           "update_id": "12",
           "suffix": "bua-sql",
@@ -28,12 +29,12 @@
             },
             "on": {
               "COMPLETE": {
-                "delay": 60,
-                "next": "230_invoice_runs"
+                "delay": 30,
+                "next": "231_invoice_runs"
               }
             }
           },
-          "230_invoice_runs": {
+          "231_invoice_runs": {
             "action": "bua_initiate_invoice_runs",
             "speed": "slow",
             "args": {
@@ -45,12 +46,12 @@
             },
             "on": {
               "COMPLETE": {
-                "delay": 120,
-                "next": "230_wait_for_invoice_runs"
+                "delay": 300,
+                "next": "231_wait_for_invoice_run_schedules"
               }
             }
           },
-          "230_wait_for_invoice_runs": {
+          "231_wait_for_invoice_run_schedules": {
             "action": "wait_for_workflow_schedules",
             "args": {
               "workflow_names": [
@@ -60,13 +61,13 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "231_wait_for_invoice_runs"
+                "next": "232_wait_for_invoice_runs_ili"
               }
             }
           },
-          "231_wait_for_invoice_runs": {
+          "232_wait_for_invoice_runs_ili": {
             "action": "wait_for_workflows",
-            "retry_delay": 120,
+            "retry_delay": 300,
             "args": {
               "workflow_names": [
                 "GENERATE_ILI"
@@ -75,15 +76,15 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "232_wait_for_invoice_runs"
+                "next": "233_wait_for_invoice_run_batches"
               },
               "FAILED": {},
               "ONHOLD": {}
             }
           },
-          "232_wait_for_invoice_runs": {
+          "233_wait_for_invoice_run_batches": {
             "action": "wait_for_workflows",
-            "retry_delay": 120,
+            "retry_delay": 300,
             "args": {
               "workflow_names": [
                 "RUN_INVOICE_BATCH"
@@ -92,18 +93,17 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "234_wait_for_invoice_runs"
+                "next": "235_wait_for_invoicegen"
               },
               "FAILED": {
-                "next": "233_reschedule_failed_workflows"
+                "next": "234_reschedule_failed_invoice_batches"
               },
               "ONHOLD": {}
             }
           },
-          "233_reschedule_failed_workflows": {
+          "234_reschedule_failed_invoice_batches": {
             "action": "resubmit_failed_workflows",
             "retries": 1,
-            "retry_delay": 120,
             "args": {
               "workflow_names": [
                 "RUN_INVOICE_BATCH"
@@ -111,14 +111,14 @@
             },
             "on": {
               "COMPLETE": {
-                "delay": 120,
-                "next": "232_wait_for_invoice_runs"
+                "delay": 60,
+                "next": "233_wait_for_invoice_run_batches"
               }
             }
           },
-          "234_wait_for_invoice_runs": {
+          "235_wait_for_invoicegen": {
             "action": "wait_for_workflows",
-            "retry_delay": 120,
+            "retry_delay": 300,
             "args": {
               "acceptable_error_rate": 1,
               "workflow_names": [
@@ -128,15 +128,14 @@
             "on": {
               "COMPLETE": {},
               "FAILED": {
-                "next": "235_reschedule_failed_workflows"
+                "next": "236_reschedule_failed_invoicegen"
               },
               "ONHOLD": {}
             }
           },
-          "235_reschedule_failed_workflows": {
+          "236_reschedule_failed_invoicegen": {
             "action": "resubmit_failed_workflows",
             "retries": 1,
-            "retry_delay": 120,
             "args": {
               "workflow_names": [
                 "INVOICEGEN"
@@ -144,8 +143,8 @@
             },
             "on": {
               "COMPLETE": {
-                "delay": 120,
-                "next": "234_wait_for_invoice_runs"
+                "delay": 60,
+                "next": "235_wait_for_invoicegen"
               }
             }
           }
