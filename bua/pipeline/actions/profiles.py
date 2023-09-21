@@ -10,17 +10,37 @@ class Profiles:
         self.prefix = self.config['prefix']
 
     def wait_for_empty_site_queues(self, step, data):
+        status = 'COMPLETE'
+        reason = 'None of the queues have messages'
         queues = self.sqs.describe_queues(queue_name_prefix=f'{self.prefix}-sqs-bua-site-')
         for queue_url, attributes in queues.items():
             queue_name = queue_url.split('/')[-1]
+            if queue_name.endswith('-failure-queue'):
+                continue
+            if queue_name.endswith('-dlqueue'):
+                continue
             total = attributes['Total']
             if total > 0:
-                if queue_name.endswith('-failure-queue'):
-                    return "FAILED", f'Queue {queue_name} has about {total} messages'
-                if queue_name.endswith('-dlqueue'):
-                    return "FAILED", f'Queue {queue_name} has about {total} messages'
-                return "RETRY", f'Queue {queue_name} has about {total} messages'
-        return "COMPLETE", 'None of the queues have messages'
+                status = 'RETRY'
+                reason = f'Queue {queue_name} has about {total} messages'
+                break
+        if status == 'COMPLETE':
+            for queue_url, attributes in queues.items():
+                queue_name = queue_url.split('/')[-1]
+                total = attributes['Total']
+                if total > 0:
+                    if queue_name.endswith('-failure-queue'):
+                        status = 'FAILED'
+                        reason = f'Queue {queue_name} has about {total} messages'
+                        break
+                    if queue_name.endswith('-dlqueue'):
+                        status = 'FAILED'
+                        reason = f'Queue {queue_name} has about {total} messages'
+                        break
+                    status = 'RETRY'
+                    reason = f'Queue {queue_name} has about {total} messages'
+                    break
+        return status, reason
 
     def empty_site_errors_queues(self, step, data):
         queues = self.sqs.describe_queues(queue_name_prefix=f'{self.prefix}-sqs-bua-site-')
