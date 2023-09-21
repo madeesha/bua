@@ -12,11 +12,12 @@
           "name": "BUA",
           "action": "get_stepfunction_arns",
           "data": {
-            "start": "ResetBasicReads",
+            "start.$": "$.start",
             "stepfunction": {
               "bua-reset-basicreads": "",
               "bua-basicreads": "",
-              "bua-invoiceruns": ""
+              "bua-invoiceruns": "",
+              "bua-restore": ""
             }
           }
         }
@@ -42,6 +43,11 @@
           "Variable": "$.data.start",
           "StringEquals": "InvoiceRuns",
           "Next": "InvoiceRuns"
+        },
+        {
+          "Variable": "$.data.start",
+          "StringEquals": "Restore",
+          "Next": "Restore"
         }
       ],
       "Default": "ResetBasicReads"
@@ -95,6 +101,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.data.stepfunction.bua-invoiceruns",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
+    },
+    "Restore": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today",
+            "stepfunction.$": "$.data.stepfunction"
+          },
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.data.stepfunction.bua-restore",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "OutputPath": "$.Output",

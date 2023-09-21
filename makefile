@@ -9,6 +9,9 @@ venv:
 requirements: venv
 	venv/bin/pip3 install --upgrade pip -r requirements.txt -r runtime-requirements.txt
 
+json: venv
+	cat bua/pipeline/actions/bua_restore.yml | venv/bin/python yaml2json.py > sandpit/bua_restore.json
+
 lint: venv
 	chmod u+x cf-lint
 	source venv/bin/activate && ./cf-lint

@@ -1,0 +1,580 @@
+{
+  "Comment": "Restore Database",
+  "StartAt": "RestoreDatabase",
+  "States": {
+    "RestoreDatabase": {
+      "Type": "Pass",
+      "Parameters": {
+        "type": "step",
+        "name": "BUA Restore",
+        "next": "000_restore_database",
+        "speed": "fast",
+        "retry_delay": 120,
+        "data": {
+          "run_date.$": "$.data.run_date",
+          "today.$": "$.data.today",
+          "stepfunction.$": "$.data.stepfunction",
+          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
+          "instance_class": "DBInstanceClassR6i",
+          "instance_type": "8xlarge",
+          "mysql_version": "8.0.32",
+          "params_id": "2",
+          "schema": "Turkey_BLU",
+          "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32",
+          "suffix": "bua-sql",
+          "update_id": "13",
+          "rdssecret": "cicd/tst-anstead/rds/bua",
+          "hosted_zone_id": "Z06477101FOH3N8B2WK6N",
+          "cluster_name": "anstead",
+          "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
+        },
+        "steps": {
+          "000_restore_database": {
+            "action": "choice",
+            "args": {
+              "choices": [
+                {
+                  "variable": "mysql_version",
+                  "string_equals": "8.0.32",
+                  "result": "MYSQL80"
+                },
+                {
+                  "variable": "mysql_version",
+                  "string_equals": "5.7.41",
+                  "result": "MYSQL57"
+                }
+              ]
+            },
+            "on": {
+              "MYSQL80": {
+                "next": "010_restore_database"
+              },
+              "MYSQL57": {
+                "next": "011_restore_database"
+              }
+            }
+          },
+          "010_restore_database": {
+            "comment": "MySQL 8.0 restore",
+            "retries": 1,
+            "action": "restore_database",
+            "args": {
+              "instance_class": "DBInstanceClassR6i",
+              "instance_type": "8xlarge"
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "010_wait_for_restore_database"
+              },
+              "FAILED": {
+                "next": "012_destroy_database"
+              }
+            }
+          },
+          "011_restore_database": {
+            "comment": "MySQL 5.7 restore",
+            "retries": 1,
+            "action": "restore_database",
+            "args": {
+              "instance_class": "DBInstanceClassR5",
+              "instance_type": "large"
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "011_wait_for_restore_database"
+              },
+              "FAILED": {
+                "next": "012_destroy_database"
+              }
+            }
+          },
+          "010_wait_for_restore_database": {
+            "comment": "MySQL 8.0 restore",
+            "action": "check_restore_database",
+            "on": {
+              "COMPLETE": {
+                "next": "030_reset_rds_password"
+              }
+            }
+          },
+          "011_wait_for_restore_database": {
+            "comment": "MySQL 5.7 restore",
+            "action": "check_restore_database",
+            "on": {
+              "COMPLETE": {
+                "next": "031_reset_rds_password"
+              }
+            }
+          },
+          "012_destroy_database": {
+            "action": "destroy_database",
+            "on": {
+              "COMPLETE": {
+                "next": "012_wait_for_destroy_database"
+              }
+            }
+          },
+          "012_wait_for_destroy_database": {
+            "action": "check_destroy_database",
+            "on": {
+              "COMPLETE": {
+                "next": "000_restore_database"
+              }
+            }
+          },
+          "030_reset_rds_password": {
+            "comment": "MySQL 8.0 reset password",
+            "action": "reset_password",
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "040_disable_workflow_schedules"
+              }
+            }
+          },
+          "031_reset_rds_password": {
+            "comment": "MySQL 5.7 reset password",
+            "action": "reset_password",
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "032_export_procedures"
+              }
+            }
+          },
+          "032_export_procedures": {
+            "comment": "MySQL 5.7 export procedures",
+            "action": "export_procedures",
+            "args": {
+              "procedures": [
+                "mi_mfin_triage_v2"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "033_upgrade_database"
+              }
+            }
+          },
+          "033_upgrade_database": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "create_upgrade_version_change_set",
+            "args": {
+              "change_set_name": "upgrade-database-8-0-32",
+              "mysql_version": "8.0.32"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "033_wait_for_upgrade_db_ready"
+              }
+            }
+          },
+          "033_wait_for_upgrade_db_ready": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "check_change_set_ready",
+            "args": {
+              "change_set_name": "upgrade-database-8-0-32",
+              "mysql_version": "8.0.32"
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "034_execute_upgrade_database"
+              }
+            }
+          },
+          "034_execute_upgrade_database": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "execute_change_set",
+            "args": {
+              "change_set_name": "upgrade-database-8-0-32",
+              "mysql_version": "8.0.32"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "034_wait_for_upgrade_db_complete"
+              }
+            }
+          },
+          "034_wait_for_upgrade_db_complete": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "check_change_set_complete",
+            "args": {
+              "change_set_name": "upgrade-database-8-0-32",
+              "mysql_version": "8.0.32"
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "035_import_procedures"
+              }
+            }
+          },
+          "035_import_procedures": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "import_procedures",
+            "args": {
+              "procedures": [
+                "mi_mfin_triage_v2"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "036_scale_database"
+              }
+            }
+          },
+          "036_scale_database": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "create_scale_change_set",
+            "args": {
+              "change_set_name": "scale-database-8xlarge",
+              "instance_class": "DBInstanceClassR6i",
+              "instance_type": "8xlarge"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "036_wait_for_scale_db_ready"
+              }
+            }
+          },
+          "036_wait_for_scale_db_ready": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "check_change_set_ready",
+            "on": {
+              "COMPLETE": {
+                "next": "037_execute_scale_database"
+              }
+            }
+          },
+          "037_execute_scale_database": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "execute_change_set",
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "037_wait_for_scale_db_complete"
+              }
+            }
+          },
+          "037_wait_for_scale_db_complete": {
+            "comment": "MySQL 5.7 upgrade database",
+            "action": "check_change_set_complete",
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "040_disable_workflow_schedules"
+              }
+            }
+          },
+          "040_disable_workflow_schedules": {
+            "action": "disable_workflow_schedules",
+            "on": {
+              "COMPLETE": {
+                "next": "050_disable_workflow_instances"
+              }
+            }
+          },
+          "050_disable_workflow_instances": {
+            "action": "disable_workflow_instances",
+            "on": {
+              "COMPLETE": {
+                "next": "060_set_user_passwords"
+              }
+            }
+          },
+          "060_set_user_passwords": {
+            "comment": "set the user passwords",
+            "action": "execute_sql",
+            "args": {
+              "sqlsecret": "cicd/tst-anstead/rds/bua/passwords"
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "070_stats_sample_pages"
+              }
+            }
+          },
+          "070_stats_sample_pages": {
+            "action": "stats_sample_pages",
+            "speed": "slow",
+            "args": {
+              "tables": [
+                {
+                  "name": "AggregatedRead",
+                  "sample_pages": 1600
+                }
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "080_scale_down_deployments"
+              }
+            }
+          },
+          "080_scale_down_deployments": {
+            "comment": "kubectl -n core scale --replicas=0 deployment --all",
+            "action": "scale_replicas",
+            "args": {
+              "namespace": "core",
+              "deployment": [
+                "workflow",
+                "meterdata"
+              ],
+              "replicas": 0
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "090_switch_dns"
+              }
+            }
+          },
+          "090_switch_dns": {
+            "comment": "need to update route53 entries with the rds server endpoint",
+            "action": "set_rds_dns_entry",
+            "args": {
+              "route53_records": [
+                {
+                  "name": "tst-sql1.anstead.encore.sh",
+                  "type": "CNAME"
+                }
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "100_scale_up_nodegroup"
+              }
+            }
+          },
+          "100_scale_up_nodegroup": {
+            "action": "scale_nodegroup",
+            "args": {
+              "min_size": 1,
+              "max_size": 1,
+              "desired_size": 1
+            },
+            "on": {
+              "RUNNING": {
+                "next": "101_wait_for_scale_up_nodegroup"
+              },
+              "FAILED": {
+                "comment": "Failed to scale node group"
+              },
+              "TERMINATE": {
+                "comment": "Failed to scale node group"
+              },
+              "COMPLETE": {
+                "delay": 300
+              }
+            }
+          },
+          "101_wait_for_scale_up_nodegroup": {
+            "action": "wait_for_scale_nodegroup",
+            "on": {
+              "FAILED": {
+                "comment": "Failed to scale node group"
+              },
+              "TERMINATE": {
+                "comment": "Failed to scale node group"
+              },
+              "COMPLETE": {
+                "delay": 300
+              }
+            }
+          },
+          "105_scale_up_workflow": {
+            "comment": "kubectl -n core scale --replicas=3 deployment workflow",
+            "action": "scale_replicas",
+            "args": {
+              "namespace": "core",
+              "deployment": [
+                "workflow"
+              ],
+              "replicas": 1
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 60,
+                "next": "105_wait_for_scale_up_workflow"
+              }
+            }
+          },
+          "105_wait_for_scale_up_workflow": {
+            "action": "check_replicas",
+            "args": {
+              "namespace": "core",
+              "deployment": [
+                "workflow"
+              ],
+              "replicas": 1
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120
+              }
+            }
+          },
+          "110_analyse_statistics": {
+            "action": "core_warm_database_statistics",
+            "args": {
+              "concurrency": 32
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "110_wait_for_analyse_statistics"
+              }
+            }
+          },
+          "110_wait_for_analyse_statistics": {
+            "action": "wait_for_workflows",
+            "retry_delay": 120,
+            "args": {
+              "workflow_names": [
+                "WARM_TABLE",
+                "WARM_PARTITION"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "120_database_warming"
+              },
+              "FAILED": {
+                "comment": "Stop processing"
+              },
+              "ONHOLD": {
+                "comment": "Stop processing"
+              }
+            }
+          },
+          "120_database_warming": {
+            "action": "core_warm_database_indexes",
+            "args": {
+              "concurrency": 32
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "120_wait_for_database_warming"
+              }
+            }
+          },
+          "120_wait_for_database_warming": {
+            "action": "wait_for_workflows",
+            "retry_delay": 120,
+            "args": {
+              "workflow_names": [
+                "WARM_INDEX"
+              ]
+            },
+            "on": {
+              "COMPLETE": {},
+              "FAILED": {},
+              "ONHOLD": {}
+            }
+          }
+        }
+      },
+      "Next": "NextTransition"
+    },
+    "FastController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FastControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 180,
+      "Next": "WhatNext"
+    },
+    "SlowController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlowControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 900,
+      "Next": "WhatNext"
+    },
+    "WhatNext": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.next",
+              "StringEquals": ""
+            },
+            {
+              "Variable": "$.result.status",
+              "StringEquals": "COMPLETE"
+            }
+          ],
+          "Next": "ExecutionDone"
+        },
+        {
+          "Variable": "$.next",
+          "StringEquals": "",
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$.delay",
+          "NumericGreaterThan": 0,
+          "Next": "WaitForNext"
+        }
+      ],
+      "Default": "NextTransition"
+    },
+    "ExecutionDone": {
+      "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "Step not COMPLETE"
+    },
+    "WaitForNext": {
+      "Type": "Wait",
+      "SecondsPath": "$.delay",
+      "Next": "NextTransition"
+    },
+    "NextTransition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.speed",
+          "StringEquals": "slow",
+          "Next": "NextTransitionSlow"
+        }
+      ],
+      "Default": "NextTransitionFast"
+    },
+    "NextTransitionSlow": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "SlowController"
+    },
+    "NextTransitionFast": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "FastController"
+    }
+  }
+}
