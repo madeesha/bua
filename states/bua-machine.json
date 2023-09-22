@@ -19,7 +19,8 @@
             "bua-nem12": "",
             "bua-reset-basicreads": "",
             "bua-basicreads": "",
-            "bua-invoiceruns": ""
+            "bua-invoiceruns": "",
+            "bua-scaledown": ""
           },
           "start.$": "$.start"
         }
@@ -48,8 +49,8 @@
         },
         {
           "Variable": "$.start",
-          "StringEquals": "ScaleupMeterdata",
-          "Next": "ScaleupMeterdata"
+          "StringEquals": "ScaleUpMeterdata",
+          "Next": "ScaleUpMeterdata"
         },
         {
           "Variable": "$.start",
@@ -70,6 +71,11 @@
           "Variable": "$.start",
           "StringEquals": "InvoiceRuns",
           "Next": "InvoiceRuns"
+        },
+        {
+          "Variable": "$.start",
+          "StringEquals": "ScaleDown",
+          "Next": "ScaleDown"
         }
       ],
       "Default": "ExecutionDone"
@@ -143,7 +149,7 @@
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
     },
-    "ScaleupMeterdata": {
+    "ScaleUpMeterdata": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
@@ -250,6 +256,29 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-invoiceruns",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
+    },
+    "ScaleDown": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today"
+          },
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.stepfunction.bua-scaledown",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
