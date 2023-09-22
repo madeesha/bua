@@ -274,7 +274,7 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "BasicReads"
+      "Next": "ExecutionDone"
     },
     "BasicReads": {
       "Type": "Task",
