@@ -95,7 +95,10 @@ class BUAControllerHandler:
 
     def get_config(self, step, data):
         data['config'] = dict(self.config)
-        data['config']['states_prefix'] = f'arn:aws:states:{data["config"]["region"]}:{data["config"]["aws_account"]}:stateMachine:{data["config"]["prefix"]}")'
+        region = data["config"]["region"]
+        account = data["config"]["aws_account"]
+        prefix = data["config"]["prefix"]
+        data['config']['states_prefix'] = f'arn:aws:states:{region}:{account}:stateMachine:{prefix}")'
         return "COMPLETE", f'Retrieved config values'
 
     def get_stepfunction_arns(self, step, data):
@@ -107,7 +110,7 @@ class BUAControllerHandler:
             data['stepfunction'][name] = f'arn:aws:states:{region}:{account_id}:stateMachine:{prefix}-{name}'
         return "COMPLETE", f'Calculated {len(stepfunctions)} stepfunction names'
 
-    def handle_request(self, event):
+    def handle_request(self, event: Dict):
         print('ProjectVersion', self.config['version'])
         if 'Records' in event:
             for record in event['Records']:
@@ -137,7 +140,7 @@ class BUAControllerHandler:
         text: str = response['Body'].read().decode('utf-8')
         return text
 
-    def _handle_event(self, event):
+    def _handle_event(self, event: Dict):
         use_sqs = event['type'] == 'sqs'
         try:
             if 'action' in event:
@@ -147,12 +150,12 @@ class BUAControllerHandler:
         except Exception as e:
             self._handle_step_failure(e, event, use_sqs)
 
-    def _handle_action(self, event):
+    def _handle_action(self, event: Dict):
         name: str = event.get('name', event['action'].replace('_', ' ').title())
         this: str = event['action']
         self._handle_step(event, name, this, event)
 
-    def _handle_pipeline(self, event, use_sqs):
+    def _handle_pipeline(self, event: Dict, use_sqs: bool):
         if 'name' not in event:
             raise Exception('[name] tag is missing from the event')
         name = event['name']
@@ -166,7 +169,7 @@ class BUAControllerHandler:
         if use_sqs:
             self._handle_next_via_sqs(event)
 
-    def _handle_next_via_sqs(self, event):
+    def _handle_next_via_sqs(self, event: Dict):
         _next = event.get('next')
         if _next is not None and len(_next) > 0:
             event['this'] = _next
@@ -181,13 +184,13 @@ class BUAControllerHandler:
             )
             print(f'Sent message [{response["MessageId"]}] to {self.config["next_queue_url"]}')
 
-    def _handle_event_steps(self, event, name, this):
+    def _handle_event_steps(self, event: Dict, name: str, this: str):
         if this not in event['steps']:
             raise Exception(f'There is no step definition for [{this}] in the event')
         step = event['steps'][this]
         self._handle_step(event, name, this, step)
 
-    def _handle_step(self, event, name, this, step):
+    def _handle_step(self, event: Dict, name: str, this: str, step: Dict):
         event['next'] = ''
         event['speed'] = 'fast'
         event['delay'] = 0
@@ -213,7 +216,7 @@ class BUAControllerHandler:
         if status == 'ABORT':
             raise Exception(reason)
 
-    def _handle_step_failure(self, e, event, use_sqs):
+    def _handle_step_failure(self, e, event: Dict, use_sqs: bool):
         traceback.print_exception(e)
         if use_sqs:
             response = self.sqs.send_message(
@@ -227,7 +230,7 @@ class BUAControllerHandler:
         else:
             raise
 
-    def _perform_action(self, data, log_item, step, this):
+    def _perform_action(self, data: Dict, log_item: Dict, step: Dict, this: str):
         if 'action' in step:
 
             action = step['action']
@@ -249,7 +252,7 @@ class BUAControllerHandler:
             status, reason = 'COMPLETE', 'No action'
         return reason, status
 
-    def _record_result(self, event, log_item, reason, status, this):
+    def _record_result(self, event: Dict, log_item: Dict, reason: str, status: str, this: str):
         log_item['TIME2'] = self._local_time()
         if status is not None:
             log_item['STATUS'] = status
@@ -271,7 +274,7 @@ class BUAControllerHandler:
         local_now = utc_now_no_microseconds.astimezone(gmt_plus_10_timezone)
         return str(local_now)
 
-    def _log_processing_start(self, instance, name, this):
+    def _log_processing_start(self, instance: str, name: str, this: str):
         time1 = self._local_time()
         result = self.ddb_table.get_item(
             Key={
@@ -293,24 +296,27 @@ class BUAControllerHandler:
         self.ddb_table.put_item(Item=log_item)
         return log_item
 
-    def _determine_instance(self, event):
+    @staticmethod
+    def _determine_instance(event: Dict) -> str:
         if 'instance' not in event or event['instance'] is None or len(event['instance']) == 0:
             event['instance'] = str(int(datetime.now(timezone.utc).timestamp() * 1000))
         instance = str(event['instance'])
         return instance
 
-    def _process_args(self, data, step):
+    @staticmethod
+    def _process_args(data: Dict, step: Dict):
         if 'args' in step:
             for key, value in step['args'].items():
                 data[key] = value
 
-    def _get_data(self, event):
+    @staticmethod
+    def _get_data(event: Dict) -> Dict:
         if 'data' not in event:
             event['data'] = dict()
         data = event['data']
         return data
 
-    def _determine_next_step(self, event, log_item, status, step, reason):
+    def _determine_next_step(self, event: Dict, log_item: Dict, status: str, step: Dict, reason: str):
         if 'on' in step:
             if status in step['on']:
                 if 'next' in step['on'][status]:
@@ -336,7 +342,8 @@ class BUAControllerHandler:
         self._no_next_step(event, log_item)
         return status, reason
 
-    def _check_retries_exceeded(self, step):
+    @staticmethod
+    def _check_retries_exceeded(step: Dict):
         status = 'OK'
         reason = None
         if 'retries' in step:
@@ -348,7 +355,8 @@ class BUAControllerHandler:
                 reason = f'Retries exceeded'
         return status, reason
 
-    def _log_next_step(self, event, log_item):
+    @staticmethod
+    def _log_next_step(event: Dict, log_item: Dict):
         if len(event['next']) > 0:
             log_item['NEXT'] = event['next']
         elif 'NEXT' in log_item:
@@ -358,7 +366,7 @@ class BUAControllerHandler:
         elif 'DELAY' in log_item:
             del log_item['DELAY']
 
-    def _no_next_step(self, event, log_item):
+    def _no_next_step(self, event: Dict, log_item: Dict):
         event['next'] = ''
         event['delay'] = 0
         self._log_next_step(event, log_item)
