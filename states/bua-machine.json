@@ -12,10 +12,11 @@
           "name": "BUA",
           "action": "get_stepfunction_arns",
           "stepfunction": {
+            "bua-restore": "",
+            "bua-segments": "",
             "bua-reset-basicreads": "",
             "bua-basicreads": "",
-            "bua-invoiceruns": "",
-            "bua-restore": ""
+            "bua-invoiceruns": ""
           },
           "start.$": "$.start"
         }
@@ -27,6 +28,16 @@
     "WhatNext": {
       "Type": "Choice",
       "Choices": [
+        {
+          "Variable": "$.start",
+          "StringEquals": "Restore",
+          "Next": "Restore"
+        },
+        {
+          "Variable": "$.start",
+          "StringEquals": "GenerateSegments",
+          "Next": "GenerateSegments"
+        },
         {
           "Variable": "$.start",
           "StringEquals": "ResetBasicReads",
@@ -41,14 +52,55 @@
           "Variable": "$.start",
           "StringEquals": "InvoiceRuns",
           "Next": "InvoiceRuns"
-        },
-        {
-          "Variable": "$.start",
-          "StringEquals": "Restore",
-          "Next": "Restore"
         }
       ],
       "Default": "ResetBasicReads"
+    },
+    "Restore": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today"
+          },
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.stepfunction.bua-restore",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
+    },
+    "GenerateSegments": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today"
+          },
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.stepfunction.bua-segments",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
     },
     "ResetBasicReads": {
       "Type": "Task",
@@ -111,29 +163,6 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-invoiceruns",
-        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
-      },
-      "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
-      },
-      "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
-    },
-    "Restore": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::states:startExecution.sync:2",
-      "Parameters":{
-        "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
-          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
-        },
-        "StateMachineArn.$":"$.stepfunction.bua-restore",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
