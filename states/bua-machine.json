@@ -68,7 +68,7 @@
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($$.Execution.Input.context, $.Output, false)"
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
       "Next": "BasicReads"
@@ -91,7 +91,7 @@
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($$.Execution.Input.context, $.Output, false)"
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
@@ -114,7 +114,7 @@
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($$.Execution.Input.context, $.Output, false)"
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
@@ -137,7 +137,7 @@
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($$.Execution.Input.context, $.Output, false)"
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
