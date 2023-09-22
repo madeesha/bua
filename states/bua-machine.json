@@ -14,6 +14,7 @@
           "stepfunction": {
             "bua-restore": "",
             "bua-segments": "",
+            "bua-microscalar": "",
             "bua-reset-basicreads": "",
             "bua-basicreads": "",
             "bua-invoiceruns": ""
@@ -35,8 +36,13 @@
         },
         {
           "Variable": "$.start",
-          "StringEquals": "GenerateSegments",
-          "Next": "GenerateSegments"
+          "StringEquals": "Segments",
+          "Next": "Segments"
+        },
+        {
+          "Variable": "$.start",
+          "StringEquals": "Microscalar",
+          "Next": "Microscalar"
         },
         {
           "Variable": "$.start",
@@ -54,7 +60,7 @@
           "Next": "InvoiceRuns"
         }
       ],
-      "Default": "ResetBasicReads"
+      "Default": "ExecutionDone"
     },
     "Restore": {
       "Type": "Task",
@@ -79,7 +85,7 @@
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
     },
-    "GenerateSegments": {
+    "Segments": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
@@ -94,6 +100,29 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-segments",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
+    },
+    "Microscalar": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today"
+          },
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.stepfunction.bua-microscalar",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
