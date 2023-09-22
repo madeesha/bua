@@ -1,6 +1,10 @@
+from bua.pipeline.handler.request import HandlerRequest
+
+
 class Choice:
 
-    def choice(self, step, data):
+    def choice(self, request: HandlerRequest):
+        data = request.data
         choices = data['choices']
         for choice in choices:
             if 'variable' in choice:

@@ -1,6 +1,7 @@
 from typing import Dict
 
 from bua.pipeline.facade.sqs import SQS
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class Profiles:
@@ -9,7 +10,7 @@ class Profiles:
         self.sqs = sqs
         self.prefix = self.config['prefix']
 
-    def wait_for_empty_site_queues(self, step, data):
+    def wait_for_empty_site_queues(self, _request: HandlerRequest):
         status = 'COMPLETE'
         reason = 'None of the queues have messages'
         queues = self.sqs.describe_queues(queue_name_prefix=f'{self.prefix}-sqs-bua-site-')
@@ -42,7 +43,7 @@ class Profiles:
                     break
         return status, reason
 
-    def empty_site_errors_queues(self, step, data):
+    def empty_site_errors_queues(self, _request: HandlerRequest):
         queues = self.sqs.describe_queues(queue_name_prefix=f'{self.prefix}-sqs-bua-site-')
         for queue_url, attributes in queues.items():
             queue_name = queue_url.split('/')[-1]

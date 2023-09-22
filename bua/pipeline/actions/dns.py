@@ -1,4 +1,5 @@
 from bua.pipeline.facade.route53 import Route53
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class DNS:
@@ -6,7 +7,8 @@ class DNS:
         self.prefix = config['prefix']
         self.route53 = route53
 
-    def set_rds_dns_entry(self, step, data):
+    def set_rds_dns_entry(self, request: HandlerRequest):
+        data = request.data
         hosted_zone_id = data['hosted_zone_id']
         route53_records = data['route53_records']
         domain = data['domain']

@@ -2,6 +2,7 @@ import os
 import pathlib
 
 from bua.pipeline.facade.cf import CF
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class ChangeSet:
@@ -13,7 +14,8 @@ class ChangeSet:
         self.cluster_name = self.config['cluster']
         self.env_name = self.config['env']
 
-    def create_upgrade_version_change_set(self, step, data):
+    def create_upgrade_version_change_set(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         mysql_version = data['mysql_version']
@@ -34,7 +36,8 @@ class ChangeSet:
         msg = f'{stack_name} : {change_set_name} : Change set creation in progress'
         return "COMPLETE", msg
 
-    def create_scale_change_set(self, step, data):
+    def create_scale_change_set(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         instance_type = data['instance_type']
@@ -56,7 +59,8 @@ class ChangeSet:
         msg = f'{stack_name} : {change_set_name} : Change set creation in progress'
         return "COMPLETE", msg
 
-    def create_change_set(self, step, data):
+    def create_change_set(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         params_id = data['params_id']
@@ -85,7 +89,8 @@ class ChangeSet:
         msg = f'{stack_name} : {change_set_name} : Change set creation in progress'
         return "COMPLETE", msg
 
-    def check_change_set_ready(self, step, data):
+    def check_change_set_ready(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         stack_name = f'{self.prefix}-{update_id}-{suffix}'
@@ -108,7 +113,8 @@ class ChangeSet:
             return "COMPLETE", msg
         return "RETRY", msg
 
-    def check_change_set_complete(self, step, data):
+    def check_change_set_complete(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         stack_name = f'{self.prefix}-{update_id}-{suffix}'
@@ -128,7 +134,8 @@ class ChangeSet:
         msg = f'{stack_name} : {change_set_name} : {stack_status} : Change set not complete yet. {stack_status_reason}'
         return "RETRY", msg
 
-    def execute_change_set(self, step, data):
+    def execute_change_set(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         stack_name = f'{self.prefix}-{update_id}-{suffix}'

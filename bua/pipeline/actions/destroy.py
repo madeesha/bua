@@ -1,4 +1,5 @@
 from bua.pipeline.facade.cf import CF
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class Destroy:
@@ -10,7 +11,8 @@ class Destroy:
         self.cluster_name = self.config['cluster']
         self.env_name = self.config['env']
 
-    def destroy_database(self, step, data):
+    def destroy_database(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         stack_name = f'{self.prefix}-{update_id}-{suffix}'
@@ -25,7 +27,8 @@ class Destroy:
         msg = f'{stack_name} : Stack is not in a state that can be automatically deleted'
         return "ABORT", msg
 
-    def check_destroy_database(self, step, data):
+    def check_destroy_database(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         stack_name = f'{self.config["prefix"]}-{update_id}-{suffix}'

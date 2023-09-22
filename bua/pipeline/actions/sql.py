@@ -7,6 +7,7 @@ import pymysql
 import pymysql.cursors
 
 from bua.pipeline.facade.sm import SecretManager
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class SQL:
@@ -36,7 +37,8 @@ class SQL:
             cur.execute("SET SESSION innodb_lock_wait_timeout = 60")
         return con
 
-    def insert_event_log(self, step, data):
+    def insert_event_log(self, request: HandlerRequest):
+        data = request.data
         events: List[Dict] = data['events']
         try:
             con = self._connect(data)
@@ -60,7 +62,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def execute_sql(self, step, data):
+    def execute_sql(self, request: HandlerRequest):
+        data = request.data
         sql = data.get('sql')
         if sql is None:
             sql = self.sm.fetch_secret(data['sqlsecret'])['sql']
@@ -80,7 +83,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def bua_initiate_invoice_runs(self, step, data):
+    def bua_initiate_invoice_runs(self, request: HandlerRequest):
+        data = request.data
         run_date = data.get('run_date')
         aws_account = self.config['aws_account']
         schedule_gap = data.get('schedule_gap', 15)
@@ -116,7 +120,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def bua_create_invoice_scalar(self, step, data):
+    def bua_create_invoice_scalar(self, request: HandlerRequest):
+        data = request.data
         concurrency = int(data['concurrency'])
         start_inclusive = data.get('start_inclusive')
         end_exclusive = data.get('end_exclusive')
@@ -141,7 +146,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def bua_initiate(self, step, data):
+    def bua_initiate(self, request: HandlerRequest):
+        data = request.data
         run_type = data['run_type']
         start_inclusive = data.get('start_inclusive')
         end_inclusive = data.get('end_inclusive')
@@ -165,7 +171,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def bua_resolve_variances(self, step, data):
+    def bua_resolve_variances(self, request: HandlerRequest):
+        data = request.data
         run_date = data['run_date']
         source_date = data.get('source_date')
         try:
@@ -184,7 +191,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def truncate_workflow_instance(self, step, data):
+    def truncate_workflow_instance(self, request: HandlerRequest):
+        data = request.data
         try:
             con = self._connect(data)
             with con:
@@ -202,7 +210,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def get_max_workflow_instance(self, step, data):
+    def get_max_workflow_instance(self, request: HandlerRequest):
+        data = request.data
         try:
             con = self._connect(data)
             with con:
@@ -222,7 +231,8 @@ class SQL:
         print(f'Max workflow_instance_id is {workflow_instance_id}')
         return workflow_instance_id
 
-    def check_bua_control(self, step, data):
+    def check_bua_control(self, request: HandlerRequest):
+        data = request.data
         run_type = data['run_type']
         run_date = data['run_date']
         acceptable_error_rate = int(data.get('acceptable_error_rate', 0))
@@ -251,7 +261,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def wait_for_workflows(self, step, data):
+    def wait_for_workflows(self, request: HandlerRequest):
+        data = request.data
         workflow_names = data['workflow_names']
         workflow_instance_id = int(data.get('workflow_instance_id', 0))
         acceptable_error_rate = int(data.get('acceptable_error_rate', 0))
@@ -293,7 +304,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def resubmit_failed_workflows(self, step, data):
+    def resubmit_failed_workflows(self, request: HandlerRequest):
+        data = request.data
         workflow_names = data['workflow_names']
         workflow_instance_id = int(data.get('workflow_instance_id', 0))
         try:
@@ -322,7 +334,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def wait_for_workflow_schedules(self, step, data):
+    def wait_for_workflow_schedules(self, request: HandlerRequest):
+        data = request.data
         workflow_names = data['workflow_names']
         try:
             con = self._connect(data)
@@ -347,7 +360,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def core_warm_database_statistics(self, step, data):
+    def core_warm_database_statistics(self, request: HandlerRequest):
+        data = request.data
         concurrency = int(data['concurrency'])
         try:
             con = self._connect(data)
@@ -365,7 +379,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def core_warm_database_indexes(self, step, data):
+    def core_warm_database_indexes(self, request: HandlerRequest):
+        data = request.data
         concurrency = int(data['concurrency'])
         try:
             con = self._connect(data)
@@ -382,7 +397,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def disable_workflow_schedules(self, step, data):
+    def disable_workflow_schedules(self, request: HandlerRequest):
+        data = request.data
         try:
             con = self._connect(data)
             with con:
@@ -396,7 +412,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def disable_workflow_instances(self, step, data):
+    def disable_workflow_instances(self, request: HandlerRequest):
+        data = request.data
         try:
             con = self._connect(data)
             with con:
@@ -410,7 +427,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def stats_sample_pages(self, step, data):
+    def stats_sample_pages(self, request: HandlerRequest):
+        data = request.data
         tables = data['tables']
         try:
             con = self._connect(data)
@@ -428,7 +446,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def export_procedures(self, step, data):
+    def export_procedures(self, request: HandlerRequest):
+        data = request.data
         schema = data['schema']
         try:
             con = self._connect(data)
@@ -469,7 +488,8 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def import_procedures(self, step, data):
+    def import_procedures(self, request: HandlerRequest):
+        data = request.data
         schema = data['schema']
         try:
             con = self._connect(data)

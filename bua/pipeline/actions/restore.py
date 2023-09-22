@@ -1,6 +1,7 @@
 import pathlib
 import os
 from bua.pipeline.facade.cf import CF
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class Restore:
@@ -12,7 +13,8 @@ class Restore:
         self.cluster_name = self.config['cluster']
         self.env_name = self.config['env']
 
-    def restore_database(self, step, data):
+    def restore_database(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         params_id = data['params_id']
@@ -39,7 +41,8 @@ class Restore:
         msg = f'{stack_name} : Stack creation in progress'
         return "COMPLETE", msg
 
-    def check_restore_database(self, step, data):
+    def check_restore_database(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         stack_name = f'{self.config["prefix"]}-{update_id}-{suffix}'

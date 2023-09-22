@@ -3,6 +3,7 @@ import pathlib
 import yaml
 
 from bua.pipeline.facade.sqs import SQS
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class Trigger:
@@ -10,7 +11,8 @@ class Trigger:
         self.sqs = sqs
         self.next_queue_url = config['next_queue_url']
 
-    def trigger_restore(self, step, data):
+    def trigger_restore(self, request: HandlerRequest):
+        data = request.data
         template_name = data.get('template_name', 'bua_restore')
         template_path = pathlib.Path(__file__).parent / f'{template_name}.yml'
         if not os.path.exists(template_path):

@@ -6,6 +6,8 @@ import kubernetes
 from boto3 import Session
 from botocore.signers import RequestSigner
 
+from bua.pipeline.handler.request import HandlerRequest
+
 
 class KubeCtl:
 
@@ -120,7 +122,8 @@ class KubeCtl:
         with open(KubeCtl.KUBE_FILEPATH, 'w') as outfile:
             yaml.dump(kube_content, outfile, default_flow_style=False)
 
-    def scale_replicas(self, step, data):
+    def scale_replicas(self, request: HandlerRequest):
+        data = request.data
         self._create_kube_config(self.cluster)
         deployments = data['deployment']
         namespace = data['namespace']
@@ -135,7 +138,8 @@ class KubeCtl:
                 apps_api.patch_namespaced_deployment(name=name, namespace=namespace, body=deployment)
         return "COMPLETE", f"{','.join(deployments)} scaled to {replicas} replicas"
 
-    def check_replicas(self, step, data):
+    def check_replicas(self, request: HandlerRequest):
+        data = request.data
         self._create_kube_config(self.cluster)
         deployments = data['deployment']
         namespace = data['namespace']
@@ -149,7 +153,8 @@ class KubeCtl:
                 return "RETRY", f"Only {ready_replicas} {name} replicas are ready"
         return "COMPLETE", f"Replicas are ready"
 
-    def scale_down(self, step, data):
+    def scale_down(self, request: HandlerRequest):
+        data = request.data
         self._create_kube_config(self.cluster)
         deployments = data['deployment']
         namespace = data['namespace']
@@ -163,7 +168,8 @@ class KubeCtl:
                 apps_api.patch_namespaced_deployment(name=name, namespace=namespace, body=deployment)
         return "COMPLETE", f"{','.join(deployments)} scaled down to 0 replicas"
 
-    def scale_nodegroup(self, step, data):
+    def scale_nodegroup(self, request: HandlerRequest):
+        data = request.data
         cluster_name = data['cluster_name']
         node_group_name = data['node_group_name']
         min_size = data['min_size']
@@ -191,7 +197,8 @@ class KubeCtl:
             return "COMPLETE", f'Updated nodegroup configuration'
         return "TERMINATE", f'Unknown status {response["update"]["status"]}'
 
-    def wait_for_scale_nodegroup(self, step, data):
+    def wait_for_scale_nodegroup(self, request: HandlerRequest):
+        data = request.data
         cluster_name = data['cluster_name']
         node_group_name = data['node_group_name']
         eks_update_id = data['eks_update_id']

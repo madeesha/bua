@@ -1,5 +1,6 @@
 from bua.pipeline.facade.rds import RDS
 from bua.pipeline.facade.sm import SecretManager
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class Reset:
@@ -10,7 +11,8 @@ class Reset:
         self.sm = secret_manager
         self.prefix = config['prefix']
 
-    def reset_password(self, step, data):
+    def reset_password(self, request: HandlerRequest):
+        data = request.data
         update_id = data['update_id']
         suffix = data['suffix']
         db_instance_identifier = f'{self.prefix}-{update_id}-{suffix}'

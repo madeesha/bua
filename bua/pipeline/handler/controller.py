@@ -21,6 +21,7 @@ from bua.pipeline.facade.rds import RDS
 from bua.pipeline.facade.route53 import Route53
 from bua.pipeline.facade.sm import SecretManager
 from bua.pipeline.facade.sqs import SQS
+from bua.pipeline.handler.request import HandlerRequest
 
 
 class BUAControllerHandler:
@@ -78,6 +79,7 @@ class BUAControllerHandler:
             'truncate_workflow_instance': sql_handler.truncate_workflow_instance,
             'scale_replicas': kubectl_handler.scale_replicas,
             'check_replicas': kubectl_handler.check_replicas,
+            'scale_down': kubectl_handler.scale_down,
             'bua_initiate': sql_handler.bua_initiate,
             'bua_resolve_variances': sql_handler.bua_resolve_variances,
             'wait_for_empty_site_queues': profiles_handler.wait_for_empty_site_queues,
@@ -93,7 +95,8 @@ class BUAControllerHandler:
             'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup,
         }
 
-    def get_config(self, step, data):
+    def get_config(self, request: HandlerRequest):
+        data = request.data
         data['config'] = dict(self.config)
         region = data["config"]["region"]
         account = data["config"]["aws_account"]
@@ -101,13 +104,14 @@ class BUAControllerHandler:
         data['config']['states_prefix'] = f'arn:aws:states:{region}:{account}:stateMachine:{prefix}")'
         return "COMPLETE", f'Retrieved config values'
 
-    def get_stepfunction_arns(self, step, data):
+    def get_stepfunction_arns(self, request: HandlerRequest):
+        event = request.event
         region = self.config['region']
-        account_id = self.config['aws_account']
+        account = self.config['aws_account']
         prefix = self.config['prefix']
-        stepfunctions = data.get('stepfunction', dict())
+        stepfunctions = event.get('stepfunction', dict())
         for name in stepfunctions:
-            data['stepfunction'][name] = f'arn:aws:states:{region}:{account_id}:stateMachine:{prefix}-{name}'
+            event['stepfunction'][name] = f'arn:aws:states:{region}:{account}:stateMachine:{prefix}-{name}'
         return "COMPLETE", f'Calculated {len(stepfunctions)} stepfunction names'
 
     def handle_request(self, event: Dict):
@@ -209,7 +213,7 @@ class BUAControllerHandler:
         log_item = self._log_processing_start(instance, name, this)
         status, reason = self._check_retries_exceeded(step)
         if status == 'OK':
-            reason, status = self._perform_action(data, log_item, step, this)
+            reason, status = self._perform_action(log_item, this, event, step, data)
             status, reason = self._determine_next_step(event, log_item, status, step, reason)
         self._record_result(event, log_item, reason, status, this)
         self.ddb_table.put_item(Item=log_item)
@@ -230,7 +234,7 @@ class BUAControllerHandler:
         else:
             raise
 
-    def _perform_action(self, data: Dict, log_item: Dict, step: Dict, this: str):
+    def _perform_action(self, log_item: Dict, this: str, event: Dict, step: Dict, data: Dict):
         if 'action' in step:
 
             action = step['action']
@@ -240,7 +244,7 @@ class BUAControllerHandler:
             try:
                 if action not in self.handlers:
                     raise Exception(f'Cannot find handler for [{action}]')
-                status, reason = self.handlers[action](step, data)
+                status, reason = self.handlers[action](HandlerRequest(event, step, data))
             except Exception as e:
                 log_item['TIME2'] = self._local_time()
                 log_item['STATUS'] = 'ABORT'
