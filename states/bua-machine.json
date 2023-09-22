@@ -20,7 +20,9 @@
             "bua-reset-basicreads": "",
             "bua-basicreads": "",
             "bua-invoiceruns": "",
-            "bua-scaledown": ""
+            "bua-scaledown": "",
+            "bua-scaleup-workflow": "",
+            "bua-warming": ""
           },
           "start.$": "$.start"
         }
@@ -36,6 +38,16 @@
           "Variable": "$.start",
           "StringEquals": "Restore",
           "Next": "Restore"
+        },
+        {
+          "Variable": "$.start",
+          "StringEquals": "ScaleUpWorkflow",
+          "Next": "ScaleUpWorkflow"
+        },
+        {
+          "Variable": "$.start",
+          "StringEquals": "Warming",
+          "Next": "Warming"
         },
         {
           "Variable": "$.start",
@@ -95,6 +107,52 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-restore",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
+    },
+    "ScaleUpWorkflow": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today"
+          },
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.stepfunction.bua-scaleup-workflow",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ExecutionDone"
+    },
+    "Warming": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
+          "data": {
+            "run_date.$": "$.data.run_date",
+            "today.$": "$.data.today"
+          },
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.stepfunction.bua-warming",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {

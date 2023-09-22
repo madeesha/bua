@@ -1,0 +1,187 @@
+{
+  "Comment": "Warm Database",
+  "StartAt": "WarmDatabase",
+  "States": {
+    "WarmDatabase": {
+      "Type": "Pass",
+      "Parameters": {
+        "type": "step",
+        "name": "Warm Database",
+        "next": "110_analyse_statistics",
+        "speed": "fast",
+        "retry_delay": 120,
+        "data": {
+          "run_date.$": "$.data.run_date",
+          "today.$": "$.data.today",
+          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
+          "instance_class": "DBInstanceClassR6i",
+          "instance_type": "8xlarge",
+          "mysql_version": "8.0.32",
+          "params_id": "1",
+          "schema": "Turkey_BLU",
+          "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32",
+          "suffix": "bua-sql",
+          "update_id": "12",
+          "rdssecret": "cicd/tst-anstead/rds/bua",
+          "hosted_zone_id": "Z06477101FOH3N8B2WK6N",
+          "cluster_name": "anstead",
+          "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
+        },
+        "steps": {
+          "110_analyse_statistics": {
+            "action": "core_warm_database_statistics",
+            "args": {
+              "concurrency": 32
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "110_wait_for_analyse_statistics"
+              }
+            }
+          },
+          "110_wait_for_analyse_statistics": {
+            "action": "wait_for_workflows",
+            "retry_delay": 300,
+            "args": {
+              "workflow_names": [
+                "WARM_TABLE",
+                "WARM_PARTITION"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "120_database_warming"
+              },
+              "FAILED": {},
+              "ONHOLD": {}
+            }
+          },
+          "120_database_warming": {
+            "action": "core_warm_database_indexes",
+            "args": {
+              "concurrency": 32
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "120_wait_for_database_warming"
+              }
+            }
+          },
+          "120_wait_for_database_warming": {
+            "action": "wait_for_workflows",
+            "retry_delay": 300,
+            "args": {
+              "workflow_names": [
+                "WARM_INDEX"
+              ]
+            },
+            "on": {
+              "COMPLETE": {},
+              "FAILED": {},
+              "ONHOLD": {}
+            }
+          }
+        }
+      },
+      "Next": "NextTransition"
+    },
+    "FastController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FastControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 180,
+      "Next": "WhatNext"
+    },
+    "SlowController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlowControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 900,
+      "Next": "WhatNext"
+    },
+    "WhatNext": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.next",
+              "StringEquals": ""
+            },
+            {
+              "Variable": "$.result.status",
+              "StringEquals": "COMPLETE"
+            }
+          ],
+          "Next": "ExecutionDone"
+        },
+        {
+          "Variable": "$.next",
+          "StringEquals": "",
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$.delay",
+          "NumericGreaterThan": 0,
+          "Next": "WaitForNext"
+        }
+      ],
+      "Default": "NextTransition"
+    },
+    "ExecutionDone": {
+      "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "Step not COMPLETE"
+    },
+    "WaitForNext": {
+      "Type": "Wait",
+      "SecondsPath": "$.delay",
+      "Next": "NextTransition"
+    },
+    "NextTransition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.speed",
+          "StringEquals": "slow",
+          "Next": "NextTransitionSlow"
+        }
+      ],
+      "Default": "NextTransitionFast"
+    },
+    "NextTransitionSlow": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "SlowController"
+    },
+    "NextTransitionFast": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "FastController"
+    }
+  }
+}
