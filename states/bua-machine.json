@@ -11,15 +11,13 @@
           "type": "step",
           "name": "BUA",
           "action": "get_stepfunction_arns",
-          "data": {
-            "start.$": "$.start",
-            "stepfunction": {
-              "bua-reset-basicreads": "",
-              "bua-basicreads": "",
-              "bua-invoiceruns": "",
-              "bua-restore": ""
-            }
-          }
+          "stepfunction": {
+            "bua-reset-basicreads": "",
+            "bua-basicreads": "",
+            "bua-invoiceruns": "",
+            "bua-restore": ""
+          },
+          "start.$": "$.start"
         }
       },
       "OutputPath": "$.Payload",
@@ -30,22 +28,22 @@
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.data.start",
+          "Variable": "$.start",
           "StringEquals": "ResetBasicReads",
           "Next": "ResetBasicReads"
         },
         {
-          "Variable": "$.data.start",
+          "Variable": "$.start",
           "StringEquals": "BasicReads",
           "Next": "BasicReads"
         },
         {
-          "Variable": "$.data.start",
+          "Variable": "$.start",
           "StringEquals": "InvoiceRuns",
           "Next": "InvoiceRuns"
         },
         {
-          "Variable": "$.data.start",
+          "Variable": "$.start",
           "StringEquals": "Restore",
           "Next": "Restore"
         }
@@ -57,15 +55,20 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
           "data": {
             "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today",
-            "stepfunction.$": "$.data.stepfunction"
+            "today.$": "$.data.today"
           },
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$": "$.data.stepfunction.bua-reset-basicreads",
+        "StateMachineArn.$": "$.stepfunction.bua-reset-basicreads",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($$.Execution.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
       "Next": "BasicReads"
@@ -75,15 +78,20 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
           "data": {
             "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today",
-            "stepfunction.$": "$.data.stepfunction"
+            "today.$": "$.data.today"
           },
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.data.stepfunction.bua-basicreads",
+        "StateMachineArn.$":"$.stepfunction.bua-basicreads",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($$.Execution.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
@@ -93,15 +101,20 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
           "data": {
             "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today",
-            "stepfunction.$": "$.data.stepfunction"
+            "today.$": "$.data.today"
           },
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.data.stepfunction.bua-invoiceruns",
+        "StateMachineArn.$":"$.stepfunction.bua-invoiceruns",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($$.Execution.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"
@@ -111,15 +124,20 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
+          "context": {
+            "stepfunction.$": "$.stepfunction"
+          },
           "data": {
             "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today",
-            "stepfunction.$": "$.data.stepfunction"
+            "today.$": "$.data.today"
           },
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.data.stepfunction.bua-restore",
+        "StateMachineArn.$":"$.stepfunction.bua-restore",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($$.Execution.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
       "Next": "ExecutionDone"

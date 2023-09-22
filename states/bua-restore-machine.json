@@ -13,7 +13,6 @@
         "data": {
           "run_date.$": "$.data.run_date",
           "today.$": "$.data.today",
-          "stepfunction.$": "$.data.stepfunction",
           "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
           "instance_class": "DBInstanceClassR6i",
           "instance_type": "8xlarge",
