@@ -1,3 +1,0 @@
-action: trigger_restore
-args:
-  this: 110_analyse_statistics

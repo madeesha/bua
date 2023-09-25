@@ -1,4 +1,0 @@
-action: trigger_restore
-args:
-  this: 180_clear_error_queues
-  run_date: '2023-09-01'

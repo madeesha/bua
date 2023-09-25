@@ -1,3 +1,0 @@
-action: trigger_restore
-args:
-  this: 195_scale_up_meterdata

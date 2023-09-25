@@ -1,4 +1,0 @@
-action: trigger_restore
-args:
-  this: 230_prepare_invoice_runs
-  run_date: '2023-09-01'
