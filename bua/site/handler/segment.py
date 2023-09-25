@@ -4,6 +4,7 @@ from typing import Dict
 from bua.site.action import SQS
 from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
+from bua.site.action.fix import Fix
 from bua.site.action.nem12 import NEM12
 from bua.site.action.scalar import MicroScalar
 from bua.site.action.sitesegment import SiteSegment
@@ -24,6 +25,7 @@ class BUASiteSegmentHandler:
             'SegmentJurisdiction': self._handle_segment_jurisdiction,
             'SegmentTNI': self._handle_segment_tni,
             'SegmentJurisdictionCheck': self._handle_segment_jurisdiction_check,
+            'SegmentJurisdictionFix': self._handle_segment_jurisdiction_fix,
             'NEM12': self._handle_nem12,
             'MicroScalar': self._handle_microscalar,
             'BasicRead': self._handle_basic_read,
@@ -139,6 +141,13 @@ class BUASiteSegmentHandler:
         interval_date = entry['interval_date']
         action = Check(queue=self.segment_queue, conn=self.conn, debug=debug)
         return action.segment_jurisdiction_check(run_date, identifier_type, interval_date)
+
+    def _handle_segment_jurisdiction_fix(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
+        run_date = entry['run_date']
+        identifier_type = entry['identifier_type']
+        interval_date = entry['interval_date']
+        action = Fix(queue=self.segment_queue, conn=self.conn, debug=debug)
+        return action.segment_jurisdiction_fix(run_date, identifier_type, interval_date)
 
     def calculate_jurisdiction_segment(self, identifier_type, run_date, source_date, entry,
                                        debug=False, avg_sum='Average', incl_est=True) -> Dict:

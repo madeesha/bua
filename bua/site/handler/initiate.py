@@ -2,6 +2,7 @@ import json
 
 from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
+from bua.site.action.fix import Fix
 from bua.site.action.jurisdiction import SegmentJurisdiction
 from bua.site.action.nem12 import NEM12
 from bua.site.action.scalar import MicroScalar
@@ -29,6 +30,7 @@ class BUASiteInitiateHandler:
             'SegmentJurisdiction': self._initiate_segment_jurisdiction_calculation,
             'SegmentTNI': self._initiate_segment_tni_calculation,
             'SegmentJurisdictionCheck': self._initiate_segment_jurisdiction_check,
+            'SegmentJurisdictionFix': self._initiate_segment_jurisdiction_fix,
             'Requeue': self._initiate_requeue,
             'NEM12': self._initiate_nem12_files,
             'MicroScalar': self._initiate_microscalar,
@@ -111,6 +113,20 @@ class BUASiteInitiateHandler:
         identifier_type = body['identifier_type']
         site = Check(queue=self.segment_queue, conn=self.conn, debug=debug)
         site.initiate_segment_jurisdiction_check(
+            run_type=run_type,
+            run_date=run_date,
+            today=today,
+            start_inclusive=body['start_inclusive'],
+            end_exclusive=body['end_exclusive'],
+            identifier_type=identifier_type
+        )
+
+    def _initiate_segment_jurisdiction_fix(self, body, debug, run_type):
+        run_date: str = body['run_date']
+        today: str = body['today']
+        identifier_type = body['identifier_type']
+        site = Fix(queue=self.segment_queue, conn=self.conn, debug=debug)
+        site.initiate_segment_jurisdiction_fix(
             run_type=run_type,
             run_date=run_date,
             today=today,

@@ -13,19 +13,10 @@
         "data": {
           "run_date.$": "$.data.run_date",
           "today.$": "$.data.today",
-          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
-          "instance_class": "DBInstanceClassR6i",
-          "instance_type": "8xlarge",
-          "mysql_version": "8.0.32",
-          "params_id": "1",
           "schema": "Turkey_BLU",
-          "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32",
           "suffix": "bua-sql",
           "update_id": "12",
-          "rdssecret": "cicd/tst-anstead/rds/bua",
-          "hosted_zone_id": "Z06477101FOH3N8B2WK6N",
-          "cluster_name": "anstead",
-          "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
+          "rdssecret": "cicd/tst-anstead/rds/bua"
         },
         "steps": {
           "130_clear_error_queues": {
@@ -128,11 +119,43 @@
             "on": {
               "COMPLETE": {
                 "delay": 60,
-                "next": "160_profile_validation"
+                "next": "160_segment_jurisdiction_fix"
               }
             }
           },
-          "160_profile_validation": {
+          "160_segment_jurisdiction_fix": {
+            "action": "bua_initiate",
+            "args": {
+              "run_type": "SegmentJurisdictionFix",
+              "identifier_type": "SegmentJurisdictionAvgExclEst"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "160_wait_for_segment_jurisdiction_fix"
+              }
+            }
+          },
+          "160_wait_for_segment_jurisdiction_fix": {
+            "action": "wait_for_empty_site_queues",
+            "retry_delay": 120,
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "170_clear_error_queues"
+              }
+            }
+          },
+          "170_clear_error_queues": {
+            "action": "empty_site_errors_queues",
+            "on": {
+              "COMPLETE": {
+                "delay": 60,
+                "next": "170_profile_validation"
+              }
+            }
+          },
+          "170_profile_validation": {
             "action": "bua_initiate",
             "args": {
               "run_type": "Validate"
@@ -140,18 +163,18 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "160_wait_for_profile_validation"
+                "next": "170_wait_for_profile_validation"
               }
             }
           },
-          "160_wait_for_profile_validation": {
+          "170_wait_for_profile_validation": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
             "on": {
               "COMPLETE": {}
             }
           },
-          "170_resolve_variances": {
+          "180_resolve_variances": {
             "comment": "bua_resolve_variances",
             "on": {
               "COMPLETE": {
