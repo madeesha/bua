@@ -24,7 +24,10 @@
             "bua-scaleup-workflow": "",
             "bua-warming": ""
           },
-          "start.$": "$.start"
+          "start.$": "$.start",
+          "data": {
+            "run_date.$": "$.run_date"
+          }
         }
       },
       "OutputPath": "$.Payload",
