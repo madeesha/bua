@@ -17,7 +17,11 @@ class TestCase:
                     for choice in state['Choices']:
                         assert choice['Next'] in fsa['States']
                 if 'Parameters' in state:
-                    TestCase._validate_parameters(f'{name}/Parameters', state['Parameters'])
+                    key_name = f'{machine_name}: {name}/Parameters'
+                    TestCase._validate_parameters(key_name, state['Parameters'])
+                if 'ResultSelector' in state:
+                    key_name = f'{machine_name}: {name}/ResultSelector'
+                    TestCase._validate_parameters(key_name, state['ResultSelector'])
 
     @staticmethod
     def _validate_parameters(name, parameters):
@@ -25,7 +29,14 @@ class TestCase:
             if isinstance(value, dict):
                 TestCase._validate_parameters(f'{name}/{key}', value)
             if isinstance(value, str):
-                assert not value.startswith('$.') or key.endswith('.$'), f'{name}/{key} missing .$ on the key'
+                if value.startswith('$.'):
+                    assert key.endswith('.$'), f'{name}/{key} missing .$ on the key'
+                if key.endswith('.$'):
+                    _valid_json_path = value.startswith('$.') \
+                                       or value == '$' \
+                                       or value.startswith('States.') \
+                                       or value.startswith('$$.')
+                    assert _valid_json_path, f'{name}/{key} missing $. on the value'
 
     def test_machines(self):
         entries = os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'states'))

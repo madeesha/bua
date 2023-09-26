@@ -86,7 +86,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Payload.data",
-        "context.$": "$Payload.context",
+        "context.$": "$.Payload.context",
         "stepfunction.$": "$.Payload.stepfunction"
       },
       "TimeoutSeconds": 180,
