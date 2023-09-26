@@ -1,7 +1,57 @@
 {
   "Comment": "Bottom Up Accruals",
-  "StartAt": "BUA",
+  "StartAt": "Initialise",
   "States": {
+    "Initialise": {
+      "Type": "Pass",
+      "Parameters": {
+        "data": {
+          "run_date.$": "$.run_date"
+        },
+        "context": {
+          "steps.$": "States.StringSplit($.steps, $.context.splitter)",
+          "step_count.$": "States.ArrayLength(States.StringSplit($.steps, $.context.splitter))",
+          "default_steps": "ScaleUpWorkflow,ScaleUpMeterdata",
+          "splitter": ","
+        },
+        "stepfunction": {
+          "bua-restore": "",
+          "bua-segments": "",
+          "bua-microscalar": "",
+          "bua-scaleup-meterdata": "",
+          "bua-nem12": "",
+          "bua-reset-basicreads": "",
+          "bua-basicreads": "",
+          "bua-invoiceruns": "",
+          "bua-scaledown": "",
+          "bua-scaleup-workflow": "",
+          "bua-warming": ""
+        }
+      },
+      "Next": "CheckSteps"
+    },
+    "CheckSteps": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.context.step_count",
+          "NumericEquals": 0,
+          "Next": "SetDefaultSteps"
+        }
+      ],
+      "Default": "BUA"
+    },
+    "SetDefaultSteps": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "$.data",
+        "context": {
+          "steps.$": "States.StringSplit($.context.default_steps, $.context.splitter)",
+        },
+        "stepfunction.$": "$.stepfunction"
+      },
+      "Next": "BUA"
+    },
     "BUA": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -11,76 +61,29 @@
           "type": "step",
           "name": "BUA",
           "action": "get_stepfunction_arns",
-          "stepfunction": {
-            "bua-restore": "",
-            "bua-segments": "",
-            "bua-microscalar": "",
-            "bua-scaleup-meterdata": "",
-            "bua-nem12": "",
-            "bua-reset-basicreads": "",
-            "bua-basicreads": "",
-            "bua-invoiceruns": "",
-            "bua-scaledown": "",
-            "bua-scaleup-workflow": "",
-            "bua-warming": ""
-          },
-          "context": {
-            "steps.$": "States.StringSplit($.steps,\",\")",
-            "default_steps": "ScaleUpWorkflow,ScaleUpMeterdata"
-          },
-          "data": {
-            "run_date.$": "$.run_date"
-          }
-        }
-      },
-      "OutputPath": "$.Payload",
-      "TimeoutSeconds": 180,
-      "Next": "CheckSteps"
-    },
-    "CheckSteps": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "States.ArrayLength($.context.steps)",
-          "NumericEquals": 0,
-          "Next": "SetDefaultSteps"
-        }
-      ],
-      "Default": "ReplaceContext"
-    },
-    "SetDefaultSteps": {
-      "Type": "Pass",
-      "Parameters": {
-        "Output.$": "$",
-        "Context.$": {
-          "context": {
-            "steps.$": "States.StringSplit($.context.default_steps,\",\")"
-          }
+          "stepfunction.$": "$.stepfunction",
+          "data.$": "$.data"
         }
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Output, $.Context, false)"
+        "data.$": "$.Payload.data",
+        "context.$": "$.Input.context",
+        "stepfunction.$": "$.Payload.stepfunction"
       },
-      "OutputPath": "$.Output",
+      "TimeoutSeconds": 180,
       "Next": "ReplaceContext"
     },
     "ReplaceContext": {
       "Type": "Pass",
       "Parameters": {
-        "Output.$": "$",
-        "Context.$": {
-          "context": {
-            "stepfunction.$": "$.stepfunction",
-            "steps.$": "$.context.steps",
-            "steps_left.$": "States.MathAdd(States.ArrayLength($.context.steps),-1)",
-            "start.$": "States.ArrayGetItem($.context.steps,0)"
-          }
+        "data.$": "$.data",
+        "context.$": {
+          "stepfunction.$": "$.stepfunction",
+          "steps.$": "$.context.steps",
+          "steps_left.$": "States.MathAdd(States.ArrayLength($.context.steps),-1)",
+          "start.$": "States.ArrayGetItem($.context.steps,0)"
         }
       },
-      "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Output, $.Context, false)"
-      },
-      "OutputPath": "$.Output",
       "Next": "WhatToStart"
     },
     "WhatToStart": {
@@ -149,20 +152,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-restore",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "ScaleUpWorkflow": {
@@ -170,20 +170,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
+          "data.$": "$.data",
           "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-scaleup-workflow",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "Warming": {
@@ -191,20 +188,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-warming",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "Segments": {
@@ -212,20 +206,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-segments",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "Microscalar": {
@@ -233,20 +224,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-microscalar",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "ScaleUpMeterdata": {
@@ -254,20 +242,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-scaleup-meterdata",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "GenerateNEM12": {
@@ -275,20 +260,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-nem12",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "ResetBasicReads": {
@@ -296,20 +278,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$": "$.stepfunction.bua-reset-basicreads",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "BasicReads": {
@@ -317,20 +296,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-basicreads",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "InvoiceRuns": {
@@ -338,20 +314,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-invoiceruns",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "ScaleDown": {
@@ -359,20 +332,17 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context.$": "$.context",
-          "data": {
-            "run_date.$": "$.data.run_date",
-            "today.$": "$.data.today"
-          },
+          "data": "$.data",
+          "context": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-scaledown",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
       },
-      "OutputPath": "$.Output",
       "Next": "IsAnotherStep"
     },
     "IsAnotherStep": {
@@ -389,20 +359,14 @@
     "TakeAStep": {
       "Type": "Pass",
       "Parameters": {
-        "Output.$": "$",
-        "Context.$": {
-          "context": {
-            "stepfunction.$": "$.context.stepfunction",
-            "steps.$": "$.context.steps[1:]",
-            "steps_left.$": "States.MathAdd($.context.steps_left, -1)",
-            "start.$": "States.ArrayGetItem($.context.steps, 1)"
-          }
+        "data.$": "$.data",
+        "context": {
+          "stepfunction.$": "$.context.stepfunction",
+          "steps.$": "$.context.steps[1:]",
+          "steps_left.$": "States.MathAdd($.context.steps_left, -1)",
+          "start.$": "States.ArrayGetItem($.context.steps, 1)"
         }
       },
-      "ResultSelector": {
-        "Output.$": "States.JsonMerge($.Output, $.Context, false)"
-      },
-      "OutputPath": "$.Output",
       "Next": "WhatToStart"
     },
     "ExecutionDone": {
