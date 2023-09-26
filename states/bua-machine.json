@@ -180,7 +180,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -198,7 +198,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -216,7 +216,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -234,7 +234,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -252,7 +252,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -270,7 +270,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -288,7 +288,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -306,7 +306,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -324,7 +324,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -342,7 +342,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -360,7 +360,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$.Output.context"
+        "context.$": "$.Input.context"
       },
       "Next": "IsAnotherStep"
     },
