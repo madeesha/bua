@@ -22,71 +22,77 @@ test: venv
 
 # Trigger Restore Pipeline
 
+execute_defaults:
+	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
+		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
+		--name $(TODAY)-$(UUID) \
+		--input '{"steps": "", "run_date": "2023-09-25"}'
+
 execute_restore:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-Restore-$(UUID) \
-		--input '{"start": "Restore", "run_date": "2023-09-25"}'
+		--input '{"steps": "Restore", "run_date": "2023-09-25"}'
 
 execute_scaleup_workflow:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-ScaleUpWorkflow-$(UUID) \
-		--input '{"start": "ScaleUpWorkflow", "run_date": "2023-09-25"}'
+		--input '{"steps": "ScaleUpWorkflow", "run_date": "2023-09-25"}'
 
 execute_warming:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-Warming-$(UUID) \
-		--input '{"start": "Warming", "run_date": "2023-09-25"}'
+		--input '{"steps": "Warming", "run_date": "2023-09-25"}'
 
 execute_segments:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-Segments-$(UUID) \
-		--input '{"start": "Segments", "run_date": "2023-09-25"}'
+		--input '{"steps": "Segments", "run_date": "2023-09-25"}'
 
 execute_microscalar:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-MicroScalar-$(UUID) \
-		--input '{"start": "Microscalar", "run_date": "2023-09-25"}'
+		--input '{"steps": "Microscalar", "run_date": "2023-09-25"}'
 
 execute_scaleup_meterdata:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-ScaleUpMeterdata-$(UUID) \
-		--input '{"start": "ScaleUpMeterdata", "run_date": "2023-09-25"}'
+		--input '{"steps": "ScaleUpMeterdata", "run_date": "2023-09-25"}'
 
 execute_generate_nem12:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-GenerateNEM12-$(UUID) \
-		--input '{"start": "GenerateNEM12", "run_date": "2023-09-25"}'
+		--input '{"steps": "GenerateNEM12", "run_date": "2023-09-25"}'
 
 execute_reset_basicreads:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-ResetBasicReads-$(UUID) \
-		--input '{"start": "ResetBasicReads", "run_date": "2023-09-25"}'
+		--input '{"steps": "ResetBasicReads", "run_date": "2023-09-25"}'
 
 execute_generate_basicreads:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-BasicReads-$(UUID) \
-		--input '{"start": "BasicReads", "run_date": "2023-09-25"}'
+		--input '{"steps": "BasicReads", "run_date": "2023-09-25"}'
 
 execute_invoice_runs:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-InvoiceRuns-$(UUID) \
-		--input '{"start": "InvoiceRuns", "run_date": "2023-09-25"}'
+		--input '{"steps": "InvoiceRuns", "run_date": "2023-09-25"}'
 
 execute_scaledown:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
 		--name $(TODAY)-ScaleDown-$(UUID) \
-		--input '{"start": "ScaleDown", "run_date": "2023-09-25"}'
+		--input '{"steps": "ScaleDown", "run_date": "2023-09-25"}'
 
 # Manual Upgrade DB Steps
 

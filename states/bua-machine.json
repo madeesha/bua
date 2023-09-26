@@ -24,7 +24,10 @@
             "bua-scaleup-workflow": "",
             "bua-warming": ""
           },
-          "start.$": "$.start",
+          "context": {
+            "steps.$": "States.StringSplit($.steps,\",\")",
+            "default_steps": "ScaleUpWorkflow,ScaleUpMeterdata"
+          },
           "data": {
             "run_date.$": "$.run_date"
           }
@@ -32,63 +35,109 @@
       },
       "OutputPath": "$.Payload",
       "TimeoutSeconds": 180,
-      "Next": "WhatNext"
+      "Next": "CheckSteps"
     },
-    "WhatNext": {
+    "CheckSteps": {
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.start",
+          "Variable": "States.ArrayLength($.context.steps)",
+          "NumericEquals": 0,
+          "Next": "SetDefaultSteps"
+        }
+      ],
+      "Default": "ReplaceContext"
+    },
+    "SetDefaultSteps": {
+      "Type": "Pass",
+      "Parameters": {
+        "Output.$": "$",
+        "Context.$": {
+          "context": {
+            "steps.$": "States.StringSplit($.context.default_steps,\",\")"
+          }
+        }
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Output, $.Context, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "ReplaceContext"
+    },
+    "ReplaceContext": {
+      "Type": "Pass",
+      "Parameters": {
+        "Output.$": "$",
+        "Context.$": {
+          "context": {
+            "stepfunction.$": "$.stepfunction",
+            "steps.$": "$.context.steps",
+            "steps_left.$": "States.MathAdd(States.ArrayLength($.context.steps),-1)",
+            "start.$": "States.ArrayGetItem($.context.steps,0)"
+          }
+        }
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Output, $.Context, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "WhatToStart"
+    },
+    "WhatToStart": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.context.start",
           "StringEquals": "Restore",
           "Next": "Restore"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "ScaleUpWorkflow",
           "Next": "ScaleUpWorkflow"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "Warming",
           "Next": "Warming"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "Segments",
           "Next": "Segments"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "Microscalar",
           "Next": "Microscalar"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "ScaleUpMeterdata",
           "Next": "ScaleUpMeterdata"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "GenerateNEM12",
           "Next": "GenerateNEM12"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "ResetBasicReads",
           "Next": "ResetBasicReads"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "BasicReads",
           "Next": "BasicReads"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "InvoiceRuns",
           "Next": "InvoiceRuns"
         },
         {
-          "Variable": "$.start",
+          "Variable": "$.context.start",
           "StringEquals": "ScaleDown",
           "Next": "ScaleDown"
         }
@@ -100,9 +149,7 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -116,16 +163,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "ScaleUpWorkflow": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -139,16 +184,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "Warming": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -162,16 +205,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "Segments": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -185,16 +226,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "Microscalar": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -208,16 +247,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "ScaleUpMeterdata": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -231,16 +268,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "GenerateNEM12": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -254,16 +289,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "ResetBasicReads": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -277,16 +310,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "BasicReads": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -300,16 +331,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "InvoiceRuns": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -323,16 +352,14 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
     },
     "ScaleDown": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "context": {
-            "stepfunction.$": "$.stepfunction"
-          },
+          "context.$": "$.context",
           "data": {
             "run_date.$": "$.data.run_date",
             "today.$": "$.data.today"
@@ -346,7 +373,37 @@
         "Output.$": "States.JsonMerge($.Input.context, $.Output, false)"
       },
       "OutputPath": "$.Output",
-      "Next": "ExecutionDone"
+      "Next": "IsAnotherStep"
+    },
+    "IsAnotherStep": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.context.steps_left",
+          "NumericGreaterThan": 0,
+          "Next": "TakeAStep"
+        }
+      ],
+      "Default": "ExecutionDone"
+    },
+    "TakeAStep": {
+      "Type": "Pass",
+      "Parameters": {
+        "Output.$": "$",
+        "Context.$": {
+          "context": {
+            "stepfunction.$": "$.context.stepfunction",
+            "steps.$": "$.context.steps[1:]",
+            "steps_left.$": "States.MathAdd($.context.steps_left, -1)",
+            "start.$": "States.ArrayGetItem($.context.steps, 1)"
+          }
+        }
+      },
+      "ResultSelector": {
+        "Output.$": "States.JsonMerge($.Output, $.Context, false)"
+      },
+      "OutputPath": "$.Output",
+      "Next": "WhatToStart"
     },
     "ExecutionDone": {
       "Type": "Succeed"
