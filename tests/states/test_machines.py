@@ -11,6 +11,7 @@ class TestCase:
             assert fsa['StartAt'] in fsa['States']
             for name, state in fsa['States'].items():
                 assert 'Next' not in state or state['Next'] in fsa['States']
+                assert 'ResultSelector' not in state or state['Type'] in ('Task', 'Map', 'Parallel')
                 if state['Type'] == 'Choice':
                     assert state['Default'] in fsa['States']
                     for choice in state['Choices']:
