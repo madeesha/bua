@@ -175,7 +175,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-restore",
+        "StateMachineArn.$":"$.context.stepfunction.bua-restore",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -193,7 +193,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-scaleup-workflow",
+        "StateMachineArn.$":"$.context.stepfunction.bua-scaleup-workflow",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -211,7 +211,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-warming",
+        "StateMachineArn.$":"$.context.stepfunction.bua-warming",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -229,7 +229,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-segments",
+        "StateMachineArn.$":"$.context.stepfunction.bua-segments",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -247,7 +247,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-microscalar",
+        "StateMachineArn.$":"$.context.stepfunction.bua-microscalar",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -265,7 +265,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-scaleup-meterdata",
+        "StateMachineArn.$":"$.context.stepfunction.bua-scaleup-meterdata",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -283,7 +283,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-nem12",
+        "StateMachineArn.$":"$.context.stepfunction.bua-nem12",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -301,7 +301,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$": "$.stepfunction.bua-reset-basicreads",
+        "StateMachineArn.$": "$.context.stepfunction.bua-reset-basicreads",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -319,7 +319,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-basicreads",
+        "StateMachineArn.$":"$.context.stepfunction.bua-basicreads",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -337,7 +337,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-invoiceruns",
+        "StateMachineArn.$":"$.context.stepfunction.bua-invoiceruns",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
@@ -355,7 +355,7 @@
           "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
-        "StateMachineArn.$":"$.stepfunction.bua-scaledown",
+        "StateMachineArn.$":"$.context.stepfunction.bua-scaledown",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
