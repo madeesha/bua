@@ -16,6 +16,16 @@ class TestCase:
                     assert state['Default'] in fsa['States']
                     for choice in state['Choices']:
                         assert choice['Next'] in fsa['States']
+                if 'Parameters' in state:
+                    TestCase._validate_parameters(f'{name}/Parameters', state['Parameters'])
+
+    @staticmethod
+    def _validate_parameters(name, parameters):
+        for key, value in parameters.items():
+            if isinstance(value, dict):
+                TestCase._validate_parameters(f'{name}/{key}', value)
+            if isinstance(value, str):
+                assert not value.startswith('$.') or key.endswith('.$'), f'{name}/{key} missing .$ on the key'
 
     def test_machines(self):
         entries = os.listdir(os.path.join(os.path.dirname(__file__), '..', '..', 'states'))

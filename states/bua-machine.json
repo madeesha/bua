@@ -80,12 +80,13 @@
           "name": "BUA",
           "action": "get_stepfunction_arns",
           "stepfunction.$": "$.stepfunction",
-          "data.$": "$.data"
+          "data.$": "$.data",
+          "context.$": "$.context"
         }
       },
       "ResultSelector": {
         "data.$": "$.Payload.data",
-        "context.$": "$$.Execution.Input.context",
+        "context.$": "$Payload.context",
         "stepfunction.$": "$.Payload.stepfunction"
       },
       "TimeoutSeconds": 180,
@@ -170,7 +171,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-restore",
@@ -178,7 +180,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -188,6 +190,7 @@
       "Parameters":{
         "Input":{
           "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-scaleup-workflow",
@@ -195,7 +198,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -204,7 +207,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-warming",
@@ -212,7 +216,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -221,7 +225,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-segments",
@@ -229,7 +234,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -238,7 +243,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-microscalar",
@@ -246,7 +252,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -255,7 +261,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-scaleup-meterdata",
@@ -263,7 +270,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -272,7 +279,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-nem12",
@@ -280,7 +288,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -289,7 +297,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$": "$.stepfunction.bua-reset-basicreads",
@@ -297,7 +306,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -306,7 +315,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-basicreads",
@@ -314,7 +324,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -323,7 +333,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-invoiceruns",
@@ -331,7 +342,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
@@ -340,7 +351,8 @@
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Parameters":{
         "Input":{
-          "data": "$.data",
+          "data.$": "$.data",
+          "context.$": "$.context",
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.stepfunction.bua-scaledown",
@@ -348,7 +360,7 @@
       },
       "ResultSelector": {
         "data.$": "$.Output.data",
-        "context.$": "$$.Execution.Input.context"
+        "context.$": "$.Output.context"
       },
       "Next": "IsAnotherStep"
     },
