@@ -163,7 +163,7 @@
           "Next": "ScaleDown"
         }
       ],
-      "Default": "ExecutionDone"
+      "Default": "ExecutionFailed"
     },
     "Restore": {
       "Type": "Task",
@@ -386,6 +386,10 @@
         }
       },
       "Next": "WhatToStart"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "Step failed"
     },
     "ExecutionDone": {
       "Type": "Succeed"
