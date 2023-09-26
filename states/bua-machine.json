@@ -9,11 +9,51 @@
           "run_date.$": "$.run_date"
         },
         "context": {
-          "steps.$": "States.StringSplit($.steps, $.context.splitter)",
-          "step_count.$": "States.ArrayLength(States.StringSplit($.steps, $.context.splitter))",
+          "steps.$": "$.steps",
           "default_steps": "ScaleUpWorkflow,ScaleUpMeterdata",
           "splitter": ","
-        },
+        }
+      },
+      "Next": "SplitSteps"
+    },
+    "SplitSteps": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "$.data",
+        "context": {
+          "steps.$": "States.StringSplit($.context.steps, $.context.splitter)",
+          "step_count.$": "States.ArrayLength(States.StringSplit($.context.steps, $.context.splitter))",
+          "default_steps.$": "States.StringSplit($.context.default_steps, $.context.splitter)"
+        }
+      },
+      "Next": "CheckSteps"
+    },
+    "CheckSteps": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.context.step_count",
+          "NumericEquals": 0,
+          "Next": "SetDefaultSteps"
+        }
+      ],
+      "Default": "ListStepFunctions"
+    },
+    "SetDefaultSteps": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "$.data",
+        "context": {
+          "steps.$": "$.context.default_steps"
+        }
+      },
+      "Next": "ListStepFunctions"
+    },
+    "ListStepFunctions": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "$.data",
+        "context.$": "$.context",
         "stepfunction": {
           "bua-restore": "",
           "bua-segments": "",
@@ -28,31 +68,9 @@
           "bua-warming": ""
         }
       },
-      "Next": "CheckSteps"
+      "Next": "GetStepfunctionArns"
     },
-    "CheckSteps": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.context.step_count",
-          "NumericEquals": 0,
-          "Next": "SetDefaultSteps"
-        }
-      ],
-      "Default": "BUA"
-    },
-    "SetDefaultSteps": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "$.data",
-        "context": {
-          "steps.$": "States.StringSplit($.context.default_steps, $.context.splitter)",
-        },
-        "stepfunction.$": "$.stepfunction"
-      },
-      "Next": "BUA"
-    },
-    "BUA": {
+    "GetStepfunctionArns": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
@@ -71,13 +89,13 @@
         "stepfunction.$": "$.Payload.stepfunction"
       },
       "TimeoutSeconds": 180,
-      "Next": "ReplaceContext"
+      "Next": "InitialiseStart"
     },
-    "ReplaceContext": {
+    "InitialiseStart": {
       "Type": "Pass",
       "Parameters": {
         "data.$": "$.data",
-        "context.$": {
+        "context": {
           "stepfunction.$": "$.stepfunction",
           "steps.$": "$.context.steps",
           "steps_left.$": "States.MathAdd(States.ArrayLength($.context.steps),-1)",
