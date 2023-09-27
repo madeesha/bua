@@ -530,8 +530,8 @@ class SQL:
         data = request.data
         table_names = data['table_names']
         run_date = data['run_date']
-        batch_size = data.get('batch_size', 50000)
         format = data.get('format', 'csv')
+        batch_size = data.get('batch_size', 100000 if format == 'csv' else 1000000)
         index_col = data.get('index_col', 'id')
         bucket_name = data.get('bucket_name', self.config['bucket_name'])
         bucket_prefix = data.get('bucket_prefix', 'export')
