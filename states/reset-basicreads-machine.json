@@ -1,7 +1,28 @@
 {
   "Comment": "Reset Basic Reads",
-  "StartAt": "ResetBasicReads",
+  "StartAt": "DefaultValues",
   "States": {
+    "DefaultValues": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "$.data",
+        "defaults": {
+          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
+          "schema": "Turkey_BLU",
+          "suffix": "bua-sql",
+          "update_id": "12",
+          "rdssecret": "cicd/tst-anstead/rds/bua"
+        }
+      },
+      "Next": "MergeData"
+    },
+    "MergeData": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "States.JsonMerge($.defaults, $.data, false)"
+      },
+      "Next": "ResetBasicReads"
+    },
     "ResetBasicReads": {
       "Type": "Pass",
       "Parameters": {
@@ -10,15 +31,7 @@
         "next": "210_clear_error_queues",
         "speed": "slow",
         "retry_delay": 120,
-        "data": {
-          "run_date.$": "$.data.run_date",
-          "today.$": "$.data.today",
-          "update_id": "12",
-          "suffix": "bua-sql",
-          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
-          "schema": "Turkey_BLU",
-          "rdssecret": "cicd/tst-anstead/rds/bua"
-        },
+        "data.$": "$.data",
         "steps": {
           "210_clear_error_queues": {
             "action": "empty_site_errors_queues",
