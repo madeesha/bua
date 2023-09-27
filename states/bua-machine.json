@@ -65,7 +65,8 @@
           "bua-invoiceruns": "",
           "bua-scaledown": "",
           "bua-scaleup-workflow": "",
-          "bua-warming": ""
+          "bua-warming": "",
+          "bua-select-accounts": ""
         }
       },
       "Next": "GetStepfunctionArns"
@@ -122,6 +123,11 @@
           "Variable": "$.context.start",
           "StringEquals": "Warming",
           "Next": "Warming"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "SelectAccounts",
+          "Next": "SelectAccounts"
         },
         {
           "Variable": "$.context.start",
@@ -212,6 +218,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-warming",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "SelectAccounts": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-select-accounts",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
