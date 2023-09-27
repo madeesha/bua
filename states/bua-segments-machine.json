@@ -1,7 +1,28 @@
 {
   "Comment": "Generate Segments",
-  "StartAt": "GenerateSegments",
+  "StartAt": "DefaultValues",
   "States": {
+    "DefaultValues": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "$.data",
+        "defaults": {
+          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
+          "schema": "Turkey_BLU",
+          "suffix": "bua-sql",
+          "update_id": "12",
+          "rdssecret": "cicd/tst-anstead/rds/bua"
+        }
+      },
+      "Next": "MergeData"
+    },
+    "MergeData": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "States.JsonMerge($.defaults, $.data, false)"
+      },
+      "Next": "GenerateSegments"
+    },
     "GenerateSegments": {
       "Type": "Pass",
       "Parameters": {
@@ -10,14 +31,7 @@
         "next": "130_clear_error_queues",
         "speed": "fast",
         "retry_delay": 120,
-        "data": {
-          "run_date.$": "$.data.run_date",
-          "today.$": "$.data.today",
-          "schema": "Turkey_BLU",
-          "suffix": "bua-sql",
-          "update_id": "12",
-          "rdssecret": "cicd/tst-anstead/rds/bua"
-        },
+        "data.$": "$.data",
         "steps": {
           "130_clear_error_queues": {
             "action": "empty_site_errors_queues",
