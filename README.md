@@ -6,6 +6,38 @@ how many units has a customer consumed in a month or over a periods selected tha
 
 https://jira.alintaenergy.com.au/browse/CB-6866
 
+## Architecture
+
+### EARL Pipeline
+
+```mermaid
+graph TD;
+EARL-Pipeline --> EARL-RDS-Instance;
+EARL-Pipeline --> EARL-KMS-Key;
+EARL-Pipeline --> EARL-RDS-Snapshot;
+EARL-Pipeline --> EARL-SNS-Topic;
+```
+
+### ANSTEAD Pipeline
+
+```mermaid
+graph TD;
+EARL-SNS-Topic --> ANSTEAD-SQS-Queue;
+ANSTEAD-SQS-Queue --> ANSTEAD-Lambda-Trigger;
+ANSTEAD-Lambda-Trigger --> ANSTEAD-Pipeline;
+ANSTEAD-Pipeline --> ANSTEAD-Lambda-Controller;
+ANSTEAD-Lambda-Controller --> EARL-KMS-Key;
+ANSTEAD-Lambda-Controller --> EARL-RDS-Snapshot;
+ANSTEAD-Lambda-Controller --> ANSTEAD-RDS-Instance;
+ANSTEAD-Lambda-Controller --> ANSTEAD-EKS-ControlPlane;
+ANSTEAD-Lambda-Controller --> ANSTEAD-EKS-NodeGroupConfig;
+ANSTEAD-Lambda-Controller --> ANSTEAD-DynamoDB-Tables;
+ANSTEAD-Lambda-Controller --> ANSTEAD-S3-Buckets;
+ANSTEAD-Lambda-Controller --> ANSTEAD-SQS-Queues;
+ANSTEAD-Lambda-Controller --> ANSTEAD-Route53-Zone;
+ANSTEAD-Lambda-Controller --> EARL-S3-Integration-Bucket;
+```
+
 ## Lambda functions
 
 | Function                   | Purpose                                                           |
