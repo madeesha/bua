@@ -1,7 +1,27 @@
 {
   "Comment": "Generate NEM12 files",
-  "StartAt": "GenerateNEM12",
+  "StartAt": "DefaultValues",
   "States": {
+    "DefaultValues": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "$.data",
+        "defaults": {
+          "schema": "Turkey_BLU",
+          "suffix": "bua-sql",
+          "update_id": "12",
+          "rdssecret": "cicd/tst-anstead/rds/bua"
+        }
+      },
+      "Next": "MergeData"
+    },
+    "MergeData": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "States.JsonMerge($.defaults, $.data, false)"
+      },
+      "Next": "GenerateNEM12"
+    },
     "GenerateNEM12": {
       "Type": "Pass",
       "Parameters": {
@@ -10,23 +30,7 @@
         "next": "200_clear_error_queues",
         "speed": "fast",
         "retry_delay": 120,
-        "data": {
-          "run_date.$": "$.data.run_date",
-          "today.$": "$.data.today",
-          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
-          "instance_class": "DBInstanceClassR6i",
-          "instance_type": "8xlarge",
-          "mysql_version": "8.0.32",
-          "params_id": "1",
-          "schema": "Turkey_BLU",
-          "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32",
-          "suffix": "bua-sql",
-          "update_id": "12",
-          "rdssecret": "cicd/tst-anstead/rds/bua",
-          "hosted_zone_id": "Z06477101FOH3N8B2WK6N",
-          "cluster_name": "anstead",
-          "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
-        },
+        "data.$": "$.data",
         "steps": {
           "200_clear_error_queues": {
             "action": "empty_site_errors_queues",
