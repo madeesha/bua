@@ -137,6 +137,7 @@ class BUASiteInitiateHandler:
 
     def _initiate_site_data_processing(self, body, debug, run_type):
         run_date: str = body['run_date']
+        today: str = body['today']
         source_date: str = body['source_date']
         site = SiteData(
             table=self.table, queue=self.data_queue, conn=self.conn,
@@ -146,6 +147,7 @@ class BUASiteInitiateHandler:
         site.initiate_site_data_processing(
             run_type=run_type,
             run_date=run_date,
+            today=today,
             start_inclusive=body['start_inclusive'],
             end_exclusive=body['end_exclusive'],
             source_date=source_date,

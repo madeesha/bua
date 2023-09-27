@@ -38,6 +38,15 @@ ANSTEAD-Lambda-Controller --> ANSTEAD-Route53-Zone;
 ANSTEAD-Lambda-Controller --> EARL-S3-Integration-Bucket;
 ```
 
+## Stored Procedures
+
+| Stored Procedure           | Purpose                                                          |
+|----------------------------|------------------------------------------------------------------|
+| bua_list_profile_registers | Get a list of all registers that are used for profile generation |
+| bua_list_profile_nmis      | Get a list of all NMIs that require NEM12 file generation        |
+| bua_list_unbilled_accounts | Get a list of accounts that are unbilled for some period         |
+| bua_list_all_accounts      | Get a list of all accounts open at some time during the period   |
+
 ## Lambda functions
 
 | Function                   | Purpose                                                           |

@@ -22,19 +22,15 @@ class Accounts(SQS):
         with self.conn.cursor() as cur:
             try:
 
-                sql = """
-                SELECT DISTINCT ac.id
-                FROM Account ac
-                JOIN AccountBilling ab ON ac.id = ab.account_id
-                WHERE ac.commence_date <= COALESCE(ac.closed_date, %s)
-                AND COALESCE(ac.closed_date, %s) >= DATE_SUB(%s, INTERVAL 1 YEAR)"""
-                cur.execute(sql, (today, today, today))
+                sql = "CALL bua_list_unbilled_accounts(%s,%s,%s,%s)"
+                params = (None, None, today, run_date)
+                cur.execute(sql, params)
 
                 total = 0
                 bodies = []
                 body = None
                 for record in cur.fetchall_unbuffered():
-                    account_id = record['id']
+                    account_id = record['account_id']
                     if body is not None:
                         self.send_if_needed(bodies, force=False, batch_size=self.batch_size)
                     body = {

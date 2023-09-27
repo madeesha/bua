@@ -19,7 +19,7 @@ class SiteData(Action):
         self.check_nem = check_nem
         self.check_aggread = check_aggread
 
-    def initiate_site_data_processing(self, run_type, run_date, start_inclusive, end_exclusive, source_date,
+    def initiate_site_data_processing(self, run_type, run_date, today, start_inclusive, end_exclusive, source_date,
                                       limit=1000000000):
         """Initiate the extraction or validation of site data"""
         bodies = []
@@ -51,47 +51,8 @@ class SiteData(Action):
                         (run_date, run_type, start_inclusive, end_exclusive)
                     )
                 cur.execute(
-                    """
-                    SELECT 
-                    ut.identifier AS 'nmi', 
-                    SUBSTR(COALESCE(ut.cust_class_code, 'RESIDENTIAL'),1,3) AS 'res_bus', 
-                    ju.name AS 'jurisdiction', 
-                    mr.suffix_id AS 'nmi_suffix', 
-                    CASE 
-                    WHEN COALESCE(mp.value, 'NO') = 'YES' THEN 'CONTROL' 
-                    WHEN SUBSTR(mr.suffix_id,1,1) = 'A' THEN 'SOLAR' 
-                    WHEN SUBSTR(mr.suffix_id,1,1) = 'B' THEN 'SOLAR' 
-                    WHEN SUBSTR(mr.suffix_id,1,1) = 'C' THEN 'SOLAR' 
-                    WHEN SUBSTR(mr.suffix_id,1,1) = 'J' THEN 'SOLAR' 
-                    WHEN SUBSTR(mr.suffix_id,1,1) = 'K' THEN 'SOLAR' 
-                    WHEN SUBSTR(mr.suffix_id,1,1) = 'L' THEN 'SOLAR' 
-                    WHEN SUBSTR(mr.suffix_id,1,1) = 'N' AND mr.direction_indicator = 'I' THEN 'SOLAR' 
-                    WHEN SUBSTR(mr.suffix_id,1,1) = 'X' AND mr.direction_indicator = 'I' THEN 'SOLAR' 
-                    ELSE 'PRIMARY' 
-                    END AS stream_type, 
-                    MAX(IF(ud.utility_status='A',tn.name,'')) AS 'tni'
-                    FROM MeterRegister mr 
-                    LEFT JOIN MarketPayloadMapping mp 
-                    ON mp.market_value = mr.controlled_load AND mp.market_tag = 'ControlledLoad' 
-                    JOIN Meter mt ON mr.meter_id = mt.id 
-                    JOIN Utility ut ON mt.utility_id = ut.id 
-                    JOIN UtilityDetail ud ON ud.utility_id = ut.id 
-                    JOIN UtilityNetwork un ON ut.utility_network_id = un.id 
-                    JOIN UtilityTni tn ON ud.utility_tni_id = tn.id 
-                    JOIN Jurisdiction ju ON ju.id = un.jurisdiction_id 
-                    JOIN ServiceType st ON un.service_type_id = st.id AND st.name = 'ELECTRICITY' 
-                    JOIN MeterRegisterDetail md 
-                    ON md.meter_register_id = mr.id AND md.status = 'C' 
-                    AND md.start_date < %s AND COALESCE(md.end_date,NOW()) >= %s 
-                    WHERE (
-                        mt.meter_installation_type LIKE 'COMMS%%' 
-                        OR mt.meter_installation_type LIKE 'MR%%'
-                        ) 
-                    AND LENGTH(ut.identifier) = 10 
-                    GROUP BY ut.identifier, ut.cust_class_code, ju.name, mr.suffix_id, mp.value, mr.direction_indicator
-                    ORDER BY 1 
-                    """,
-                    (end_exclusive, start_inclusive)
+                    "CALL bua_list_profile_registers(%s, %s, %s, %s)",
+                    (start_inclusive, end_exclusive, today, run_date)
                 )
                 body = None
                 total = 0
