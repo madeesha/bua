@@ -88,6 +88,12 @@ execute_invoice_runs:
 		--name $(TODAY)-InvoiceRuns-$(UUID) \
 		--input '{"steps": "InvoiceRuns", "run_date": "2023-09-25"}'
 
+execute_export:
+	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
+		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
+		--name $(TODAY)-Export-$(UUID) \
+		--input '{"steps": "Export", "run_date": "2023-09-25"}'
+
 execute_scaledown:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \

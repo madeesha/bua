@@ -93,6 +93,7 @@ class BUAControllerHandler:
             'choice': choice_handler.choice,
             'scale_nodegroup': kubectl_handler.scale_nodegroup,
             'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup,
+            'export_tables': sql_handler.export_tables
         }
 
     def get_config(self, request: HandlerRequest):
