@@ -46,12 +46,6 @@ execute_warming:
 		--name $(TODAY)-Warming-$(UUID) \
 		--input '{"steps": "Warming", "run_date": "2023-09-25"}'
 
-execute_select_accounts:
-	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
-		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
-		--name $(TODAY)-SelectAccounts-$(UUID) \
-		--input '{"steps": "SelectAccounts", "run_date": "2023-09-25"}'
-
 execute_segments:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \

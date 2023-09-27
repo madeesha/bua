@@ -81,7 +81,6 @@ class BUAControllerHandler:
             'check_replicas': kubectl_handler.check_replicas,
             'scale_down': kubectl_handler.scale_down,
             'bua_initiate': sql_handler.bua_initiate,
-            'bua_select_accounts': sql_handler.bua_select_accounts,
             'bua_resolve_variances': sql_handler.bua_resolve_variances,
             'wait_for_empty_site_queues': profiles_handler.wait_for_empty_site_queues,
             'empty_site_errors_queues': profiles_handler.empty_site_errors_queues,

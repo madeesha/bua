@@ -146,30 +146,6 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
-    def bua_select_accounts(self, request: HandlerRequest):
-        data = request.data
-        start_inclusive = data.get('start_inclusive')
-        end_exclusive = data.get('end_exclusive')
-        today = data['today']
-        run_date = data['run_date']
-        try:
-            con = self._connect(data)
-            with con:
-                cur = con.cursor()
-                with cur:
-                    cur.execute(
-                        "CALL bua_select_accounts(%s, %s, %s, %s)",
-                        (start_inclusive, end_exclusive, today, run_date)
-                    )
-                    cur.execute("SELECT COUNT(*) AS total FROM BUAAccountSummary")
-                    total = cur.fetchall()[0]['total']
-                    con.commit()
-            return "COMPLETE", f'BUA selected {total} accounts as at {today}'
-        except pymysql.err.OperationalError as e:
-            if 'timed out' in str(e):
-                return "RETRY", f'{e}'
-            raise
-
     def bua_initiate(self, request: HandlerRequest):
         data = request.data
         run_type = data['run_type']
