@@ -2,11 +2,12 @@ import base64
 import os
 from hashlib import md5
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pandas
 import pymysql
 import pymysql.cursors
+from pymysql import Connection
 
 from bua.pipeline.facade.sm import SecretManager
 from bua.pipeline.handler.request import HandlerRequest
@@ -529,12 +530,7 @@ class SQL:
     def export_tables(self, request: HandlerRequest):
         data = request.data
         table_names = data['table_names']
-        run_date = data['run_date']
-        format = data.get('format', 'csv')
-        batch_size = data.get('batch_size', 100000 if format == 'csv' else 1000000)
-        index_col = data.get('index_col', 'id')
-        bucket_name = data.get('bucket_name', self.config['bucket_name'])
-        bucket_prefix = data.get('bucket_prefix', 'export')
+        partitions = data.get('partitions')
         try:
             con = self._connect(data)
             with con:
@@ -543,26 +539,49 @@ class SQL:
                     for table_name in table_names:
                         print(f'Exporting {table_name} to S3')
                         counter = 0
-                        cur.execute(f"SELECT COUNT(*) AS total FROM {table_name}")
-                        total_rows = cur.fetchall()[0]['total']
-                        for offset in range(0, total_rows, batch_size):
-                            counter += 1
-                            file_name = f"BUA_{table_name}_{run_date}_{counter}.{format}"
-                            file_path = f"/tmp/{file_name}"
-                            key = f'{bucket_prefix}/{file_name}'
-                            sql = f"SELECT * FROM {table_name} LIMIT {batch_size} OFFSET {offset}"
-                            df = pandas.read_sql_query(sql, con, index_col=index_col)
-                            if format == 'parquet':
-                                df.to_parquet(file_path, index=False)
-                            if format == 'csv':
-                                df.to_csv(file_path, index=False, header=True)
-                            if os.path.isfile(file_path):
-                                with open(file_path, 'rb') as fp:
-                                    self.s3.upload_fileobj(fp, bucket_name, key)
-                                os.remove(file_path)
-                                print(f'Uploaded {file_name} to {bucket_name}/{key}')
+                        if partitions is not None:
+                            for partition in partitions:
+                                counter = self._export_table(con, cur, data, table_name, partition, counter)
+                        else:
+                            self._export_table(con, cur, data, table_name, partition, counter)
             return "COMPLETE", f'Exported {len(table_names)} tables'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
                 return "RETRY", f'{e}'
             raise
+
+    def _export_table(
+            self, con: Connection, cur: pymysql.cursors.Cursor,
+            data: Dict, table_name: str, partition: Optional[str], counter: int
+    ) -> int:
+        run_date = data['run_date']
+        format = data.get('format', 'csv')
+        batch_size = data.get('batch_size', 100000 if format == 'csv' else 1000000)
+        index_col = data.get('index_col', 'id')
+        bucket_name = data.get('bucket_name', self.config['bucket_name'])
+        bucket_prefix = data.get('bucket_prefix', 'export')
+        if partition is not None:
+            cur.execute(f"SELECT COUNT(*) AS total FROM {table_name} PARTITION ({partition})")
+        else:
+            cur.execute(f"SELECT COUNT(*) AS total FROM {table_name}")
+        total_rows = cur.fetchall()[0]['total']
+        for offset in range(0, total_rows, batch_size):
+            counter += 1
+            file_name = f"BUA_{table_name}_{run_date}_{counter}.{format}"
+            file_path = f"/tmp/{file_name}"
+            key = f'{bucket_prefix}/{file_name}'
+            if partition is not None:
+                sql = f"SELECT * FROM {table_name} PARTITION ({partition}) LIMIT {batch_size} OFFSET {offset}"
+            else:
+                sql = f"SELECT * FROM {table_name} LIMIT {batch_size} OFFSET {offset}"
+            df = pandas.read_sql_query(sql, con, index_col=index_col)
+            if format == 'parquet':
+                df.to_parquet(file_path, index=False)
+            if format == 'csv':
+                df.to_csv(file_path, index=False, header=True)
+            if os.path.isfile(file_path):
+                with open(file_path, 'rb') as fp:
+                    self.s3.upload_fileobj(fp, bucket_name, key)
+                os.remove(file_path)
+                print(f'Uploaded {file_name} to {bucket_name}/{key}')
+        return counter
