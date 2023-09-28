@@ -253,6 +253,7 @@ Resources:
           bucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "bua" ] ]
           nextQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-next-queue" ] ]
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-failure-queue" ] ]
+          initiateQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-queue" ] ]
           awsRegion: !Ref "AWS::Region"
           awsAccount: !Ref "AWS::AccountId"
       Code:
@@ -305,6 +306,7 @@ Resources:
               'aws_account': os.environ['awsAccount'],
               'next_queue_url': os.environ['nextQueueURL'],
               'failure_queue_url': os.environ['failureQueueURL'],
+              'initiate_queue_url': os.environ['initiateQueueURL'],
               'bucket_name': os.environ['bucketName']
           }
           

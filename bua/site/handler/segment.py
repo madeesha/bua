@@ -4,6 +4,7 @@ from typing import Dict
 from bua.site.action import SQS
 from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
+from bua.site.action.exporter import Exporter
 from bua.site.action.fix import Fix
 from bua.site.action.nem12 import NEM12
 from bua.site.action.scalar import MicroScalar
@@ -14,9 +15,10 @@ from bua.site.handler import STATUS_DONE
 class BUASiteSegmentHandler:
     """AWS Lambda handler for bottom up accruals profile segment calculations"""
 
-    def __init__(self, s3_client, bucket_name, table, segment_queue, failure_queue, conn, debug=False):
+    def __init__(self, s3_client, meterdata_bucket_name, bua_bucket_name, table, segment_queue, failure_queue, conn, debug=False):
         self.s3_client = s3_client
-        self.bucket_name = bucket_name
+        self.meterdata_bucket_name = meterdata_bucket_name
+        self.bua_bucket_name = bua_bucket_name
         self.table = table
         self.segment_queue = segment_queue
         self.conn = conn
@@ -30,6 +32,7 @@ class BUASiteSegmentHandler:
             'MicroScalar': self._handle_microscalar,
             'BasicRead': self._handle_basic_read,
             'ResetBasicRead': self._handle_reset_basic_read,
+            'ExportTables': self._handle_export_tables
         }
         self._initialise_connection()
         self.failure_sqs = SQS(failure_queue, debug)
@@ -101,7 +104,8 @@ class BUASiteSegmentHandler:
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
         action = NEM12(
-            queue=self.segment_queue, conn=self.conn, debug=debug, s3_client=self.s3_client, bucket_name=self.bucket_name
+            queue=self.segment_queue, conn=self.conn, debug=debug,
+            s3_client=self.s3_client, bucket_name=self.meterdata_bucket_name
         )
         return action.nem12_file_generation(run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
 
@@ -134,6 +138,24 @@ class BUASiteSegmentHandler:
             queue=self.segment_queue, conn=self.conn, debug=debug
         )
         return action.execute_reset_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
+
+    def _handle_export_tables(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
+        table_name = entry['table_name']
+        partition = entry['partition']
+        counter = entry['counter']
+        offset = entry['offset']
+        batch_size = entry['batch_size']
+        bucket_prefix = entry['bucket_prefix']
+        run_date = entry['run_date']
+        index_col = entry['index_col']
+        file_format = entry['file_format']
+        action = Exporter(
+            queue=self.segment_queue, conn=self.conn, debug=debug,
+            s3_client=self.s3_client, bucket_name=self.bua_bucket_name
+        )
+        return action.export_table(
+            table_name, partition, counter, offset, batch_size, bucket_prefix, run_date, index_col, file_format
+        )
 
     def _handle_segment_jurisdiction_check(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
         run_date = entry['run_date']

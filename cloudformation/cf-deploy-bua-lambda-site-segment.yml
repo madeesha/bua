@@ -118,6 +118,14 @@ Resources:
                 Resource:
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-meterdata/nem/bua/*" ] ]
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-meterdata/bua/*" ] ]
+              - Sid: AllowS3AccessForExportTables
+                Effect: Allow
+                Action:
+                  - 's3:GetObject*'
+                  - 's3:PutObject*'
+                  - 's3:DeleteObject*'
+                Resource:
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/export/*" ] ]
 
   BUASiteSegmentLambdaLogGroup:
     Type: AWS::Logs::LogGroup
@@ -141,7 +149,8 @@ Resources:
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-segment-failure-queue" ] ]
           rdsSecretName: !Join [ "/" , [ "cicd", !Ref ResourcePrefix , "rds" , !Ref RDSName ] ]
           debugEnabled: !Ref DebugEnabled
-          bucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "meterdata" ] ]
+          meterdataBucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "meterdata" ] ]
+          buaBucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "bua" ] ]
       Code:
         ZipFile: |
           import os
@@ -177,9 +186,13 @@ Resources:
           
           s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
           s3_client = boto3.client('s3', config=s3_config)
-          bucket_name = os.environ['bucketName']
+          meterdata_bucket_name = os.environ['meterdataBucketName']
+          bua_bucket_name = os.environ['buaBucketName']
 
-          handler = BUASiteSegmentHandler(s3_client=s3_client, bucket_name=bucket_name, table=table, segment_queue=segment_queue, failure_queue=failure_queue, conn=conn, debug=debug)
+          handler = BUASiteSegmentHandler(
+              s3_client=s3_client, meterdata_bucket_name=meterdata_bucket_name, bua_bucket_name=bua_bucket_name, 
+              table=table, segment_queue=segment_queue, failure_queue=failure_queue, conn=conn, debug=debug
+          )
 
           def lambda_handler(event, context):
               try:

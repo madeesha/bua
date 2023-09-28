@@ -26,6 +26,10 @@ class TestCase:
             os.remove(KubeCtl.KUBE_FILEPATH)
 
     @fixture(autouse=True)
+    def initiate_queue_url(self):
+        return 'initiate-queue-url'
+
+    @fixture(autouse=True)
     def failure_queue_url(self):
         return 'failure-queue-url'
 
@@ -147,7 +151,7 @@ class TestCase:
         return KubernetesStub(replicas=1)
 
     @fixture(autouse=True)
-    def config(self, failure_queue_url, prefix):
+    def config(self, failure_queue_url, initiate_queue_url, prefix):
         return {
             'version': '123',
             'prefix': prefix,
@@ -159,7 +163,8 @@ class TestCase:
                 'password': '123'
             },
             'next_queue_url': 'next_queue',
-            'failure_queue_url': failure_queue_url
+            'failure_queue_url': failure_queue_url,
+            'initiate_queue_url': initiate_queue_url
         }
 
     @fixture(autouse=True)

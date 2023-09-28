@@ -7,8 +7,11 @@ import traceback
 from typing import Dict, Any
 from datetime import datetime, timezone, timedelta
 
+from dateutil.relativedelta import relativedelta
+
 from bua.pipeline.actions.choice import Choice
 from bua.pipeline.actions.dns import DNS
+from bua.pipeline.actions.initiator import Initiator
 from bua.pipeline.actions.kube import KubeCtl
 from bua.pipeline.actions.profiles import Profiles
 from bua.pipeline.actions.reset import Reset
@@ -49,6 +52,7 @@ class BUAControllerHandler:
         dns_handler = DNS(config=config, route53=route53)
         trigger_handler = Trigger(config=config, sqs=self.sqs)
         choice_handler = Choice()
+        initiator_handler = Initiator(config=config, sqs=self.sqs)
 
         self.handlers: Dict[str, Any] = {
             'get_config': self.get_config,
@@ -80,7 +84,7 @@ class BUAControllerHandler:
             'scale_replicas': kubectl_handler.scale_replicas,
             'check_replicas': kubectl_handler.check_replicas,
             'scale_down': kubectl_handler.scale_down,
-            'bua_initiate': sql_handler.bua_initiate,
+            'bua_initiate': initiator_handler.bua_initiate,
             'bua_resolve_variances': sql_handler.bua_resolve_variances,
             'wait_for_empty_site_queues': profiles_handler.wait_for_empty_site_queues,
             'empty_site_errors_queues': profiles_handler.empty_site_errors_queues,
@@ -203,12 +207,7 @@ class BUAControllerHandler:
         data = self._get_data(event)
         self._process_args(data, step)
 
-        run_date = datetime.now(ZoneInfo('Australia/Sydney'))
-        if 'run_date' not in data or data['run_date'] is None or len(data['run_date']) == 0:
-            data['run_date'] = run_date.strftime('%Y-%m-%d')
-        if 'today' not in data or data['today'] is None or len(data['today']) == 0:
-            today = run_date - timedelta(days=run_date.day - 1)
-            data['today'] = today.strftime('%Y-%m-%d')
+        self._calculate_run_dates(data)
 
         instance = self._determine_instance(event)
         log_item = self._log_processing_start(instance, name, this)
@@ -220,6 +219,34 @@ class BUAControllerHandler:
         self.ddb_table.put_item(Item=log_item)
         if status == 'ABORT':
             raise Exception(reason)
+
+    @staticmethod
+    def _calculate_run_dates(data):
+        run_date = datetime.now(ZoneInfo('Australia/Sydney'))
+        if 'run_date' not in data or data['run_date'] is None or len(data['run_date']) == 0:
+            data['run_date'] = run_date.strftime('%Y-%m-%d')
+        else:
+            if len(data['run_date']) == 10:
+                run_date = datetime.strptime(data['run_date'], '%Y-%m-%d')
+            else:
+                run_date = datetime.strptime(data['run_date'][0:19], '%Y-%m-%d %H:%M:%S')
+        if 'today' not in data or data['today'] is None or len(data['today']) == 0:
+            today = run_date - timedelta(days=run_date.day - 1)
+            data['today'] = today.strftime('%Y-%m-%d')
+            today = datetime.strptime(data['today'], '%Y-%m-%d')
+        else:
+            today = datetime.strptime(data['today'], '%Y-%m-%d')
+        if 'source_date' not in data or data['source_date'] is None or len(data['source_date']) == 0:
+            data['source_date'] = data['run_date']
+        month_start = today - timedelta(days=today.day - 1)
+        year_ago = month_start - relativedelta(years=1)
+        end_inclusive = month_start - timedelta(days=1)
+        if 'start_inclusive' not in data or data['start_inclusive'] is None or len(data['start_inclusive']) == 0:
+            data['start_inclusive'] = year_ago.strftime('%Y-%m-%d')
+        if 'end_exclusive' not in data or data['end_exclusive'] is None or len(data['end_exclusive']) == 0:
+            data['end_exclusive'] = month_start.strftime('%Y-%m-%d')
+        if 'end_inclusive' not in data or data['end_inclusive'] is None or len(data['end_inclusive']) == 0:
+            data['end_inclusive'] = end_inclusive.strftime('%Y-%m-%d')
 
     def _handle_step_failure(self, e, event: Dict, use_sqs: bool):
         traceback.print_exception(e)

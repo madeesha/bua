@@ -1,7 +1,9 @@
 import json
+from typing import Dict, Callable
 
 from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
+from bua.site.action.exporter import Exporter
 from bua.site.action.fix import Fix
 from bua.site.action.jurisdiction import SegmentJurisdiction
 from bua.site.action.nem12 import NEM12
@@ -24,7 +26,7 @@ class BUASiteInitiateHandler:
         self.util_batch_size = util_batch_size
         self.jur_batch_size = jur_batch_size
         self.tni_batch_size = tni_batch_size
-        self._handlers = {
+        self._handlers: Dict[str, Callable[[Dict, bool, str], None]] = {
             'Utility': self._initiate_site_data_processing,
             'Validate': self._initiate_site_data_processing,
             'SegmentJurisdiction': self._initiate_segment_jurisdiction_calculation,
@@ -36,6 +38,7 @@ class BUASiteInitiateHandler:
             'MicroScalar': self._initiate_microscalar,
             'BasicRead': self._initiate_basic_read,
             'ResetBasicRead': self._initiate_reset_basic_read,
+            'ExportTables': self._initiate_export_tables
         }
         self._initialise_connection()
 
@@ -47,7 +50,7 @@ class BUASiteInitiateHandler:
         with self.conn.cursor() as cur:
             cur.execute("SET SESSION innodb_lock_wait_timeout = 60")
 
-    def handle_request(self, event):
+    def handle_request(self, event: Dict):
         if 'Records' in event:
             for record in event['Records']:
                 if record['eventSource'] == 'aws:sqs':
@@ -56,7 +59,7 @@ class BUASiteInitiateHandler:
         else:
             self._process_message(event)
 
-    def _process_message(self, body):
+    def _process_message(self, body: Dict):
         debug = self.debug or body.get('debug') is True
         print(body)
         if 'run_type' in body:
@@ -204,4 +207,24 @@ class BUASiteInitiateHandler:
             today=today,
             run_date=run_date,
             identifier_type=identifier_type
+        )
+
+    def _initiate_export_tables(self, body, debug, run_type):
+        run_date: str = body['run_date']
+        action = Exporter(queue=self.segment_queue, conn=self.conn, debug=debug)
+        table_names = body['table_names']
+        partitions = body.get('partitions')
+        file_format = body.get('file_format', 'csv')
+        batch_size = body.get('batch_size', 100000 if file_format == 'csv' else 1000000)
+        bucket_prefix = body.get('bucket_prefix', 'export')
+        index_col = body.get('index_col', 'id')
+        action.initiate_export_tables(
+            table_names=table_names,
+            partitions=partitions,
+            batch_size=batch_size,
+            bucket_prefix=bucket_prefix,
+            run_date=run_date,
+            run_type=run_type,
+            index_col=index_col,
+            file_format=file_format
         )
