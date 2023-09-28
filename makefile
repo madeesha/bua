@@ -10,7 +10,7 @@ venv:
 	python3.10 -m venv venv
 
 requirements: venv
-	venv/bin/pip3 install --upgrade pip -r requirements.txt -r runtime-requirements.txt
+	venv/bin/pip3 install --upgrade pip -r requirements.txt
 
 lint: venv
 	chmod u+x cf-lint
