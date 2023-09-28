@@ -44,12 +44,20 @@ provision:
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-warming-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-export-machine.json
     - |
-      # Package python for aws lambda layers
+      # Package pandas for aws lambda layers
+      rm -fr ./target/packages
+      pip3 install --target ./target/packages --ignore-installed -r runtime-requirements-pandas.txt
+      python3 -m cicd --cmd package --version-id $CI_PARENT_PIPELINE_ID --unit bua-pandas
+    - |
+      # Release new pandas aws lambda layer
+      python3 -m cicd --cmd release-python --version-id $CI_PARENT_PIPELINE_ID --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --unit bua-pandas
+    - |
+      # Package bua for aws lambda layers
       rm -fr ./target/packages
       pip3 install --target ./target/packages --ignore-installed -r runtime-requirements.txt
       python3 -m cicd --cmd package --version-id $CI_PARENT_PIPELINE_ID --unit bua --package bua
     - |
-      # Release new python aws lambda layer
+      # Release new bua aws lambda layer
       python3 -m cicd --cmd release-python --version-id $CI_PARENT_PIPELINE_ID --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --unit bua
   variables:
     CF_ROLE: CloudformationProvisionRole

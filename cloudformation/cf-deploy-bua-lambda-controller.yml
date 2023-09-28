@@ -325,6 +325,7 @@ Resources:
       Runtime: python3.10
       Timeout: 180
       Layers:
+        - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-pandas-python-libs-" , !Ref ProjectVersion , ":1" ] ]
         - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-python-libs-" , !Ref ProjectVersion , ":1" ] ]
       MemorySize: 256
       VpcConfig:
@@ -429,6 +430,7 @@ Resources:
       Runtime: python3.10
       Timeout: 900
       Layers:
+        - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-pandas-python-libs-" , !Ref ProjectVersion , ":1" ] ]
         - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-python-libs-" , !Ref ProjectVersion , ":1" ] ]
       MemorySize: 256
       VpcConfig:
