@@ -35,7 +35,7 @@ class Exporter(Action):
                             )
                     else:
                         self._initiate_export_table(
-                            cur, table_name, partition, counter, batch_size,
+                            cur, table_name, None, counter, batch_size,
                             bucket_prefix, run_date, run_type, index_col, file_format
                         )
                 self.conn.commit()
