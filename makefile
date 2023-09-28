@@ -20,10 +20,11 @@ test: venv
 	venv/bin/coverage run --branch -m pytest --durations=0 tests
 	venv/bin/coverage report -m
 
-test-package-pandas: venv
+test-package: venv
 	rm -fr ./target/packages
 	mkdir -p ./target/packages
 	venv/bin/pip3 install --target ./target/packages --ignore-installed -r runtime-requirements-pandas.txt
+	venv/bin/pip3 install --target ./target/packages --ignore-installed -r runtime-requirements.txt
 	find ./target/packages -depth -type d -name tests -exec rm -fr {} \;
 	find ./target/packages -depth -type d -name __pycache__ -exec rm -fr {} \;
 	rm -fr ./target/packages/pandas/_testing
@@ -35,7 +36,7 @@ test-package-pandas: venv
 	rm -fr ./target/packages/sqlalchemy/dialects/sqlite
 	zip -r ./target/layer.zip ./target/packages
 	ls -lh ./target/layer.zip
-	du -h ./target/packages | tail -1
+	du -m ./target/packages | sort -n | tail -10
 
 # Trigger Restore Pipeline
 
