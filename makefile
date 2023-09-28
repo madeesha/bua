@@ -24,6 +24,15 @@ test-package-pandas: venv
 	rm -fr ./target/packages
 	mkdir -p ./target/packages
 	venv/bin/pip3 install --target ./target/packages --ignore-installed -r runtime-requirements-pandas.txt
+	find ./target/packages -depth -type d -name tests -exec rm -fr {} \;
+	find ./target/packages -depth -type d -name __pycache__ -exec rm -fr {} \;
+	rm -fr ./target/packages/pandas/_testing
+	rm -fr ./target/packages/sqlalchemy/orm
+	rm -fr ./target/packages/sqlalchemy/testing
+	rm -fr ./target/packages/sqlalchemy/dialects/msssql
+	rm -fr ./target/packages/sqlalchemy/dialects/oracle
+	rm -fr ./target/packages/sqlalchemy/dialects/postgresql
+	rm -fr ./target/packages/sqlalchemy/dialects/sqlite
 	zip -r ./target/layer.zip ./target/packages
 	ls -lh ./target/layer.zip
 	du -h ./target/packages | tail -1

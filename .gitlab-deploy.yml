@@ -47,6 +47,15 @@ provision:
       # Package pandas for aws lambda layers
       rm -fr ./target/packages
       pip3 install --target ./target/packages --ignore-installed -r runtime-requirements-pandas.txt
+      find ./target/packages -depth -type d -name tests -exec rm -fr {} \;
+      find ./target/packages -depth -type d -name __pycache__ -exec rm -fr {} \;
+      rm -fr ./target/packages/pandas/_testing
+      rm -fr ./target/packages/sqlalchemy/orm
+      rm -fr ./target/packages/sqlalchemy/testing
+      rm -fr ./target/packages/sqlalchemy/dialects/msssql
+      rm -fr ./target/packages/sqlalchemy/dialects/oracle
+      rm -fr ./target/packages/sqlalchemy/dialects/postgresql
+      rm -fr ./target/packages/sqlalchemy/dialects/sqlite
       python3 -m cicd --cmd package --version-id $CI_PARENT_PIPELINE_ID --unit bua-pandas
     - |
       # Release new pandas aws lambda layer
@@ -55,6 +64,8 @@ provision:
       # Package bua for aws lambda layers
       rm -fr ./target/packages
       pip3 install --target ./target/packages --ignore-installed -r runtime-requirements.txt
+      find ./target/packages -depth -type d -name tests -exec rm -fr {} \;
+      find ./target/packages -depth -type d -name __pycache__ -exec rm -fr {} \;
       python3 -m cicd --cmd package --version-id $CI_PARENT_PIPELINE_ID --unit bua --package bua
     - |
       # Release new bua aws lambda layer
