@@ -5,6 +5,7 @@ from typing import List, Optional, Dict
 import pandas
 from pymysql import Connection
 from pymysql.cursors import Cursor
+from sqlalchemy import Engine
 
 from bua.site.action import Action
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
@@ -12,11 +13,17 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 class Exporter(Action):
 
-    def __init__(self, queue, conn: Connection, debug=False, batch_size=100, s3_client=None, bucket_name=None):
+    def __init__(
+            self, queue, conn: Connection,
+            debug=False, batch_size=100,
+            s3_client=None, bucket_name=None,
+            engine: Optional[Engine] = None
+    ):
         Action.__init__(self, queue, conn, debug)
+        self.batch_size = batch_size
         self.s3_client = s3_client
         self.bucket_name = bucket_name
-        self.batch_size = batch_size
+        self.engine = engine
 
     def initiate_export_tables(
             self, table_names: List[str], partitions: List[str], batch_size: int,
@@ -94,22 +101,22 @@ class Exporter(Action):
                 sql = f"SELECT * FROM {table_name} PARTITION ({partition}) LIMIT {batch_size} OFFSET {offset}"
             else:
                 sql = f"SELECT * FROM {table_name} LIMIT {batch_size} OFFSET {offset}"
-            df = pandas.read_sql_query(sql, self.conn, index_col=index_col)
-            if file_format == 'parquet':
-                df.to_parquet(file_path, index=False)
-            if file_format == 'csv':
-                df.to_csv(file_path, index=False, header=True)
-            if os.path.isfile(file_path):
-                with open(file_path, 'rb') as fp:
-                    self.s3_client.upload_fileobj(fp, self.bucket_name, key)
-                os.remove(file_path)
-                print(f'Uploaded {file_name} to {self.bucket_name}/{key}')
+            with self.engine.connect() as conn:
+                df = pandas.read_sql_query(sql, conn, index_col=index_col)
+                if file_format == 'parquet':
+                    df.to_parquet(file_path, index=False)
+                if file_format == 'csv':
+                    df.to_csv(file_path, index=False, header=True)
+                if os.path.isfile(file_path):
+                    with open(file_path, 'rb') as fp:
+                        self.s3_client.upload_fileobj(fp, self.bucket_name, key)
+                    os.remove(file_path)
+                    print(f'Uploaded {file_name} to {self.bucket_name}/{key}')
             return {
                 'status': STATUS_DONE
             }
         except KeyError as ex:
             traceback.print_exception(ex)
-            self.conn.rollback()
             return {
                 'status': STATUS_FAIL,
                 'cause': str(ex)

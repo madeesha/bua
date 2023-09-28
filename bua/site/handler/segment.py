@@ -1,6 +1,8 @@
 import json
 from typing import Dict
 
+from sqlalchemy import Engine
+
 from bua.site.action import SQS
 from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
@@ -15,13 +17,20 @@ from bua.site.handler import STATUS_DONE
 class BUASiteSegmentHandler:
     """AWS Lambda handler for bottom up accruals profile segment calculations"""
 
-    def __init__(self, s3_client, meterdata_bucket_name, bua_bucket_name, table, segment_queue, failure_queue, conn, debug=False):
+    def __init__(
+            self, s3_client, meterdata_bucket_name, bua_bucket_name,
+            table,
+            segment_queue, failure_queue,
+            conn, db_engine: Engine,
+            debug=False
+    ):
         self.s3_client = s3_client
         self.meterdata_bucket_name = meterdata_bucket_name
         self.bua_bucket_name = bua_bucket_name
         self.table = table
         self.segment_queue = segment_queue
         self.conn = conn
+        self.db_engine = db_engine
         self.debug = debug
         self._handler = {
             'SegmentJurisdiction': self._handle_segment_jurisdiction,
@@ -142,7 +151,8 @@ class BUASiteSegmentHandler:
     def _handle_export_tables(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
         action = Exporter(
             queue=self.segment_queue, conn=self.conn, debug=debug,
-            s3_client=self.s3_client, bucket_name=self.bua_bucket_name
+            s3_client=self.s3_client, bucket_name=self.bua_bucket_name,
+            engine=self.db_engine
         )
         return action.export_table(entry)
 

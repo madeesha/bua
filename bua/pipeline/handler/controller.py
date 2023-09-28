@@ -96,8 +96,7 @@ class BUAControllerHandler:
             'bua_initiate_invoice_runs': sql_handler.bua_initiate_invoice_runs,
             'choice': choice_handler.choice,
             'scale_nodegroup': kubectl_handler.scale_nodegroup,
-            'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup,
-            'export_tables': sql_handler.export_tables
+            'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup
         }
 
     def get_config(self, request: HandlerRequest):
