@@ -198,7 +198,7 @@ Resources:
               s3_client=s3_client, meterdata_bucket_name=meterdata_bucket_name, bua_bucket_name=bua_bucket_name, 
               table=table, 
               segment_queue=segment_queue, failure_queue=failure_queue, 
-              conn=conn, db_engine=db_engine
+              conn=conn, db_engine=db_engine,
               debug=debug
           )
 
