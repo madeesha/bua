@@ -29,7 +29,7 @@
         "type": "step",
         "name": "BUA Export",
         "next": "100_clear_error_queues",
-        "speed": "slow",
+        "speed": "fast",
         "retry_delay": 120,
         "data.$": "$.data",
         "steps": {
@@ -60,7 +60,7 @@
           },
           "110_export_tables_parquet": {
             "action": "bua_initiate",
-            "speed": "slow",
+            "speed": "fast",
             "args": {
               "run_type": "ExportTables",
               "table_names": ["BUAAccountSummary", "InvoiceLineItemMonthly"],
