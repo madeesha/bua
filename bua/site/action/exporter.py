@@ -1,13 +1,13 @@
 import os
 import traceback
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import pandas
 from pymysql import Connection
 from pymysql.cursors import Cursor
 
 from bua.site.action import Action
-from bua.site.handler import STATUS_DONE
+from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
 class Exporter(Action):
@@ -61,7 +61,7 @@ class Exporter(Action):
                 self.send_if_needed(bodies, force=False, batch_size=self.batch_size)
             body = {
                 'table_name': table_name,
-                'partition_name': partition,
+                'partition': partition,
                 'counter': counter,
                 'offset': offset,
                 'batch_size': batch_size,
@@ -75,28 +75,42 @@ class Exporter(Action):
         self.send_if_needed(bodies, force=True, batch_size=self.batch_size)
         return counter
 
-    def export_table(
-            self, table_name: str, partition: Optional[str], counter: int, offset: int, batch_size: int,
-            bucket_prefix: str, run_date: str, index_col: str, file_format: str
-    ):
-        file_name = f"BUA_{table_name}_{run_date}_{counter}.{format}"
-        file_path = f"/tmp/{file_name}"
-        key = f'{bucket_prefix}/{file_name}'
-        if partition is not None:
-            sql = f"SELECT * FROM {table_name} PARTITION ({partition}) LIMIT {batch_size} OFFSET {offset}"
-        else:
-            sql = f"SELECT * FROM {table_name} LIMIT {batch_size} OFFSET {offset}"
-        df = pandas.read_sql_query(sql, self.conn, index_col=index_col)
-        if file_format == 'parquet':
-            df.to_parquet(file_path, index=False)
-        if file_format == 'csv':
-            df.to_csv(file_path, index=False, header=True)
-        if os.path.isfile(file_path):
-            with open(file_path, 'rb') as fp:
-                self.s3_client.upload_fileobj(fp, self.bucket_name, key)
-            os.remove(file_path)
-            print(f'Uploaded {file_name} to {self.bucket_name}/{key}')
-        return {
-            'status': STATUS_DONE
-        }
+    def export_table(self, entry: Dict):
+        try:
+            table_name = entry['table_name']
+            partition = entry['partition']
+            counter = entry['counter']
+            offset = entry['offset']
+            batch_size = entry['batch_size']
+            bucket_prefix = entry['bucket_prefix']
+            run_date = entry['run_date']
+            index_col = entry['index_col']
+            file_format = entry['file_format']
 
+            file_name = f"BUA_{table_name}_{run_date}_{counter}.{format}"
+            file_path = f"/tmp/{file_name}"
+            key = f'{bucket_prefix}/{file_name}'
+            if partition is not None:
+                sql = f"SELECT * FROM {table_name} PARTITION ({partition}) LIMIT {batch_size} OFFSET {offset}"
+            else:
+                sql = f"SELECT * FROM {table_name} LIMIT {batch_size} OFFSET {offset}"
+            df = pandas.read_sql_query(sql, self.conn, index_col=index_col)
+            if file_format == 'parquet':
+                df.to_parquet(file_path, index=False)
+            if file_format == 'csv':
+                df.to_csv(file_path, index=False, header=True)
+            if os.path.isfile(file_path):
+                with open(file_path, 'rb') as fp:
+                    self.s3_client.upload_fileobj(fp, self.bucket_name, key)
+                os.remove(file_path)
+                print(f'Uploaded {file_name} to {self.bucket_name}/{key}')
+            return {
+                'status': STATUS_DONE
+            }
+        except KeyError as ex:
+            traceback.print_exception(ex)
+            self.conn.rollback()
+            return {
+                'status': STATUS_FAIL,
+                'cause': str(ex)
+            }

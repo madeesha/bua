@@ -140,22 +140,11 @@ class BUASiteSegmentHandler:
         return action.execute_reset_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
 
     def _handle_export_tables(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
-        table_name = entry['table_name']
-        partition = entry['partition']
-        counter = entry['counter']
-        offset = entry['offset']
-        batch_size = entry['batch_size']
-        bucket_prefix = entry['bucket_prefix']
-        run_date = entry['run_date']
-        index_col = entry['index_col']
-        file_format = entry['file_format']
         action = Exporter(
             queue=self.segment_queue, conn=self.conn, debug=debug,
             s3_client=self.s3_client, bucket_name=self.bua_bucket_name
         )
-        return action.export_table(
-            table_name, partition, counter, offset, batch_size, bucket_prefix, run_date, index_col, file_format
-        )
+        return action.export_table(entry)
 
     def _handle_segment_jurisdiction_check(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
         run_date = entry['run_date']
