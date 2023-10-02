@@ -44,7 +44,6 @@
           },
           "110_export_tables_csv": {
             "action": "bua_initiate",
-            "speed": "slow",
             "args": {
               "run_type": "ExportTables",
               "table_names": ["BUAAccountSummary", "InvoiceLineItemMonthly"],
@@ -60,7 +59,6 @@
           },
           "110_export_tables_parquet": {
             "action": "bua_initiate",
-            "speed": "fast",
             "args": {
               "run_type": "ExportTables",
               "table_names": ["BUAAccountSummary", "InvoiceLineItemMonthly"],
