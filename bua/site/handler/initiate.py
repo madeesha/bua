@@ -211,6 +211,7 @@ class BUASiteInitiateHandler:
 
     def _initiate_export_tables(self, body, debug, run_type):
         run_date: str = body['run_date']
+        today: str = body['today']
         action = Exporter(queue=self.segment_queue, conn=self.conn, debug=debug)
         table_names = body['table_names']
         partitions = body.get('partitions')
@@ -224,6 +225,7 @@ class BUASiteInitiateHandler:
             batch_size=batch_size,
             bucket_prefix=bucket_prefix,
             run_date=run_date,
+            today=today,
             run_type=run_type,
             index_col=index_col,
             file_format=file_format
