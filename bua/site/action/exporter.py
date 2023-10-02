@@ -94,7 +94,7 @@ class Exporter(Action):
             index_col = entry['index_col']
             file_format = entry['file_format']
 
-            file_name = f"BUA_{table_name}_{run_date}_{counter}.{format}"
+            file_name = f"BUA_{table_name}_{run_date}_{counter}.{file_format}"
             file_path = f"/tmp/{file_name}"
             key = f'{bucket_prefix}/{file_name}'
             if partition is not None:
