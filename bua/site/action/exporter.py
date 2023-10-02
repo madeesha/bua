@@ -41,10 +41,11 @@ class Exporter(Action):
                                 bucket_prefix, run_date, run_type, index_col, file_format
                             )
                     else:
-                        self._initiate_export_table(
+                        counter = self._initiate_export_table(
                             cur, table_name, None, counter, batch_size,
                             bucket_prefix, run_date, run_type, index_col, file_format
                         )
+                    print(f'Initiate export of {counter} files to S3 for {table_name} to {bucket_prefix}')
                 self.conn.commit()
             except Exception as ex:
                 traceback.print_exception(ex)
