@@ -159,7 +159,7 @@ Resources:
       Layers:
         - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-pandas-python-libs-" , !Ref ProjectVersion , ":1" ] ]
         - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-python-libs-" , !Ref ProjectVersion , ":1" ] ]
-      MemorySize: 512
+      MemorySize: 1024
       ReservedConcurrentExecutions: !Ref ReservedConcurrentExecutions
       VpcConfig:
         SecurityGroupIds: !Ref VPCSecurityGroups
