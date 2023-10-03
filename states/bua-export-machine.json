@@ -53,21 +53,6 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "110_export_tables_parquet"
-              }
-            }
-          },
-          "110_export_tables_parquet": {
-            "action": "bua_initiate",
-            "args": {
-              "run_type": "ExportTables",
-              "table_names": ["BUAAccountSummary", "InvoiceLineItemMonthly"],
-              "file_format": "parquet",
-              "bucket_prefix": "export/parquet",
-              "index_col": "id"
-            },
-            "on": {
-              "COMPLETE": {
                 "delay": 120,
                 "next": "120_wait_for_export_tables"
               }
