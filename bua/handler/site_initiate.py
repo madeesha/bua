@@ -10,7 +10,8 @@ import traceback
 
 ddb_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 ddb = boto3.resource('dynamodb', config=ddb_config)
-ddb_table = ddb.Table(os.environ['tableName'])
+ddb_meterdata_table = ddb.Table(os.environ['meterdataTableName'])
+ddb_bua_table = ddb.Table(os.environ['buaTableName'])
 
 sqs_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 sqs = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
@@ -36,7 +37,7 @@ jur_batch_size = int(os.environ['jurisdictionBatchSize'])
 tni_batch_size = int(os.environ['tniBatchSize'])
 
 handler = BUASiteInitiateHandler(
-    sqs_client=sqs_client, ddb_table=ddb_table,
+    sqs_client=sqs_client, ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
     data_queue=data_queue, segment_queue=segment_queue,
     conn=conn, debug=debug,
     util_batch_size=util_batch_size, jur_batch_size=jur_batch_size, tni_batch_size=tni_batch_size

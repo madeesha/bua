@@ -209,12 +209,14 @@ class TestClass:
 
     def test_site_initiate_handler(self):
         sqs_client = {}
-        ddb_table = {}
+        ddb_meterdata_table = {}
+        ddb_bua_table = {}
         data_queue = {}
         segment_queue = {}
         conn = Database(rowcount=10)
         handler = BUASiteInitiateHandler(
-            sqs_client=sqs_client, ddb_table=ddb_table, data_queue=data_queue, segment_queue=segment_queue, conn=conn
+            sqs_client=sqs_client, ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
+            data_queue=data_queue, segment_queue=segment_queue, conn=conn
         )
         event = {
             'run_type': 'SegmentJurisdictionTotal',

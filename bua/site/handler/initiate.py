@@ -16,11 +16,11 @@ from bua.site.action.requeue import SiteRequeue
 
 class BUASiteInitiateHandler:
     """AWS Lambda handler for bottom up accruals initiate site data extract"""
-    def __init__(self, sqs_client, ddb_table, data_queue, segment_queue, conn,
+    def __init__(self, sqs_client, ddb_meterdata_table, ddb_bua_table, data_queue, segment_queue, conn,
                  debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10):
-        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
+        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_bua_table)
         self.sqs_client = sqs_client
-        self.table = ddb_table
+        self.table = ddb_meterdata_table
         self.data_queue = data_queue
         self.segment_queue = segment_queue
         self.conn = conn
