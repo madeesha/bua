@@ -30,13 +30,13 @@ from bua.pipeline.handler.request import HandlerRequest
 class BUAControllerHandler:
 
     def __init__(
-            self, config, r53_client, sm_client, s3_client, ddb_table, sqs_client, cf_client, rds_client,
+            self, config, r53_client, sm_client, s3_client, ddb_bua_table, sqs_client, cf_client, rds_client,
             sts_client, eks_client, session, mysql=pymysql, kubes=kubernetes
     ):
         self.config = config
         self.s3_client = s3_client
-        self.ddb_table = ddb_table
-        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
+        self.ddb_table = ddb_bua_table
+        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_bua_table)
         secret_manager = SecretManager(sm_client=sm_client)
         sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager, mysql=mysql)
         rds_handler = RDS(rds_client=rds_client)

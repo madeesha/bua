@@ -22,7 +22,7 @@ eks_client = boto3.client('eks', config=eks_config)
 
 ddb_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 ddb_resource = boto3.resource('dynamodb', config=ddb_config)
-ddb_table = ddb_resource.Table(os.environ['tableName'])
+ddb_bua_table = ddb_resource.Table(os.environ['buaTableName'])
 
 s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 s3_client = boto3.client('s3', config=s3_config)
@@ -48,7 +48,7 @@ config = {
 
 handler = BUAControllerHandler(
     config=config, r53_client=r53_client, sm_client=sm_client, s3_client=s3_client,
-    ddb_table=ddb_table, sqs_client=sqs_client, cf_client=cf_client, rds_client=rds_client,
+    ddb_bua_table=ddb_bua_table, sqs_client=sqs_client, cf_client=cf_client, rds_client=rds_client,
     sts_client=sts_client, eks_client=eks_client, session=session
 )
 

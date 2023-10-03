@@ -292,7 +292,7 @@ Resources:
           resourcePrefix: !Ref ResourcePrefix
           className: !Ref ClassName
           environmentName: !Ref EnvironmentName
-          tableName: !Join [ "-" , [ !Ref ResourcePrefix , "ddb", "bua" ] ]
+          buaTableName: !Join [ "-" , [ !Ref ResourcePrefix , "ddb", "bua" ] ]
           bucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "bua" ] ]
           nextQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-next-queue" ] ]
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-failure-queue" ] ]
