@@ -3,7 +3,7 @@ import traceback
 from typing import List, Optional, Dict
 
 import pandas
-from pymysql import Connection
+from pymysql import Connection, IntegrityError
 from pymysql.cursors import Cursor
 from sqlalchemy import Engine
 
@@ -134,7 +134,7 @@ class Exporter(Action):
                 return {
                     'status': STATUS_DONE
                 }
-        except KeyError as ex:
+        except KeyError or IntegrityError as ex:
             traceback.print_exception(ex)
             return {
                 'status': STATUS_FAIL,
