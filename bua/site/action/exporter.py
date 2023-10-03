@@ -118,12 +118,12 @@ class Exporter(Action):
                 if file_format == 'csv':
                     cur.execute(sql)
                     with open(file_path, 'w', newline='') as fp:
-                        with csv.writer(fp, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL) as writer:
-                            column_names = [col[0] for col in cur.description]
-                            writer.writerow(column_names)
-                            for record in cur.fetchall_unbuffered():
-                                row = [record[name] for name in column_names]
-                                writer.writerow(row)
+                        writer = csv.writer(fp, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                        column_names = [col[0] for col in cur.description]
+                        writer.writerow(column_names)
+                        for record in cur.fetchall_unbuffered():
+                            row = [record[name] for name in column_names]
+                            writer.writerow(row)
                 else:
                     return {
                         'status': STATUS_FAIL,
