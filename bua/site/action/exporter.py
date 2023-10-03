@@ -112,7 +112,8 @@ class Exporter(Action):
                 today = entry['today']
                 control = Control(run_type, today, today, today, run_date, identifier_type)
 
-                file_name = f"BUA_{table_name}_{run_date}_{counter}.{file_format}"
+                file_run_date = run_date[0:10].replace('-', '')
+                file_name = f"BUA_{table_name}_{file_run_date}_{counter}.{file_format}"
                 file_path = f"/tmp/{file_name}"
                 key = f'{bucket_prefix}/{file_name}'
                 if partition is not None:
