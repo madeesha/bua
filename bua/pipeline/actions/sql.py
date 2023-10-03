@@ -1,13 +1,10 @@
 import base64
-import os
 from hashlib import md5
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-import pandas
 import pymysql
 import pymysql.cursors
-from pymysql import Connection
 
 from bua.pipeline.facade.sm import SecretManager
 from bua.pipeline.handler.request import HandlerRequest

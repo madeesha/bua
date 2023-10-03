@@ -6,8 +6,6 @@ import json
 import pymysql
 import pymysql.cursors
 import traceback
-from sqlalchemy import create_engine
-from sqlalchemy.engine.url import URL
 
 ddb_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 ddb = boto3.resource('dynamodb', config=ddb_config)
@@ -28,11 +26,7 @@ username = decoded['username']
 password = decoded['password']
 dbname = decoded['dbname']
 conn = pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
-                       cursorclass=pymysql.cursors.DictCursor)
-
-db_url = URL.create(drivername='mysql+pymysql', host=rdshost, username=username, password=password, port=3306,
-                    database=dbname)
-db_engine = create_engine(db_url)
+                       cursorclass=pymysql.cursors.SSDictCursor)
 
 debug = os.environ['debugEnabled'] == 'Yes'
 
@@ -45,7 +39,7 @@ handler = BUASiteSegmentHandler(
     s3_client=s3_client, meterdata_bucket_name=meterdata_bucket_name, bua_bucket_name=bua_bucket_name,
     table=table,
     segment_queue=segment_queue, failure_queue=failure_queue,
-    conn=conn, db_engine=db_engine,
+    conn=conn,
     debug=debug
 )
 

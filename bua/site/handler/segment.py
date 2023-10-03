@@ -1,8 +1,6 @@
 import json
 from typing import Dict
 
-from sqlalchemy import Engine
-
 from bua.site.action import SQS
 from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
@@ -21,7 +19,7 @@ class BUASiteSegmentHandler:
             self, s3_client, meterdata_bucket_name, bua_bucket_name,
             table,
             segment_queue, failure_queue,
-            conn, db_engine: Engine,
+            conn,
             debug=False
     ):
         self.s3_client = s3_client
@@ -30,7 +28,6 @@ class BUASiteSegmentHandler:
         self.table = table
         self.segment_queue = segment_queue
         self.conn = conn
-        self.db_engine = db_engine
         self.debug = debug
         self._handler = {
             'SegmentJurisdiction': self._handle_segment_jurisdiction,
@@ -116,7 +113,9 @@ class BUASiteSegmentHandler:
             queue=self.segment_queue, conn=self.conn, debug=debug,
             s3_client=self.s3_client, bucket_name=self.meterdata_bucket_name
         )
-        return action.nem12_file_generation(run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        return action.nem12_file_generation(
+            run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type
+        )
 
     def _handle_microscalar(self, run_type: str, entry: Dict, debug: bool) -> Dict:
         account_id = entry['account_id']
@@ -151,8 +150,7 @@ class BUASiteSegmentHandler:
     def _handle_export_tables(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
         action = Exporter(
             queue=self.segment_queue, conn=self.conn, debug=debug,
-            s3_client=self.s3_client, bucket_name=self.bua_bucket_name,
-            engine=self.db_engine
+            s3_client=self.s3_client, bucket_name=self.bua_bucket_name
         )
         return action.export_table(entry)
 
@@ -193,7 +191,9 @@ class BUASiteSegmentHandler:
         res_bus = entry['res_bus']
         stream_type = entry['stream_type']
         interval_date = entry['interval_date']
-        return site.calculate_profile_segment(identifier_type=identifier_type, run_date=run_date, source_date=source_date,
-                                       jurisdiction_name=jurisdiction_name,
-                                       tni_name=tni_name, res_bus=res_bus, stream_type=stream_type,
-                                       interval_date=interval_date, avg_sum=avg_sum, incl_est=incl_est)
+        return site.calculate_profile_segment(
+            identifier_type=identifier_type, run_date=run_date, source_date=source_date,
+            jurisdiction_name=jurisdiction_name,
+            tni_name=tni_name, res_bus=res_bus, stream_type=stream_type,
+            interval_date=interval_date, avg_sum=avg_sum, incl_est=incl_est
+        )

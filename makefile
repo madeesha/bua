@@ -23,7 +23,6 @@ test: venv
 test-package: venv
 	rm -fr ./target/packages
 	mkdir -p ./target/packages
-	venv/bin/pip3 install --target ./target/packages --ignore-installed -r runtime-requirements-pandas.txt
 	venv/bin/pip3 install --target ./target/packages --ignore-installed -r runtime-requirements.txt
 	find ./target/packages -depth -type d -name tests -exec rm -fr {} \;
 	find ./target/packages -depth -type d -name __pycache__ -exec rm -fr {} \;

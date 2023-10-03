@@ -216,9 +216,8 @@ class BUASiteInitiateHandler:
         table_names = body['table_names']
         partitions = body.get('partitions')
         file_format = body.get('file_format', 'csv')
-        batch_size = body.get('batch_size', 100000 if file_format == 'csv' else 1000000)
+        batch_size = body.get('batch_size', 1000000)
         bucket_prefix = body.get('bucket_prefix', 'export')
-        index_col = body.get('index_col', 'id')
         action.initiate_export_tables(
             table_names=table_names,
             partitions=partitions,
@@ -227,6 +226,5 @@ class BUASiteInitiateHandler:
             run_date=run_date,
             today=today,
             run_type=run_type,
-            index_col=index_col,
             file_format=file_format
         )
