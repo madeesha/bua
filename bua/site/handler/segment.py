@@ -18,16 +18,16 @@ class BUASiteSegmentHandler:
 
     def __init__(
             self, s3_client, meterdata_bucket_name, bua_bucket_name,
-            sqs_client, ddb_table,
+            sqs_client, ddb_meterdata_table, ddb_bua_table,
             segment_queue, failure_queue,
             conn,
             debug=False
     ):
-        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
+        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_bua_table)
         self.s3_client = s3_client
         self.meterdata_bucket_name = meterdata_bucket_name
         self.bua_bucket_name = bua_bucket_name
-        self.table = ddb_table
+        self.meterdata_table = ddb_meterdata_table
         self.segment_queue = segment_queue
         self.conn = conn
         self.debug = debug
@@ -173,7 +173,7 @@ class BUASiteSegmentHandler:
 
     def calculate_jurisdiction_segment(self, identifier_type, run_date, source_date, entry,
                                        debug=False, avg_sum='Average', incl_est=True) -> Dict:
-        site = SiteSegment(table=self.table, queue=self.segment_queue, conn=self.conn, debug=debug)
+        site = SiteSegment(meterdata_table=self.meterdata_table, queue=self.segment_queue, conn=self.conn, debug=debug)
         jurisdiction_name = entry['jurisdiction_name']
         res_bus = entry['res_bus']
         stream_type = entry['stream_type']
@@ -188,7 +188,7 @@ class BUASiteSegmentHandler:
 
     def calculate_tni_segment(self, identifier_type, run_date, source_date, entry,
                               debug=False, avg_sum='Average', incl_est=True) -> Dict:
-        site = SiteSegment(table=self.table, queue=self.segment_queue, conn=self.conn, debug=debug)
+        site = SiteSegment(meterdata_table=self.meterdata_table, queue=self.segment_queue, conn=self.conn, debug=debug)
         jurisdiction_name = entry['jurisdiction_name']
         tni_name = entry['tni_name']
         res_bus = entry['res_bus']

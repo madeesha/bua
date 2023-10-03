@@ -9,9 +9,9 @@ from bua.site.handler import STATUS_DONE
 class SiteSegment(Action):
     """Management of utility profile site data including profile segment calculations"""
 
-    def __init__(self, table, queue, conn: Connection, debug=False, batch_size=10, check_nem=True, check_aggread=False):
+    def __init__(self, meterdata_table, queue, conn: Connection, debug=False, batch_size=10, check_nem=True, check_aggread=False):
         super().__init__(queue, conn, debug)
-        self.table = table
+        self.meterdata_table = meterdata_table
         self.batch_size = batch_size
         self.check_nem = check_nem
         self.check_aggread = check_aggread

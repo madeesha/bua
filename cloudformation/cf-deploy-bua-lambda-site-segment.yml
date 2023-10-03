@@ -144,7 +144,8 @@ Resources:
       Role: !GetAtt BUASiteSegmentLambdaExecRole.Arn
       Environment:
         Variables:
-          tableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-meterdata" ] ]
+          meterdataTableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-meterdata" ] ]
+          buaTableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-bua" ] ]
           segmentQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-segment-queue" ] ]
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-segment-failure-queue" ] ]
           rdsSecretName: !Join [ "/" , [ "cicd", !Ref ResourcePrefix , "rds" , !Ref RDSName ] ]
