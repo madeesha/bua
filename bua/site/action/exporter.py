@@ -16,7 +16,7 @@ class Exporter(Action):
 
     def __init__(
             self, queue, conn: Connection,
-            debug=False, batch_size=10,
+            debug=False, batch_size=1,
             s3_client=None, bucket_name=None,
             engine: Optional[Engine] = None
     ):
