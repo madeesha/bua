@@ -1,5 +1,5 @@
-from bua.pipeline.facade.rds import RDS
-from bua.pipeline.facade.sm import SecretManager
+from bua.facade.rds import RDS
+from bua.facade.sm import SecretManager
 from bua.pipeline.handler.request import HandlerRequest
 
 

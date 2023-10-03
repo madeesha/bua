@@ -2,7 +2,7 @@ import os
 import pathlib
 import yaml
 
-from bua.pipeline.facade.sqs import SQS
+from bua.facade.sqs import SQS
 from bua.pipeline.handler.request import HandlerRequest
 
 

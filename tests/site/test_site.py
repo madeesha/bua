@@ -208,11 +208,14 @@ class TestClass:
         assert printer.prints[0][0] == '20 variances identified for nmi 1234567890'
 
     def test_site_initiate_handler(self):
-        sqs = {}
-        table = {}
-        queue = {}
+        sqs_client = {}
+        ddb_table = {}
+        data_queue = {}
+        segment_queue = {}
         conn = Database(rowcount=10)
-        handler = BUASiteInitiateHandler(sqs, table, queue, queue, conn)
+        handler = BUASiteInitiateHandler(
+            sqs_client=sqs_client, ddb_table=ddb_table, data_queue=data_queue, segment_queue=segment_queue, conn=conn
+        )
         event = {
             'run_type': 'SegmentJurisdictionTotal',
             'start_inclusive': '2022-05-01',

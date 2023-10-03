@@ -1,4 +1,4 @@
-from bua.pipeline.facade.route53 import Route53
+from bua.facade.route53 import Route53
 from bua.pipeline.handler.request import HandlerRequest
 
 

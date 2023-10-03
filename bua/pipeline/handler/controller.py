@@ -20,10 +20,10 @@ from bua.pipeline.actions.destroy import Destroy
 from bua.pipeline.actions.sql import SQL
 from bua.pipeline.actions.changeset import ChangeSet
 from bua.pipeline.actions.trigger import Trigger
-from bua.pipeline.facade.rds import RDS
-from bua.pipeline.facade.route53 import Route53
-from bua.pipeline.facade.sm import SecretManager
-from bua.pipeline.facade.sqs import SQS
+from bua.facade.rds import RDS
+from bua.facade.route53 import Route53
+from bua.facade.sm import SecretManager
+from bua.facade.sqs import SQS
 from bua.pipeline.handler.request import HandlerRequest
 
 

@@ -1,6 +1,7 @@
 import json
 from typing import Dict, Callable
 
+from bua.facade.sqs import SQS
 from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
 from bua.site.action.exporter import Exporter
@@ -15,10 +16,11 @@ from bua.site.action.requeue import SiteRequeue
 
 class BUASiteInitiateHandler:
     """AWS Lambda handler for bottom up accruals initiate site data extract"""
-    def __init__(self, sqs_client, table, data_queue, segment_queue, conn,
+    def __init__(self, sqs_client, ddb_table, data_queue, segment_queue, conn,
                  debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10):
+        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
         self.sqs_client = sqs_client
-        self.table = table
+        self.table = ddb_table
         self.data_queue = data_queue
         self.segment_queue = segment_queue
         self.conn = conn
@@ -54,8 +56,9 @@ class BUASiteInitiateHandler:
         if 'Records' in event:
             for record in event['Records']:
                 if record['eventSource'] == 'aws:sqs':
-                    body = json.loads(record['body'])
-                    self._process_message(body)
+                    if self.sqs.deduplicate_request(record):
+                        body = json.loads(record['body'])
+                        self._process_message(body)
         else:
             self._process_message(event)
 

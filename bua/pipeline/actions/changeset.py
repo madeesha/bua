@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-from bua.pipeline.facade.cf import CF
+from bua.facade.cf import CF
 from bua.pipeline.handler.request import HandlerRequest
 
 

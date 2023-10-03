@@ -1,7 +1,8 @@
 import json
 from typing import Dict
 
-from bua.site.action import SQS
+from bua.facade.sqs import SQS
+from bua.site.action import SQSAction
 from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
 from bua.site.action.exporter import Exporter
@@ -17,15 +18,16 @@ class BUASiteSegmentHandler:
 
     def __init__(
             self, s3_client, meterdata_bucket_name, bua_bucket_name,
-            table,
+            sqs_client, ddb_table,
             segment_queue, failure_queue,
             conn,
             debug=False
     ):
+        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
         self.s3_client = s3_client
         self.meterdata_bucket_name = meterdata_bucket_name
         self.bua_bucket_name = bua_bucket_name
-        self.table = table
+        self.table = ddb_table
         self.segment_queue = segment_queue
         self.conn = conn
         self.debug = debug
@@ -41,7 +43,7 @@ class BUASiteSegmentHandler:
             'ExportTables': self._handle_export_tables
         }
         self._initialise_connection()
-        self.failure_sqs = SQS(failure_queue, debug)
+        self.failure_sqs = SQSAction(failure_queue, debug)
 
     def reconnect(self, conn):
         self.conn = conn
@@ -55,8 +57,9 @@ class BUASiteSegmentHandler:
         if 'Records' in event:
             for record in event['Records']:
                 if record['eventSource'] == 'aws:sqs':
-                    body = json.loads(record['body'])
-                    self._process_message(body)
+                    if self.sqs.deduplicate_request(record):
+                        body = json.loads(record['body'])
+                        self._process_message(body)
         else:
             self._process_message(event)
 

@@ -2,13 +2,13 @@ import traceback
 
 from pymysql import Connection
 
-from bua.site.action import SQS
+from bua.site.action import SQSAction
 
 
-class Accounts(SQS):
+class Accounts(SQSAction):
 
     def __init__(self, queue, conn: Connection, batch_size=100, debug=False):
-        SQS.__init__(self, queue, debug)
+        SQSAction.__init__(self, queue, debug)
         self.conn = conn
         self.batch_size = batch_size
 

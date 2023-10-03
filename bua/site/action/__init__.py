@@ -5,7 +5,7 @@ from typing import List
 from pymysql import Connection
 
 
-class SQS:
+class SQSAction:
     def __init__(self, queue, debug=False):
         self.queue = queue
         self.debug = debug
@@ -43,10 +43,10 @@ class SQS:
                     self.log(f'Sent {len(response["Successful"])} messages')
 
 
-class Action(SQS):
+class Action(SQSAction):
 
     def __init__(self, queue, conn: Connection, debug=False):
-        SQS.__init__(self, queue, debug)
+        SQSAction.__init__(self, queue, debug)
         self.conn = conn
 
     def auto_exclude_nmis(self, run_date, identifier_type, source_date):

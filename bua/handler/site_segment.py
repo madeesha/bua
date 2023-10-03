@@ -9,10 +9,11 @@ import traceback
 
 ddb_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 ddb = boto3.resource('dynamodb', config=ddb_config)
-table = ddb.Table(os.environ['tableName'])
+ddb_table = ddb.Table(os.environ['tableName'])
 
 sqs_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 sqs = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
+sqs_client = boto3.client('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
 segment_queue = sqs.Queue(os.environ['segmentQueueURL'])
 failure_queue = sqs.Queue(os.environ['failureQueueURL'])
 
@@ -37,7 +38,7 @@ bua_bucket_name = os.environ['buaBucketName']
 
 handler = BUASiteSegmentHandler(
     s3_client=s3_client, meterdata_bucket_name=meterdata_bucket_name, bua_bucket_name=bua_bucket_name,
-    table=table,
+    sqs_client=sqs_client, ddb_table=ddb_table,
     segment_queue=segment_queue, failure_queue=failure_queue,
     conn=conn,
     debug=debug

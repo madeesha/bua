@@ -1,4 +1,4 @@
-from bua.pipeline.facade.route53 import Route53
+from bua.facade.route53 import Route53
 from tests.pipeline.stubs.route53_client_stub import Route53ClientStub
 from pytest import fixture
 

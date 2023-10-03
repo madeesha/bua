@@ -103,7 +103,7 @@ class TestCase:
         return S3ClientStub()
 
     @fixture(autouse=True)
-    def ddb(self):
+    def ddb_table(self):
         return DDBTableStub()
 
     @fixture(autouse=True)
@@ -168,10 +168,10 @@ class TestCase:
         }
 
     @fixture(autouse=True)
-    def handler(self, r53, sm, s3, ddb, sqs, cf, rds, sts, eks, session, config, mysql, kubes):
+    def handler(self, r53, sm, s3, ddb_table, sqs, cf, rds, sts, eks, session, config, mysql, kubes):
         return BUAControllerHandler(
             config=config,
-            r53_client=r53, sm_client=sm, s3_client=s3, ddb_table=ddb, sqs_client=sqs, cf_client=cf,
+            r53_client=r53, sm_client=sm, s3_client=s3, ddb_table=ddb_table, sqs_client=sqs, cf_client=cf,
             rds_client=rds, sts_client=sts, eks_client=eks, session=session, mysql=mysql, kubes=kubes
         )
 
