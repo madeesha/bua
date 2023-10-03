@@ -149,7 +149,8 @@ Resources:
       Role: !GetAtt BUASiteDataLambdaExecRole.Arn
       Environment:
         Variables:
-          tableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-meterdata" ] ]
+          meterdataTableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-meterdata" ] ]
+          buaTableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-bua" ] ]
           queueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-data-queue" ] ]
           rdsSecretName: !Join [ "/" , [ "cicd", !Ref ResourcePrefix , "rds" , !Ref RDSName ] ]
           debugEnabled: !Ref DebugEnabled

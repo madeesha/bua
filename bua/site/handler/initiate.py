@@ -20,7 +20,7 @@ class BUASiteInitiateHandler:
                  debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10):
         self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_bua_table)
         self.sqs_client = sqs_client
-        self.table = ddb_meterdata_table
+        self.ddb_meterdata_table = ddb_meterdata_table
         self.data_queue = data_queue
         self.segment_queue = segment_queue
         self.conn = conn
@@ -84,7 +84,7 @@ class BUASiteInitiateHandler:
         source_date: str = body['source_date']
         identifier_type: str = body['identifier_type']
         site = SegmentTNI(
-            table=self.table, queue=self.segment_queue, conn=self.conn,
+            ddb_meterdata_table=self.ddb_meterdata_table, queue=self.segment_queue, conn=self.conn,
             debug=debug, batch_size=self.tni_batch_size
         )
         site.initiate_segment_tni_calculation(
@@ -101,7 +101,7 @@ class BUASiteInitiateHandler:
         source_date: str = body['source_date']
         identifier_type: str = body['identifier_type']
         site = SegmentJurisdiction(
-            table=self.table, queue=self.segment_queue, conn=self.conn,
+            ddb_meterdata_table=self.ddb_meterdata_table, queue=self.segment_queue, conn=self.conn,
             debug=debug, batch_size=self.jur_batch_size
         )
         site.initiate_segment_jurisdiction_calculation(
@@ -146,7 +146,7 @@ class BUASiteInitiateHandler:
         today: str = body['today']
         source_date: str = body['source_date']
         site = SiteData(
-            table=self.table, queue=self.data_queue, conn=self.conn,
+            ddb_meterdata_table=self.ddb_meterdata_table, queue=self.data_queue, conn=self.conn,
             debug=debug, batch_size=self.util_batch_size
         )
         limit = body.get('limit', 1000000000)

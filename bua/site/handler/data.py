@@ -1,15 +1,20 @@
 import json
 
+from bua.facade.sqs import SQS
 from bua.site.action.nem12 import NEM12
 from bua.site.action.sitedata import SiteData
 
 
 class BUASiteDataHandler:
     """AWS Lambda handler for bottom up accruals site data extraction and validation"""
-    def __init__(self, s3_client,  bucket_name, table, queue, conn, debug=False, check_nem=True, check_aggread=False):
+    def __init__(self, s3_client, bucket_name,
+                 sqs_client, ddb_meterdata_table, ddb_bua_table,
+                 queue, conn,
+                 debug=False, check_nem=True, check_aggread=False):
+        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_bua_table)
         self.s3_client = s3_client
         self.bucket_name = bucket_name
-        self.table = table
+        self.ddb_meterdata_table = ddb_meterdata_table
         self.queue = queue
         self.conn = conn
         self.debug = debug
@@ -33,8 +38,9 @@ class BUASiteDataHandler:
         if 'Records' in event:
             for record in event['Records']:
                 if record['eventSource'] == 'aws:sqs':
-                    body = json.loads(record['body'])
-                    self._process_message(body)
+                    if self.sqs.deduplicate_request(record):
+                        body = json.loads(record['body'])
+                        self._process_message(body)
         else:
             self._process_message(event)
 
@@ -50,7 +56,7 @@ class BUASiteDataHandler:
 
     def _handle_utility(self, entry, run_type, debug):
         run_date = entry['run_date']
-        site = SiteData(table=self.table, queue=self.queue, conn=self.conn, debug=debug)
+        site = SiteData(ddb_meterdata_table=self.ddb_meterdata_table, queue=self.queue, conn=self.conn, debug=debug)
         records = site.query_site_data(nmi=entry['nmi'],
                                        start_inclusive=entry['start_inclusive'],
                                        end_exclusive=entry['end_exclusive'])
@@ -67,7 +73,7 @@ class BUASiteDataHandler:
         run_date = entry['run_date']
         source_date = entry['source_date']
         site = SiteData(
-            table=self.table, queue=self.queue, conn=self.conn, debug=debug,
+            ddb_meterdata_table=self.ddb_meterdata_table, queue=self.queue, conn=self.conn, debug=debug,
             check_nem=self.check_nem, check_aggread=self.check_aggread
         )
         site.validate_site_data(

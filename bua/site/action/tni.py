@@ -7,9 +7,9 @@ from bua.site.action import Action
 
 class SegmentTNI(Action):
 
-    def __init__(self, table, queue, conn: Connection, debug=False, batch_size=10, check_nem=True, check_aggread=False):
+    def __init__(self, ddb_meterdata_table, queue, conn: Connection, debug=False, batch_size=10, check_nem=True, check_aggread=False):
         super().__init__(queue, conn, debug)
-        self.table = table
+        self.table = ddb_meterdata_table
         self.batch_size = batch_size
         self.check_nem = check_nem
         self.check_aggread = check_aggread

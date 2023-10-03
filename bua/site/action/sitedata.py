@@ -12,9 +12,10 @@ from bua.site.action import Action
 
 class SiteData(Action):
 
-    def __init__(self, table, queue, conn: Connection, debug=False, batch_size=10, check_nem=True, check_aggread=False):
+    def __init__(self, ddb_meterdata_table, queue, conn: Connection,
+                 debug=False, batch_size=10, check_nem=True, check_aggread=False):
         super().__init__(queue, conn, debug)
-        self.table = table
+        self.ddb_meterdata_table = ddb_meterdata_table
         self.batch_size = batch_size
         self.check_nem = check_nem
         self.check_aggread = check_aggread
@@ -109,11 +110,11 @@ class SiteData(Action):
         sk_end = end_exclusive.replace('-','')
         for pk in [f'NEM|DATA|NMI|{nmi}|ACT', f'NEM|DATA|NMI|{nmi}|EST']:
             key_expr = Key('PK').eq(pk) & Key('SK').between(sk_start, sk_end)
-            response = self.table.query(KeyConditionExpression=key_expr)
+            response = self.ddb_meterdata_table.query(KeyConditionExpression=key_expr)
             self._process_query_response(response, records)
             while 'LastEvaluatedKey' in response:
-                response = self.table.query(KeyConditionExpression=key_expr,
-                                                      ExclusiveStartKey=response['LastEvaluatedKey'])
+                response = self.ddb_meterdata_table.query(KeyConditionExpression=key_expr,
+                                                          ExclusiveStartKey=response['LastEvaluatedKey'])
                 self._process_query_response(response, records)
         return list(records.values())
 

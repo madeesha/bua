@@ -9,10 +9,12 @@ import traceback
 
 ddb_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 ddb = boto3.resource('dynamodb', config=ddb_config)
-table = ddb.Table(os.environ['tableName'])
+ddb_meterdata_table = ddb.Table(os.environ['meterdataTableName'])
+ddb_bua_table = ddb.Table(os.environ['buaTableName'])
 
 sqs_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 sqs = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
+sqs_client = boto3.client('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
 queue = sqs.Queue(os.environ['queueURL'])
 
 rdssecret = os.environ['rdsSecretName']
@@ -35,7 +37,10 @@ s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 s3_client = boto3.client('s3', config=s3_config)
 bucket_name = os.environ['bucketName']
 
-handler = BUASiteDataHandler(s3_client=s3_client, bucket_name=bucket_name, table=table, queue=queue, conn=conn,
+handler = BUASiteDataHandler(s3_client=s3_client, bucket_name=bucket_name,
+                             sqs_client=sqs_client,
+                             ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
+                             queue=queue, conn=conn,
                              debug=debug, check_nem=check_nem, check_aggread=check_aggread)
 
 
