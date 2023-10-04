@@ -1,15 +1,14 @@
 import traceback
+from typing import Callable
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
+from bua.site.action import Action
 
-from pymysql import Connection
 
-from bua.site.action import SQSAction
+class Accounts(Action):
 
-
-class Accounts(SQSAction):
-
-    def __init__(self, queue, conn: Connection, batch_size=100, debug=False):
-        SQSAction.__init__(self, queue, debug)
-        self.conn = conn
+    def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool, batch_size=100):
+        Action.__init__(self, queue, conn, log, debug)
         self.batch_size = batch_size
 
     def queue_eligible_accounts(
@@ -32,7 +31,7 @@ class Accounts(SQSAction):
                 for record in cur.fetchall_unbuffered():
                     account_id = record['account_id']
                     if body is not None:
-                        self.send_if_needed(bodies, force=False, batch_size=self.batch_size)
+                        self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size)
                     body = {
                         'account_id': account_id,
                         'run_type': run_type,
@@ -42,7 +41,7 @@ class Accounts(SQSAction):
                     }
                     bodies.append(body)
                     total += 1
-                self.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
 
                 self.log(f'{total} accounts to generate {run_type} data')
                 self.conn.commit()

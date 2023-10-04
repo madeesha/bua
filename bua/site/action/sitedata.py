@@ -2,19 +2,20 @@ import decimal
 import json
 import struct
 import traceback
-from typing import Optional
-
+from typing import Optional, Callable
 from boto3.dynamodb.conditions import Key
-from pymysql import Connection
-
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 from bua.site.action import Action
 
 
 class SiteData(Action):
 
-    def __init__(self, ddb_meterdata_table, queue, conn: Connection,
-                 debug=False, batch_size=10, check_nem=True, check_aggread=False):
-        super().__init__(queue, conn, debug)
+    def __init__(
+            self, queue: Queue, conn: DB, log: Callable, debug: bool,
+            ddb_meterdata_table, batch_size=10, check_nem=True, check_aggread=False
+    ):
+        Action.__init__(self, queue, conn, log, debug)
         self.ddb_meterdata_table = ddb_meterdata_table
         self.batch_size = batch_size
         self.check_nem = check_nem
@@ -69,7 +70,7 @@ class SiteData(Action):
                             break
                         if body is not None:
                             bodies.append(body)
-                            self.send_if_needed(bodies, batch_size=self.batch_size)
+                            self.queue.send_if_needed(bodies, batch_size=self.batch_size)
                         body = {
                             'run_type': run_type,
                             'run_date': run_date,
@@ -89,7 +90,7 @@ class SiteData(Action):
                         body['stream_types'][nmi_suffix] = stream_type
                 if body is not None:
                     bodies.append(body)
-                self.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 cur.execute(
                     "INSERT INTO UtilityProfileLog (run_date, run_type, source_date, total_entries) "
                     "VALUES (%s, %s, %s, %s)",
@@ -106,8 +107,8 @@ class SiteData(Action):
     def query_site_data(self, nmi: str, start_inclusive: str, end_exclusive: str):
         """Query the specified site and return the latest reads"""
         records = dict()
-        sk_start = start_inclusive.replace('-','')
-        sk_end = end_exclusive.replace('-','')
+        sk_start = start_inclusive.replace('-', '')
+        sk_end = end_exclusive.replace('-', '')
         for pk in [f'NEM|DATA|NMI|{nmi}|ACT', f'NEM|DATA|NMI|{nmi}|EST']:
             key_expr = Key('PK').eq(pk) & Key('SK').between(sk_start, sk_end)
             response = self.ddb_meterdata_table.query(KeyConditionExpression=key_expr)
@@ -136,7 +137,9 @@ class SiteData(Action):
                         actuals = [value for index, value in enumerate(intervals) if qualities[index].startswith('A')]
                         total_actuals = sum(actuals)
                         count_actuals = len(actuals)
-                        substitutes = [value for index, value in enumerate(intervals) if qualities[index].startswith('S')]
+                        substitutes = [
+                            value for index, value in enumerate(intervals) if qualities[index].startswith('S')
+                        ]
                         total_substitutes = sum(substitutes)
                         count_substitutes = len(substitutes)
                         finals = [value for index, value in enumerate(intervals) if qualities[index].startswith('F')]
@@ -146,30 +149,30 @@ class SiteData(Action):
                         sfx = item['SUFX']
                         idt = item['IDATE']
                         record = {
-                            'NMI': nmi,                # NMI
-                            'SFX': sfx,                # NMI suffix
-                            'CFG': item.get('CFG'),    # MDM configuration
-                            'UOM': item['UOM'],        # Unit of measure
-                            'IDT': idt,                # Interval date
-                            'FDT': item['FDTE'],       # File date
-                            'UDT': item['UPDT'],       # MDP update time
-                            'MDT': item.get('MSAT'),   # MSATS time
-                            'SER': item.get('SN'),     # serial number
-                            'REG': item.get('REG'),    # register
-                            'MDM': item.get('MDM'),    # MDM data stream identifier
-                            'DIR': direction,          # Direction
-                            'TOT': total_value,        # total reads
-                            'CNT': count_value,        # count reads
-                            'TEST': total_estimates,   # total estimates
-                            'CEST': count_estimates,   # count estimates
-                            'TACT': total_actuals,     # total actuals
-                            'CACT': count_actuals,     # count actuals
-                            'TSUB': total_substitutes, # total substitutes
-                            'CSUB': count_substitutes, # count substitutes
-                            'TFIN': total_finals,      # total finals
-                            'CFIN': count_finals,      # count finals
-                            'VAL': intervals,          # meter read interval values
-                            'QUA': qualities,          # meter read qualities
+                            'NMI': nmi,                 # NMI
+                            'SFX': sfx,                 # NMI suffix
+                            'CFG': item.get('CFG'),     # MDM configuration
+                            'UOM': item['UOM'],         # Unit of measure
+                            'IDT': idt,                 # Interval date
+                            'FDT': item['FDTE'],        # File date
+                            'UDT': item['UPDT'],        # MDP update time
+                            'MDT': item.get('MSAT'),    # MSATS time
+                            'SER': item.get('SN'),      # serial number
+                            'REG': item.get('REG'),     # register
+                            'MDM': item.get('MDM'),     # MDM data stream identifier
+                            'DIR': direction,           # Direction
+                            'TOT': total_value,         # total reads
+                            'CNT': count_value,         # count reads
+                            'TEST': total_estimates,    # total estimates
+                            'CEST': count_estimates,    # count estimates
+                            'TACT': total_actuals,      # total actuals
+                            'CACT': count_actuals,      # count actuals
+                            'TSUB': total_substitutes,  # total substitutes
+                            'CSUB': count_substitutes,  # count substitutes
+                            'TFIN': total_finals,       # total finals
+                            'CFIN': count_finals,       # count finals
+                            'VAL': intervals,           # meter read interval values
+                            'QUA': qualities,           # meter read qualities
                         }
                         key = f'{nmi}|{sfx}|{idt}'
                         if key not in records:
@@ -364,8 +367,9 @@ class SiteData(Action):
                     sql_args.extend(args)
                 if sql is not None and len(sql_args) > 0:
                     cur.execute(sql, sql_args)
-                Action.record_processing_summary(cur, run_date, run_type, nmi, start_inclusive,
-                                                len(records))
+                Action.record_processing_summary(
+                    cur, run_date, run_type, nmi, start_inclusive, len(records)
+                )
                 self.log('Imported', len(records), 'records for nmi', nmi)
                 self.conn.commit()
             except Exception as ex:
@@ -425,18 +429,34 @@ class SiteData(Action):
                                upcurr.jurisdiction_name, 
                                upcurr.total_interval_value * IF(upcurr.unit_of_measure='WH',0.001,1), 
                                upcurr.total_interval_value * IF(upcurr.unit_of_measure='WH',0.001,1)
-                               + IF(ts.prev_time_shift = 48, IF(upprev.unit_of_measure='WH',0.001,1) * upprev.value_48, 0)
-                               + IF(ts.prev_time_shift = 47, IF(upprev.unit_of_measure='WH',0.001,1) * (upprev.value_47 + upprev.value_48), 0)
-                               + IF(ts.next_time_shift = 1, IF(upnext.unit_of_measure='WH',0.001,1) * upnext.value_01, 0)
-                               - IF(ts.left_time_shift = -1, IF(upcurr.unit_of_measure='WH',0.001,1) * upcurr.value_01, 0)
-                               - IF(ts.right_time_shift = -47, IF(upcurr.unit_of_measure='WH',0.001,1) * (upcurr.value_47 + upcurr.value_48), 0)
-                               - IF(ts.right_time_shift = -48, IF(upcurr.unit_of_measure='WH',0.001,1) * upcurr.value_48, 0)
+                               + IF(ts.prev_time_shift = 48, 
+                                    IF(upprev.unit_of_measure='WH',0.001,1) * upprev.value_48, 
+                                    0)
+                               + IF(ts.prev_time_shift = 47, 
+                                    IF(upprev.unit_of_measure='WH',0.001,1) * (upprev.value_47 + upprev.value_48), 
+                                    0)
+                               + IF(ts.next_time_shift = 1, 
+                                    IF(upnext.unit_of_measure='WH',0.001,1) * upnext.value_01, 
+                                    0)
+                               - IF(ts.left_time_shift = -1, 
+                                    IF(upcurr.unit_of_measure='WH',0.001,1) * upcurr.value_01, 
+                                    0)
+                               - IF(ts.right_time_shift = -47, 
+                                    IF(upcurr.unit_of_measure='WH',0.001,1) * (upcurr.value_47 + upcurr.value_48), 
+                                    0)
+                               - IF(ts.right_time_shift = -48, 
+                                    IF(upcurr.unit_of_measure='WH',0.001,1) * upcurr.value_48, 
+                                    0)
                                AS shifted_interval_value,
                            SUM(arcurr.read_value) AS agg_read_value,
-                           upcurr.total_actual_value * IF(upcurr.unit_of_measure='WH',0.001,1), upcurr.total_actual_count,
-                           upcurr.total_estimate_value * IF(upcurr.unit_of_measure='WH',0.001,1), upcurr.total_estimate_count,
-                           upcurr.total_substitute_value * IF(upcurr.unit_of_measure='WH',0.001,1), upcurr.total_substitute_count,
-                           upcurr.total_final_value * IF(upcurr.unit_of_measure='WH',0.001,1), upcurr.total_final_count,
+                           upcurr.total_actual_value * IF(upcurr.unit_of_measure='WH',0.001,1), 
+                           upcurr.total_actual_count,
+                           upcurr.total_estimate_value * IF(upcurr.unit_of_measure='WH',0.001,1), 
+                           upcurr.total_estimate_count,
+                           upcurr.total_substitute_value * IF(upcurr.unit_of_measure='WH',0.001,1), 
+                           upcurr.total_substitute_count,
+                           upcurr.total_final_value * IF(upcurr.unit_of_measure='WH',0.001,1), 
+                           upcurr.total_final_count,
                            'BUA-NEM'
                         FROM UtilityProfile upcurr
                         JOIN UtilityProfile upnext 
@@ -552,4 +572,3 @@ class SiteData(Action):
                 traceback.print_exception(ex)
                 self.conn.rollback()
                 raise
-

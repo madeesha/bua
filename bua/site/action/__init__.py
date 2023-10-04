@@ -1,53 +1,16 @@
-import json
 import traceback
-from typing import List
+from typing import Callable
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 
-from pymysql import Connection
 
+class Action:
 
-class SQSAction:
-    def __init__(self, queue, debug=False):
+    def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool):
         self.queue = queue
-        self.debug = debug
-
-    def log(self, *args, **kwargs):
-        print(*args, **kwargs)
-
-    def send_if_needed(self, bodies: list, force=False, batch_size=10):
-        """Send SQS message batches if needed"""
-        if len(bodies) >= (batch_size*10) or (len(bodies) > 0 and force):
-            batches = [
-                {'entries': [bodies[n] for n in range(index, min(index+batch_size, len(bodies)))]}
-                for index in range(0, len(bodies), batch_size)
-            ]
-            for index in range(0, len(batches), 10):
-                self.send_request(batches[index:index+10])
-            bodies.clear()
-
-    def send_request(self, bodies: List):
-        """Send an SQS message batch"""
-        entries = [{'Id': str(index), 'MessageBody': json.dumps(body)} for index, body in enumerate(bodies)]
-        response = self.queue.send_messages(Entries=entries)
-        if self.debug:
-            if 'Successful' in response:
-                self.log(f'Sent {len(response["Successful"])} messages')
-        while 'Failed' in response and len(response['Failed']) > 0:
-            for failure in response['Failed']:
-                self.log(f'Failed {failure["Id"]} : '
-                      f'Sender fault {failure["SenderFault"]} : {failure["Code"]} : {failure["Message"]}')
-            failures = {entry['Id'] for entry in response['Failed']}
-            entries = [entry for entry in entries if entry['Id'] in failures]
-            response = self.queue.send_messages(Entries=entries)
-            if self.debug:
-                if 'Successful' in response:
-                    self.log(f'Sent {len(response["Successful"])} messages')
-
-
-class Action(SQSAction):
-
-    def __init__(self, queue, conn: Connection, debug=False):
-        SQSAction.__init__(self, queue, debug)
         self.conn = conn
+        self.log = log
+        self.debug = debug
 
     def auto_exclude_nmis(self, run_date, identifier_type, source_date):
         with self.conn.cursor() as cur:

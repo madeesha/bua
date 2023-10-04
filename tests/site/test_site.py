@@ -4,13 +4,20 @@ from decimal import Decimal
 
 import pytest
 from boto3.dynamodb.types import Binary
+from pymysql import Connection
 
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 from bua.site.action.sitedata import SiteData
 from bua.site.action.sitesegment import SiteSegment
 from bua.site.handler.initiate import BUASiteInitiateHandler
 
 
 class TestClass:
+
+    @staticmethod
+    def log(*args, **kwargs):
+        print(*args, **kwargs)
 
     @pytest.mark.parametrize('source,scale,expected', [
         ([Decimal(10), Decimal(20)], 4, [Decimal(5), Decimal(5), Decimal(10), Decimal(10)]),
@@ -99,33 +106,33 @@ class TestClass:
                 'MDM': 'N1',
             }
         ]}, {
-            '1234567890|E1|20230101': {
-                'NMI': '1234567890',
-                'SFX': 'E1',
-                'CFG': 'E1B1Q1K1',
-                'UOM': 'KWH',
-                'IDT': '20230101',
-                'FDT': '20230101020305',
-                'UDT': '20230101020304',
-                'MDT': None,
-                'SER': 'SERIAL123',
-                'REG': '1',
-                'MDM': 'N1',
-                'DIR': 'E',
-                'TOT': Decimal('144'),
-                'CNT': 48,
-                'TEST': Decimal('96'),
-                'CEST': 24,
-                'TACT': Decimal('48'),
-                'CACT': 24,
-                'TSUB': Decimal('0'),
-                'CSUB': 0,
-                'TFIN': Decimal('0'),
-                'CFIN': 0,
-                'VAL': [Decimal('2')] * 24 + [Decimal('4')] * 24,
-                'QUA': ['A'] * 24 + ['E'] * 24,
-            }
-        })
+             '1234567890|E1|20230101': {
+                 'NMI': '1234567890',
+                 'SFX': 'E1',
+                 'CFG': 'E1B1Q1K1',
+                 'UOM': 'KWH',
+                 'IDT': '20230101',
+                 'FDT': '20230101020305',
+                 'UDT': '20230101020304',
+                 'MDT': None,
+                 'SER': 'SERIAL123',
+                 'REG': '1',
+                 'MDM': 'N1',
+                 'DIR': 'E',
+                 'TOT': Decimal('144'),
+                 'CNT': 48,
+                 'TEST': Decimal('96'),
+                 'CEST': 24,
+                 'TACT': Decimal('48'),
+                 'CACT': 24,
+                 'TSUB': Decimal('0'),
+                 'CSUB': 0,
+                 'TFIN': Decimal('0'),
+                 'CFIN': 0,
+                 'VAL': [Decimal('2')] * 24 + [Decimal('4')] * 24,
+                 'QUA': ['A'] * 24 + ['E'] * 24,
+             }
+         })
     ])
     def test_process_query_response(self, source, expected):
         records = dict()
@@ -140,38 +147,68 @@ class TestClass:
              'TACT': '48', 'CACT': '0',
              'TSUB': '0', 'CSUB': '0',
              'TFIN': '0', 'CFIN': '0',
-             'VAL': ['1']*48, 'QUA': ['A']*48,
+             'VAL': ['1'] * 48, 'QUA': ['A'] * 48,
              'UOM': 'KWH', 'FDT': '202301010203', 'UDT': '20230101020304', 'MDT': None, 'SER': 'SERIAL1', 'REG': '001',
              'MDM': 'N1'}
         ], 5),
         ('1234567890', 'RES', 'QLD', 'QSPN', {'B1': 'SOLAR', 'E1': 'PRIMARY'}, '2023-01-01', '2023-01-01', [], 4),
     ])
-    def test_insert(self, nmi, res_bus, jurisdiction, tni, stream_types, start_inclusive, end_exclusive, records, count):
+    def test_insert(
+            self, nmi, res_bus, jurisdiction, tni, stream_types, start_inclusive, end_exclusive, records, count
+    ):
         table = {}
-        queue = {}
-        conn = Database()
-        site = SiteData(table, queue, conn)
+        queue = Queue({}, True, self.log)
+        db = Database()
+        conn = DB(conn=db)
+        site = SiteData(queue, conn, self.log, True, table)
         site.insert_site_data('Utility', '2023-06-01 00:00:00', nmi, res_bus, jurisdiction, tni, stream_types,
                               start_inclusive, end_exclusive, records)
-        assert len(conn.executions) == count
-        assert conn.commits == [True]
+        assert len(db.executions) == count
+        assert db.commits == [True]
 
-    @pytest.mark.parametrize('identifier_type,jurisdiction_name,tni_name,res_bus,stream_type,avg_sum,incl_est,aggregator,filter,identifier', [
-        ('SegmentTNIAvgIncl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Average', True, 'AVG', None, 'VIC|NSLP|RES|PRIMARY'),
-        ('SegmentTNISumIncl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Sum', True, 'SUM', None, 'VIC|NSLP|RES|PRIMARY'),
-        ('SegmentTNIAvgExcl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Average', False, 'AVG', 'IF(SUBSTR(quality', 'VIC|NSLP|RES|PRIMARY'),
-        ('SegmentTNISumExcl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Sum', False, 'SUM', 'IF(SUBSTR(quality', 'VIC|NSLP|RES|PRIMARY'),
-        ('SegmentJurisdictionAvgIncl', 'VIC', None, 'RES', 'PRIMARY', 'Average', True, 'AVG', None, 'VIC|RES|PRIMARY'),
-        ('SegmentJurisdictionSumIncl', 'VIC', None, 'RES', 'PRIMARY', 'Sum', True, 'SUM', None, 'VIC|RES|PRIMARY'),
-        ('SegmentJurisdictionAvgExcl', 'VIC', None, 'RES', 'PRIMARY', 'Average', False, 'AVG', 'IF(SUBSTR(quality', 'VIC|RES|PRIMARY'),
-        ('SegmentJurisdictionSumExcl', 'VIC', None, 'RES', 'PRIMARY', 'Sum', False, 'SUM', 'IF(SUBSTR(quality', 'VIC|RES|PRIMARY'),
-    ])
+    @pytest.mark.parametrize(
+        'identifier_type,jurisdiction_name,tni_name,res_bus,stream_type,avg_sum,incl_est,aggregator,_filter,identifier',
+        [
+            (
+                'SegmentTNIAvgIncl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Average', True, 'AVG', None,
+                'VIC|NSLP|RES|PRIMARY'
+            ),
+            (
+                'SegmentTNISumIncl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Sum', True, 'SUM', None, 'VIC|NSLP|RES|PRIMARY'
+            ),
+            (
+                'SegmentTNIAvgExcl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Average', False, 'AVG', 'IF(SUBSTR(quality',
+                'VIC|NSLP|RES|PRIMARY'
+            ),
+            (
+                'SegmentTNISumExcl', 'VIC', 'NSLP', 'RES', 'PRIMARY', 'Sum', False, 'SUM', 'IF(SUBSTR(quality',
+                'VIC|NSLP|RES|PRIMARY'
+            ),
+            (
+                'SegmentJurisdictionAvgIncl', 'VIC', None, 'RES', 'PRIMARY', 'Average', True, 'AVG', None,
+                'VIC|RES|PRIMARY'
+            ),
+            (
+                'SegmentJurisdictionSumIncl', 'VIC', None, 'RES', 'PRIMARY', 'Sum', True, 'SUM', None,
+                'VIC|RES|PRIMARY'
+            ),
+            (
+                'SegmentJurisdictionAvgExcl', 'VIC', None, 'RES', 'PRIMARY', 'Average', False, 'AVG',
+                'IF(SUBSTR(quality', 'VIC|RES|PRIMARY'
+            ),
+            (
+                'SegmentJurisdictionSumExcl', 'VIC', None, 'RES', 'PRIMARY', 'Sum', False, 'SUM',
+                'IF(SUBSTR(quality', 'VIC|RES|PRIMARY'
+            ),
+        ]
+    )
     def test_calculate_segment(self, identifier_type, jurisdiction_name, tni_name, res_bus, stream_type,
-                                                avg_sum, incl_est, aggregator, filter, identifier):
+                               avg_sum, incl_est, aggregator, _filter, identifier):
         table = {}
-        queue = {}
-        conn = Database(rowcount=10)
-        site = SiteSegment(table, queue, conn)
+        queue = Queue({}, True, self.log)
+        db = Database(rowcount=10)
+        conn = DB(conn=db)
+        site = SiteSegment(queue, conn, self.log, True, table)
         printer = Printer()
         site.log = printer.print
         site.calculate_profile_segment(
@@ -186,24 +223,32 @@ class TestClass:
             avg_sum=avg_sum,
             incl_est=incl_est
         )
-        assert len(conn.executions) == 4
-        assert aggregator in conn.executions[2][0]
-        if filter is not None:
-            assert filter in conn.executions[2][0]
-        assert conn.commits == [True]
+        assert len(db.executions) == 4
+        assert aggregator in db.executions[2][0]
+        if _filter is not None:
+            assert _filter in db.executions[2][0]
+        assert db.commits == [True]
         assert len(printer.prints) == 1
         assert printer.prints[0][0] == f'Imported 10 records for segment {identifier} on 2022-06-01'
 
     def test_validate_site_data(self):
         table = {}
-        queue = {}
-        conn = Database(rowcount=10)
-        site = SiteData(table, queue, conn, check_aggread=True, check_nem=True)
+        queue = Queue({}, True, self.log)
+        db = Database(rowcount=10)
+        conn = DB(conn=db)
+        site = SiteData(queue, conn, self.log, True, table, check_aggread=True, check_nem=True)
         printer = Printer()
         site.log = printer.print
-        site.validate_site_data('1234567890', 'Validate', '2023-06-01 00:00:00', '2023-06-01 00:00:00', '2022-06-01', '2023-06-01')
-        assert len(conn.executions) == 5
-        assert conn.commits == [True]
+        site.validate_site_data(
+            '1234567890',
+            'Validate',
+            '2023-06-01 00:00:00',
+            '2023-06-01 00:00:00',
+            '2022-06-01',
+            '2023-06-01'
+        )
+        assert len(db.executions) == 5
+        assert db.commits == [True]
         assert len(printer.prints) == 1
         assert printer.prints[0][0] == '20 variances identified for nmi 1234567890'
 
@@ -213,15 +258,21 @@ class TestClass:
         ddb_bua_table = {}
         data_queue = {}
         segment_queue = {}
+        export_queue = {}
+        failure_queue = {}
         conn = Database(rowcount=10)
         handler = BUASiteInitiateHandler(
             sqs_client=sqs_client, ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
-            data_queue=data_queue, segment_queue=segment_queue, conn=conn
+            data_queue=data_queue, segment_queue=segment_queue, export_queue=export_queue, failure_queue=failure_queue,
+            conn=conn
         )
         event = {
-            'run_type': 'SegmentJurisdictionTotal',
+            'run_type': 'SegmentJurisdiction',
+            'run_date': '2023-05-10',
+            'source_date': '2023-05-10',
             'start_inclusive': '2022-05-01',
-            'end_exclusive': '2023-05-01'
+            'end_exclusive': '2023-05-01',
+            'identifier_type': 'Excl'
         }
         handler.handle_request(event)
 
@@ -247,14 +298,15 @@ class Printer:
         print(*args, **kwargs)
 
 
-class Database:
+class Database(Connection):
     def __init__(self, rowcount=0):
+        Connection.__init__(self, defer_connect=True)
         self.executions = []
         self.commits = []
         self.unbuffered_result = []
         self.rowcount = rowcount
 
-    def cursor(self):
+    def cursor(self, cursor=None):
         return self
 
     def __enter__(self):
@@ -272,7 +324,7 @@ class Database:
             traceback.print_exception(te)
             print(sql)
             print(args)
-            sql_arg_count = (len(sql) - len(sql.replace('%s', '')))//2
+            sql_arg_count = (len(sql) - len(sql.replace('%s', ''))) // 2
             print('Required', sql_arg_count, 'args but received ', len(args) if args is not None else 0, 'arguments')
             raise
 

@@ -15,7 +15,8 @@ ddb_bua_table = ddb.Table(os.environ['buaTableName'])
 sqs_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 sqs = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
 sqs_client = boto3.client('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
-queue = sqs.Queue(os.environ['queueURL'])
+site_data_queue = sqs.Queue(os.environ['siteDataQueueURL'])
+failure_queue = sqs.Queue(os.environ['failureQueueURL'])
 
 rdssecret = os.environ['rdsSecretName']
 session = boto3.Session()
@@ -40,7 +41,8 @@ bucket_name = os.environ['bucketName']
 handler = BUASiteDataHandler(s3_client=s3_client, bucket_name=bucket_name,
                              sqs_client=sqs_client,
                              ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
-                             queue=queue, conn=conn,
+                             site_data_queue=site_data_queue, failure_queue=failure_queue,
+                             conn=conn,
                              debug=debug, check_nem=check_nem, check_aggread=check_aggread)
 
 

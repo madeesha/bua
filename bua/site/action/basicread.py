@@ -1,18 +1,16 @@
 import traceback
-from typing import Dict
-
-from pymysql import Connection, IntegrityError
-
-from bua.site.action import Action
+from typing import Dict, Callable
+from pymysql import IntegrityError
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
 from bua.site.action.control import Control
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
-class BasicRead(Action, Accounts):
-    def __init__(self, queue, conn: Connection, debug=False, batch_size=100):
-        Action.__init__(self, queue, conn, debug)
-        Accounts.__init__(self, queue, conn, batch_size, debug)
+class BasicRead(Accounts):
+    def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool, batch_size=100):
+        Accounts.__init__(self, queue, conn, log, debug, batch_size)
 
     def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
         self._reset_control_records(run_type, today, run_date, identifier_type)
@@ -55,7 +53,9 @@ class BasicRead(Action, Accounts):
             except IntegrityError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.insert_control_record(self.conn, cur, str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex))
+                control.insert_control_record(
+                    self.conn, cur, str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex)
+                )
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex)
@@ -84,7 +84,9 @@ class BasicRead(Action, Accounts):
             except IntegrityError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.insert_control_record(self.conn, cur, str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex))
+                control.insert_control_record(
+                    self.conn, cur, str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex)
+                )
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex)

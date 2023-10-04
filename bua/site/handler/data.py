@@ -1,62 +1,35 @@
-import json
-
-from bua.facade.sqs import SQS
-from bua.site.action.nem12 import NEM12
+from bua.handler import DBLambdaHandler
 from bua.site.action.sitedata import SiteData
 
 
-class BUASiteDataHandler:
+class BUASiteDataHandler(DBLambdaHandler):
     """AWS Lambda handler for bottom up accruals site data extraction and validation"""
     def __init__(self, s3_client, bucket_name,
                  sqs_client, ddb_meterdata_table, ddb_bua_table,
-                 queue, conn,
+                 site_data_queue, failure_queue,
+                 conn,
                  debug=False, check_nem=True, check_aggread=False):
-        self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_bua_table)
+        DBLambdaHandler.__init__(
+            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug,
+            failure_queue=failure_queue
+        )
         self.s3_client = s3_client
         self.bucket_name = bucket_name
         self.ddb_meterdata_table = ddb_meterdata_table
-        self.queue = queue
-        self.conn = conn
-        self.debug = debug
+        self.site_data_queue = site_data_queue
         self.check_nem = check_nem
         self.check_aggread = check_aggread
-        self._handlers = {
+        self._handler = {
             'Utility': self._handle_utility,
             'Validate': self._handle_validate,
         }
-        self._initialise_connection()
 
-    def reconnect(self, conn):
-        self.conn = conn
-        self._initialise_connection()
-
-    def _initialise_connection(self):
-        with self.conn.cursor() as cur:
-            cur.execute("SET SESSION innodb_lock_wait_timeout = 60")
-
-    def handle_request(self, event):
-        if 'Records' in event:
-            for record in event['Records']:
-                if record['eventSource'] == 'aws:sqs':
-                    if self.sqs.deduplicate_request(record):
-                        body = json.loads(record['body'])
-                        self._process_message(body)
-        else:
-            self._process_message(event)
-
-    def _process_message(self, body):
-        debug = self.debug or body.get('debug') is True
-        print(body)
-        if 'entries' in body:
-            for entry in body['entries']:
-                if 'run_type' in entry:
-                    run_type = entry['run_type']
-                    if run_type in self._handlers:
-                        self._handlers[run_type](entry, run_type, debug)
-
-    def _handle_utility(self, entry, run_type, debug):
+    def _handle_utility(self, run_type, entry, debug):
         run_date = entry['run_date']
-        site = SiteData(ddb_meterdata_table=self.ddb_meterdata_table, queue=self.queue, conn=self.conn, debug=debug)
+        site = SiteData(
+            queue=self.site_data_queue, conn=self.conn, log=self.log, debug=debug,
+            ddb_meterdata_table=self.ddb_meterdata_table
+        )
         records = site.query_site_data(nmi=entry['nmi'],
                                        start_inclusive=entry['start_inclusive'],
                                        end_exclusive=entry['end_exclusive'])
@@ -69,11 +42,12 @@ class BUASiteDataHandler:
                               start_inclusive=entry['start_inclusive'],
                               end_exclusive=entry['end_exclusive'], records=records)
 
-    def _handle_validate(self, entry, run_type, debug):
+    def _handle_validate(self, run_type, entry, debug):
         run_date = entry['run_date']
         source_date = entry['source_date']
         site = SiteData(
-            ddb_meterdata_table=self.ddb_meterdata_table, queue=self.queue, conn=self.conn, debug=debug,
+            queue=self.site_data_queue, conn=self.conn, log=self.log, debug=debug,
+            ddb_meterdata_table=self.ddb_meterdata_table,
             check_nem=self.check_nem, check_aggread=self.check_aggread
         )
         site.validate_site_data(

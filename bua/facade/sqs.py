@@ -1,5 +1,8 @@
+import json
 from datetime import datetime, timedelta
 import time
+from typing import List, Dict
+
 from boto3.dynamodb.conditions import Attr
 from botocore.exceptions import ClientError
 
@@ -57,3 +60,48 @@ class SQS:
 
     def empty_queue(self, queue_url):
         self.sqs.purge_queue(QueueUrl=queue_url)
+
+
+class Queue:
+    def __init__(self, queue, debug, log):
+        self.queue = queue
+        self.debug = debug
+        self._log = log
+
+    def send_failure_event(self, event: Dict, cause: str):
+        body = {
+            'event': event,
+            'cause': cause
+        }
+        response = self.queue.send_message(MessageBody=json.dumps(body))
+        message_id = response['MessageId']
+        self._log(f'Sent failure message {message_id} because [{cause}]')
+
+    def send_if_needed(self, bodies: list, force=False, batch_size=10):
+        """Send SQS message batches if needed"""
+        if len(bodies) >= (batch_size*10) or (len(bodies) > 0 and force):
+            batches = [
+                {'entries': [bodies[n] for n in range(index, min(index+batch_size, len(bodies)))]}
+                for index in range(0, len(bodies), batch_size)
+            ]
+            for index in range(0, len(batches), 10):
+                self.send_request(batches[index:index+10])
+            bodies.clear()
+
+    def send_request(self, bodies: List):
+        """Send an SQS message batch"""
+        entries = [{'Id': str(index), 'MessageBody': json.dumps(body)} for index, body in enumerate(bodies)]
+        response = self.queue.send_messages(Entries=entries)
+        if self.debug:
+            if 'Successful' in response:
+                self._log(f'Sent {len(response["Successful"])} messages')
+        while 'Failed' in response and len(response['Failed']) > 0:
+            for failure in response['Failed']:
+                self._log(f'Failed {failure["Id"]} : '
+                      f'Sender fault {failure["SenderFault"]} : {failure["Code"]} : {failure["Message"]}')
+            failures = {entry['Id'] for entry in response['Failed']}
+            entries = [entry for entry in entries if entry['Id'] in failures]
+            response = self.queue.send_messages(Entries=entries)
+            if self.debug:
+                if 'Successful' in response:
+                    self._log(f'Sent {len(response["Successful"])} messages')

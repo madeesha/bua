@@ -1,8 +1,8 @@
 import traceback
 from typing import Optional
+from pymysql.cursors import SSDictCursor
 
-from pymysql import Connection
-from pymysql.cursors import Cursor
+from bua.facade.connection import DB
 
 
 class Control:
@@ -18,14 +18,14 @@ class Control:
         self.run_date = run_date
         self.identifier_type = identifier_type
 
-    def reset_control_records(self, cur: Cursor):
+    def reset_control_records(self, cur: SSDictCursor):
         cur.execute(
             "DELETE FROM BUAControl WHERE run_type = %s AND run_date = %s",
             (self.run_type, self.run_date)
         )
 
     def insert_control_record(
-            self, conn: Connection, cur: Cursor, identifier: str, status: str,
+            self, conn: DB, cur: SSDictCursor, identifier: str, status: str,
             rows_counted: Optional[int] = None, rows_written: Optional[int] = None,
             reason: Optional[str] = None, extra: Optional[str] = None, key: Optional[str] = None
     ):

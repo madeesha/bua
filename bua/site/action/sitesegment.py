@@ -1,7 +1,7 @@
 import traceback
-
-from pymysql import Connection
-
+from typing import Callable
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 from bua.site.action import Action
 from bua.site.handler import STATUS_DONE
 
@@ -9,8 +9,11 @@ from bua.site.handler import STATUS_DONE
 class SiteSegment(Action):
     """Management of utility profile site data including profile segment calculations"""
 
-    def __init__(self, meterdata_table, queue, conn: Connection, debug=False, batch_size=10, check_nem=True, check_aggread=False):
-        super().__init__(queue, conn, debug)
+    def __init__(
+            self, queue: Queue, conn: DB, log: Callable, debug: bool,
+            meterdata_table, batch_size=10, check_nem=True, check_aggread=False
+    ):
+        Action.__init__(self, queue, conn, log, debug)
         self.meterdata_table = meterdata_table
         self.batch_size = batch_size
         self.check_nem = check_nem
@@ -63,26 +66,44 @@ class SiteSegment(Action):
                             sql += f"""
                             , ROUND(AVG(value_{index:02d}),6) AS value_{index:02d}
                             , COUNT(value_{index:02d})
-                            , SUBSTR(MIN(CASE SUBSTR(quality_{index:02d},1,1) WHEN 'E' THEN CONCAT('1',quality_{index:02d}) WHEN 'S' THEN CONCAT('2',quality_{index:02d}) WHEN 'A' THEN CONCAT('3',quality_{index:02d}) ELSE CONCAT('4',quality_{index:02d}) END),2) AS quality_{index:02d}
+                            , SUBSTR(MIN(CASE SUBSTR(quality_{index:02d},1,1) 
+                                WHEN 'E' THEN CONCAT('1',quality_{index:02d}) 
+                                WHEN 'S' THEN CONCAT('2',quality_{index:02d}) 
+                                WHEN 'A' THEN CONCAT('3',quality_{index:02d}) 
+                                ELSE CONCAT('4',quality_{index:02d}) END),2) AS quality_{index:02d}
                             """
                         else:
                             sql += f"""
-                            , ROUND(AVG(IF(SUBSTR(quality_{index:02d},1,1)='E',0,value_{index:02d})),6) AS value_{index:02d}
+                            , ROUND(AVG(IF(SUBSTR(quality_{index:02d},1,1)='E',
+                                0,
+                                value_{index:02d})),6) AS value_{index:02d}
                             , SUM(IF(SUBSTR(quality_{index:02d},1,1)='E',0,1))
-                            , SUBSTR(MIN(CASE SUBSTR(quality_{index:02d},1,1) WHEN 'S' THEN CONCAT('2',quality_{index:02d}) WHEN 'A' THEN CONCAT('3',quality_{index:02d}) WHEN 'F' THEN CONCAT('4',quality_{index:02d}) ELSE CONCAT('5',quality_{index:02d}) END),2) AS quality_{index:02d}
+                            , SUBSTR(MIN(CASE SUBSTR(quality_{index:02d},1,1) 
+                                WHEN 'S' THEN CONCAT('2',quality_{index:02d}) 
+                                WHEN 'A' THEN CONCAT('3',quality_{index:02d}) 
+                                WHEN 'F' THEN CONCAT('4',quality_{index:02d}) 
+                                ELSE CONCAT('5',quality_{index:02d}) END),2) AS quality_{index:02d}
                             """
                     else:
                         if incl_est:
                             sql += f"""
                             , SUM(value_{index:02d}) AS value_{index:02d}
                             , COUNT(value_{index:02d})
-                            , SUBSTR(MIN(CASE SUBSTR(quality_{index:02d},1,1) WHEN 'E' THEN CONCAT('1',quality_{index:02d}) WHEN 'S' THEN CONCAT('2',quality_{index:02d}) WHEN 'A' THEN CONCAT('3',quality_{index:02d}) ELSE CONCAT('4',quality_{index:02d}) END),2) AS quality_{index:02d}
+                            , SUBSTR(MIN(CASE SUBSTR(quality_{index:02d},1,1) 
+                                WHEN 'E' THEN CONCAT('1',quality_{index:02d}) 
+                                WHEN 'S' THEN CONCAT('2',quality_{index:02d}) 
+                                WHEN 'A' THEN CONCAT('3',quality_{index:02d}) 
+                                ELSE CONCAT('4',quality_{index:02d}) END),2) AS quality_{index:02d}
                             """
                         else:
                             sql += f"""
                             , SUM(IF(SUBSTR(quality_{index:02d},1,1)='E',0,value_{index:02d})) AS value_{index:02d}
                             , SUM(IF(SUBSTR(quality_{index:02d},1,1)='E',0,1))
-                            , SUBSTR(MIN(CASE SUBSTR(quality_{index:02d},1,1) WHEN 'S' THEN CONCAT('2',quality_{index:02d}) WHEN 'A' THEN CONCAT('3',quality_{index:02d}) WHEN 'F' THEN CONCAT('4',quality_{index:02d}) ELSE CONCAT('5',quality_{index:02d}) END),2) AS quality_{index:02d}
+                            , SUBSTR(MIN(CASE SUBSTR(quality_{index:02d},1,1) 
+                                WHEN 'S' THEN CONCAT('2',quality_{index:02d}) 
+                                WHEN 'A' THEN CONCAT('3',quality_{index:02d}) 
+                                WHEN 'F' THEN CONCAT('4',quality_{index:02d}) 
+                                ELSE CONCAT('5',quality_{index:02d}) END),2) AS quality_{index:02d}
                             """
                 sql += """
                 FROM UtilityProfile
@@ -113,14 +134,21 @@ class SiteSegment(Action):
                     GROUP BY jurisdiction_name, res_bus, stream_type, interval_date
                     """
                 if by_tni:
-                    cur.execute(sql, (run_date, identifier_type, identifier, source_date, jurisdiction_name, tni_name,
-                                      res_bus, stream_type, interval_date, identifier_type, run_date))
+                    params = (
+                        run_date, identifier_type, identifier, source_date, jurisdiction_name, tni_name,
+                        res_bus, stream_type, interval_date, identifier_type, run_date
+                    )
+                    cur.execute(sql, params)
                 else:
-                    cur.execute(sql, (run_date, identifier_type, identifier, source_date, jurisdiction_name,
-                                      res_bus, stream_type, interval_date, identifier_type, run_date))
+                    params = (
+                        run_date, identifier_type, identifier, source_date, jurisdiction_name,
+                        res_bus, stream_type, interval_date, identifier_type, run_date
+                    )
+                    cur.execute(sql, params)
                 rows_affected = cur.rowcount
-                Action.record_processing_summary(cur, run_date, identifier_type, identifier, interval_date,
-                                                rows_affected)
+                Action.record_processing_summary(
+                    cur, run_date, identifier_type, identifier, interval_date, rows_affected
+                )
                 self.log('Imported', rows_affected, 'records for segment', identifier, 'on', interval_date)
                 self.conn.commit()
                 return {
@@ -149,5 +177,3 @@ class SiteSegment(Action):
             "AND interval_date = %s",
             (run_date, run_type, identifier, interval_date)
         )
-
-

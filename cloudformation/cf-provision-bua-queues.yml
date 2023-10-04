@@ -138,6 +138,23 @@ Resources:
         - Key: resource-class
           Value: data
 
+  BUASiteExportDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-export-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
   BUASiteInitiateDLQ:
     Type: AWS::SQS::Queue
     Properties:
@@ -159,6 +176,57 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-segment-failure-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteInitiateFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-initiate-failure-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteDataFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-data-failure-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteExportFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-export-failure-queue" ] ]
       MessageRetentionPeriod: 1209600
       ReceiveMessageWaitTimeSeconds: 20
       VisibilityTimeout: 60
@@ -278,6 +346,26 @@ Resources:
       VisibilityTimeout: 300
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BUASiteSegmentDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteExportQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-export-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 960
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUASiteExportDLQ.Arn
         maxReceiveCount: 10
       Tags:
         - Key: env

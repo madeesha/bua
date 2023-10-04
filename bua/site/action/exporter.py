@@ -1,11 +1,13 @@
 import csv
 import os
 import traceback
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Callable
 
-from pymysql import Connection, IntegrityError
-from pymysql.cursors import Cursor
+from pymysql import IntegrityError
+from pymysql.cursors import SSDictCursor
 
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 from bua.site.action import Action
 from bua.site.action.control import Control
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
@@ -14,11 +16,10 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 class Exporter(Action):
 
     def __init__(
-            self, queue, conn: Connection,
-            debug=False, batch_size=1,
-            s3_client=None, bucket_name=None
+            self, queue: Queue, conn: DB, log: Callable, debug: bool,
+            batch_size=1, s3_client=None, bucket_name=None
     ):
-        Action.__init__(self, queue, conn, debug)
+        Action.__init__(self, queue, conn, log, debug)
         self.batch_size = batch_size
         self.s3_client = s3_client
         self.bucket_name = bucket_name
@@ -59,7 +60,7 @@ class Exporter(Action):
                 raise
 
     def _initiate_export_table(
-            self, cur: Cursor, table_name: str, partition: Optional[str], counter: int, batch_size: int,
+            self, cur: SSDictCursor, table_name: str, partition: Optional[str], counter: int, batch_size: int,
             bucket_prefix: str, run_date: str, today: str, run_type: str, file_format: str,
             identifier_type: str
     ) -> int:
@@ -73,7 +74,7 @@ class Exporter(Action):
         for offset in range(0, total_rows, batch_size):
             counter += 1
             if body is not None:
-                self.send_if_needed(bodies, force=False, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size)
             body = {
                 'table_name': table_name,
                 'partition': partition,
@@ -88,7 +89,7 @@ class Exporter(Action):
                 'today': today
             }
             bodies.append(body)
-        self.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+        self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
         return counter
 
     def export_table(self, entry: Dict):

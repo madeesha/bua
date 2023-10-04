@@ -1,20 +1,25 @@
 import traceback
-
-from pymysql import Connection
-
+from typing import Callable
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 from bua.site.action import Action
 
 
 class SegmentTNI(Action):
 
-    def __init__(self, ddb_meterdata_table, queue, conn: Connection, debug=False, batch_size=10, check_nem=True, check_aggread=False):
-        super().__init__(queue, conn, debug)
+    def __init__(
+            self, queue: Queue, conn: DB, log: Callable, debug: bool,
+            ddb_meterdata_table, batch_size=10, check_nem=True, check_aggread=False
+    ):
+        Action.__init__(self, queue, conn, log, debug)
         self.table = ddb_meterdata_table
         self.batch_size = batch_size
         self.check_nem = check_nem
         self.check_aggread = check_aggread
 
-    def initiate_segment_tni_calculation(self, run_type, run_date, start_inclusive, end_exclusive, source_date, identifier_type):
+    def initiate_segment_tni_calculation(
+            self, run_type, run_date, start_inclusive, end_exclusive, source_date, identifier_type
+    ):
         """Initiate the calculation of tni profile segments"""
         bodies = []
         self.auto_exclude_nmis(run_date, identifier_type, source_date)
@@ -62,9 +67,9 @@ class SegmentTNI(Action):
                         'incl_est': 'InclEst' in identifier_type
                     }
                     bodies.append(body)
-                    self.send_if_needed(bodies, batch_size=self.batch_size)
+                    self.queue.send_if_needed(bodies, batch_size=self.batch_size)
                     total += 1
-                self.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 cur.execute(
                     "INSERT INTO UtilityProfileLog (run_date, run_type, source_date, total_entries) "
                     "VALUES (%s,%s,%s,%s)",

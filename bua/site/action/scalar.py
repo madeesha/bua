@@ -1,16 +1,14 @@
 import traceback
-
-from pymysql import Connection
-
-from bua.site.action import Action
+from typing import Callable
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
 from bua.site.handler import STATUS_DONE
 
 
-class MicroScalar(Action, Accounts):
-    def __init__(self, queue, conn: Connection, debug=False, batch_size=100):
-        Action.__init__(self, queue, conn, debug)
-        Accounts.__init__(self, queue, conn, batch_size, debug)
+class MicroScalar(Accounts):
+    def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool, batch_size=100):
+        Accounts.__init__(self, queue, conn, log, debug, batch_size)
 
     def initiate_microscalar_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type)

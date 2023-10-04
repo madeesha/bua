@@ -3,11 +3,12 @@ import decimal
 import io
 import traceback
 from hashlib import md5
-from typing import Optional, List, Dict, Set, Any
+from typing import Optional, List, Dict, Set, Any, Callable
 from datetime import datetime, timedelta, date
-
-from pymysql import Connection
 import csv
+
+from bua.facade.connection import DB
+from bua.facade.sqs import Queue
 from bua.site.action import Action
 from bua.site.action.control import Control
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
@@ -15,8 +16,11 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 class NEM12(Action):
 
-    def __init__(self, queue, conn: Connection, debug=False, batch_size=100, s3_client=None, bucket_name=None):
-        super().__init__(queue, conn, debug)
+    def __init__(
+            self, queue: Queue, conn: DB, log: Callable, debug: bool,
+            batch_size=100, s3_client=None, bucket_name=None
+    ):
+        Action.__init__(self, queue, conn, log, debug)
         self.batch_size = batch_size
         self.s3_client = s3_client
         self.bucket_name = bucket_name
@@ -47,7 +51,7 @@ class NEM12(Action):
                     end_date: date = record['end_exclusive']
                     if start_date <= end_date:
                         if body is not None:
-                            self.send_if_needed(bodies, force=False, batch_size=self.batch_size)
+                            self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size)
                         body = {
                             'run_type': run_type,
                             'today': today,
@@ -59,7 +63,7 @@ class NEM12(Action):
                         }
                         bodies.append(body)
                         total += 1
-                self.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 self.log(f'{total} sites to generate {run_type} profiled estimates data')
                 self.conn.commit()
             except Exception as ex:
@@ -78,7 +82,7 @@ class NEM12(Action):
 
 class NEM12Generator(Control):
     def __init__(
-            self, log, conn: Connection, s3_client, bucket_name, run_type: str, nmi: str,
+            self, log, conn: DB, s3_client, bucket_name, run_type: str, nmi: str,
             start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str
     ):
         Control.__init__(self, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
