@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict
+from typing import Dict, List
 
 import boto3
 import pymysql
@@ -134,6 +134,12 @@ class MonkeyPatchConnection:
     def cursor(self):
         return self._cursor
 
+    def commit(self):
+        return
+
+    def rollback(self):
+        return
+
     def patch(self):
         self._cursor.patch()
 
@@ -144,6 +150,8 @@ class MonkeyPatchCursor:
         self.execute_fails = False
         self.execute_fails_after_invocations = -1
         self._execute_invocations = 0
+        self._result_sets: List[List[Dict]] = []
+        self._result_set = None
 
     def __enter__(self):
         return self
@@ -152,6 +160,8 @@ class MonkeyPatchCursor:
         return False
 
     def execute(self, *args, **kwargs):
+        self._result_set = self._result_sets[self._execute_invocations] \
+            if self._execute_invocations < len(self._result_sets) else []
         self._execute_invocations += 1
         if self.execute_fails:
             raise RuntimeError('Test execute has an error')
@@ -160,10 +170,20 @@ class MonkeyPatchCursor:
                 raise RuntimeError('Test execute has an error')
         return
 
+    def fetchall(self):
+        if self._result_set is None:
+            raise RuntimeError('fetchall called before execute')
+        return self._result_set
+
     def patch(self):
         self.execute_fails = False
         self.execute_fails_after_invocations = -1
         self._execute_invocations = 0
+        self._result_sets = []
+        self._result_set = None
+
+    def add_result_set(self, result_set: List[Dict]):
+        self._result_sets.append(result_set)
 
 
 patch = MonkeyPatch()

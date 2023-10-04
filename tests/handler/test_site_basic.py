@@ -55,3 +55,33 @@ class TestCase:
             lambda_handler(event, context)
         assert str(ex.value).startswith('Failed to handle request')
         monkey_patch.patch.assert_log('Failed to reconnect to the database after a failure')
+
+    def test_basic_read(self):
+        import tests.handler.monkey_patch as monkey_patch
+        monkey_patch.patch.patch(environ=self._environ)
+        monkey_patch.patch.connect().cursor().add_result_set([dict()])
+        from bua.handler.site_basic import lambda_handler
+        event = {
+            'run_type': 'BasicRead',
+            'account_id': 1,
+            'today': '2023-09-01',
+            'run_date': '2023-09-25',
+            'identifier_type': '',
+        }
+        context = {}
+        lambda_handler(event, context)
+
+    def test_reset_basic_read(self):
+        import tests.handler.monkey_patch as monkey_patch
+        monkey_patch.patch.patch(environ=self._environ)
+        monkey_patch.patch.connect().cursor().add_result_set([dict()])
+        from bua.handler.site_basic import lambda_handler
+        event = {
+            'run_type': 'ResetBasicRead',
+            'account_id': 1,
+            'today': '2023-09-01',
+            'run_date': '2023-09-25',
+            'identifier_type': '',
+        }
+        context = {}
+        lambda_handler(event, context)
