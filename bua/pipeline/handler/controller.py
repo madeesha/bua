@@ -9,6 +9,7 @@ from datetime import datetime, timezone, timedelta
 
 from dateutil.relativedelta import relativedelta
 
+from bua.facade.s3 import S3
 from bua.pipeline.actions.choice import Choice
 from bua.pipeline.actions.dns import DNS
 from bua.pipeline.actions.initiator import Initiator
@@ -17,6 +18,7 @@ from bua.pipeline.actions.profiles import Profiles
 from bua.pipeline.actions.reset import Reset
 from bua.pipeline.actions.restore import Restore
 from bua.pipeline.actions.destroy import Destroy
+from bua.pipeline.actions.s3actions import S3Actions
 from bua.pipeline.actions.sql import SQL
 from bua.pipeline.actions.changeset import ChangeSet
 from bua.pipeline.actions.trigger import Trigger
@@ -37,6 +39,7 @@ class BUAControllerHandler:
         self.s3_client = s3_client
         self.ddb_table = ddb_bua_table
         self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_bua_table)
+        self.s3 = S3(s3_client=s3_client)
         secret_manager = SecretManager(sm_client=sm_client)
         sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager, mysql=mysql)
         rds_handler = RDS(rds_client=rds_client)
@@ -53,6 +56,7 @@ class BUAControllerHandler:
         trigger_handler = Trigger(config=config, sqs=self.sqs)
         choice_handler = Choice()
         initiator_handler = Initiator(config=config, sqs=self.sqs)
+        s3_actions = S3Actions(s3=self.s3)
 
         self.handlers: Dict[str, Any] = {
             'get_config': self.get_config,
@@ -96,7 +100,8 @@ class BUAControllerHandler:
             'bua_initiate_invoice_runs': sql_handler.bua_initiate_invoice_runs,
             'choice': choice_handler.choice,
             'scale_nodegroup': kubectl_handler.scale_nodegroup,
-            'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup
+            'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup,
+            'copy_s3_objects': s3_actions.copy_s3_objects,
         }
 
     def get_config(self, request: HandlerRequest):

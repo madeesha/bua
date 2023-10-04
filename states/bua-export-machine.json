@@ -48,7 +48,7 @@
               "run_type": "ExportTables",
               "table_names": ["BUAAccountSummary", "InvoiceLineItemMonthly"],
               "file_format": "csv",
-              "bucket_prefix": "export/csv",
+              "bucket_prefix": "export/csv/{run_date}/",
               "index_col": "id"
             },
             "on": {
@@ -61,6 +61,20 @@
           "120_wait_for_export_tables": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
+            "on": {
+              "COMPLETE": {
+                "next": "130_copy_s3_objects"
+              }
+            }
+          },
+          "130_copy_s3_objects": {
+            "action": "copy_s3_objects",
+            "args": {
+              "source_bucket": "tst-anstead-s3-bua",
+              "source_prefix": "export/csv/{run_date}/",
+              "target_bucket": "tst-anstead-s3-bua",
+              "target_prefix": "copy/csv/{run_date}/"
+            },
             "on": {
               "COMPLETE": {}
             }

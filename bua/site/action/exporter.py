@@ -100,8 +100,8 @@ class Exporter(Action):
                 counter = entry['counter']
                 offset = entry['offset']
                 batch_size = entry['batch_size']
-                bucket_prefix = entry['bucket_prefix']
                 run_date = entry['run_date']
+                bucket_prefix = entry['bucket_prefix'].replace('{run_date}', run_date[0:10]).replace('-', '')
                 file_format = entry['file_format']
                 identifier_type = entry['identifier_type']
                 run_type = entry['run_type']
@@ -111,7 +111,7 @@ class Exporter(Action):
                 file_run_date = run_date[0:10].replace('-', '')
                 file_name = f"BUA_{table_name}_{file_run_date}_{counter:05d}.{file_format}"
                 file_path = f"/tmp/{file_name}"
-                key = f'{bucket_prefix}/{file_name}'
+                key = f'{bucket_prefix}{file_name}'
                 if partition is not None:
                     sql = f"SELECT * FROM {table_name} PARTITION ({partition}) LIMIT {batch_size} OFFSET {offset}"
                 else:
