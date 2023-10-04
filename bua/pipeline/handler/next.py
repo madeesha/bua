@@ -4,7 +4,7 @@ from hashlib import md5
 
 import yaml
 
-from bua.facade import SQS
+from bua.facade.sqs import SQS
 
 
 class BUANextHandler:
