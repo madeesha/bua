@@ -14,6 +14,7 @@ class MonkeyPatch:
         self._session = MonkeyPatchSession(self._client)
         self._connection = MonkeyPatchConnection()
         self._environ = dict()
+        self._logs = []
 
     def Session(self):
         return self._session
@@ -34,37 +35,6 @@ class MonkeyPatch:
     @property
     def environ(self):
         return self._environ
-        return {
-            'buaTableName': '',
-            'projectVersion': '',
-            'resourcePrefix': '',
-            'className': '',
-            'environmentName': '',
-            'awsRegion': '',
-            'awsAccount': '',
-            'nextQueueURL': '',
-            'failureQueueURL': '',
-            'initiateQueueURL': '',
-            'bucketName': '',
-            'tableName': '',
-            'meterdataTableName': '',
-            'basicQueueURL': '',
-            'rdsSecretName': '',
-            'debugEnabled': '',
-            'meterdataBucketName': '',
-            'siteDataQueueURL': '',
-            'checkNEM': '',
-            'checkAggRead': '',
-            'exportQueueURL': '',
-            'buaBucketName': '',
-            'dataQueueURL': '',
-            'segmentQueueURL': '',
-            'mscalarQueueURL': '',
-            'nem12QueueURL': '',
-            'utilityBatchSize': '10',
-            'jurisdictionBatchSize': '10',
-            'tniBatchSize': '10'
-        }
 
     def patch(self, *, environ: Dict):
         self._environ = environ
@@ -74,6 +44,10 @@ class MonkeyPatch:
         boto3.client = self.client
         boto3.resource = self.resource
         pymysql.connect = self.connect
+
+    def log(self, *args, **kwargs):
+        print(*args, **kwargs)
+        self._logs.append((args, kwargs))
 
 
 class MonkeyPatchResource:
@@ -138,6 +112,12 @@ class MonkeyPatchConnection:
 
 
 class MonkeyPatchCursor:
+
+    def __init__(self):
+        self.execute_fails = False
+        self.execute_fails_after_invocations = -1
+        self._execute_invocations = 0
+
     def __enter__(self):
         return self
 
@@ -145,6 +125,12 @@ class MonkeyPatchCursor:
         return False
 
     def execute(self, *args, **kwargs):
+        self._execute_invocations += 1
+        if self.execute_fails:
+            raise RuntimeError('Test execute has an error')
+        if self.execute_fails_after_invocations > -1:
+            if self.execute_fails_after_invocations > self._execute_invocations:
+                raise RuntimeError('Test execute has an error')
         return
 
 

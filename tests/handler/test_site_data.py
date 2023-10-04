@@ -1,3 +1,4 @@
+import pytest
 
 
 class TestCase:
@@ -21,3 +22,18 @@ class TestCase:
         event = {}
         context = {}
         lambda_handler(event, context)
+
+    def test_invoke_handler_failure(self):
+        with pytest.raises(RuntimeError):
+            import tests.handler.monkey_patch as monkey_patch
+            monkey_patch.patch.patch(environ=self._environ)
+            from bua.handler.site_data import lambda_handler
+            event = {
+                'Records': [
+                    {
+                        'eventSource': 'aws:sqs'
+                    }
+                ]
+            }
+            context = {}
+            lambda_handler(event, context)
