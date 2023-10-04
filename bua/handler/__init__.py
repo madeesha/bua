@@ -80,11 +80,12 @@ class DBLambdaHandler(LambdaHandler):
     Override the _process_message(event) and _initialise_connection() methods in subclasses.
     """
 
-    def __init__(self, sqs_client, ddb_table, conn, debug, failure_queue):
+    def __init__(self, sqs_client, ddb_table, conn, debug, failure_queue, lock_wait_timeout=60):
         LambdaHandler.__init__(
             self, sqs_client=sqs_client, ddb_table=ddb_table, debug=debug, failure_queue=failure_queue
         )
         self.conn = conn
+        self.lock_wait_timeout = lock_wait_timeout
         self._initialise_connection()
 
     def reconnect(self, conn):
@@ -93,4 +94,4 @@ class DBLambdaHandler(LambdaHandler):
 
     def _initialise_connection(self):
         with self.conn.cursor() as cur:
-            cur.execute("SET SESSION innodb_lock_wait_timeout = 60")
+            cur.execute(f"SET SESSION innodb_lock_wait_timeout = {self.lock_wait_timeout}")
