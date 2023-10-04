@@ -1,11 +1,8 @@
 from typing import Dict
 
 from bua.handler import DBLambdaHandler
-from bua.site.action.basicread import BasicRead
 from bua.site.action.check import Check
 from bua.site.action.fix import Fix
-from bua.site.action.nem12 import NEM12
-from bua.site.action.scalar import MicroScalar
 from bua.site.action.sitesegment import SiteSegment
 
 
@@ -31,10 +28,6 @@ class BUASiteSegmentHandler(DBLambdaHandler):
             'SegmentTNI': self._handle_segment_tni,
             'SegmentJurisdictionCheck': self._handle_segment_jurisdiction_check,
             'SegmentJurisdictionFix': self._handle_segment_jurisdiction_fix,
-            'NEM12': self._handle_nem12,
-            'MicroScalar': self._handle_microscalar,
-            'BasicRead': self._handle_basic_read,
-            'ResetBasicRead': self._handle_reset_basic_read
         }
 
     def _handle_segment_jurisdiction(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
@@ -56,51 +49,6 @@ class BUASiteSegmentHandler(DBLambdaHandler):
         return self._calculate_tni_segment(
             identifier_type, run_date, source_date, entry, debug=debug, avg_sum=avg_sum, incl_est=incl_est
         )
-
-    def _handle_nem12(self, run_type: str, entry: Dict, debug: bool) -> Dict:
-        nmi = entry['nmi']
-        start_inclusive = entry['start_inclusive']
-        end_exclusive = entry['end_exclusive']
-        today = entry['today']
-        run_date = entry['run_date']
-        identifier_type = entry['identifier_type']
-        action = NEM12(
-            queue=self._segment_queue, conn=self.conn, log=self.log, debug=debug,
-            s3_client=self._s3_client, bucket_name=self._meterdata_bucket_name
-        )
-        return action.nem12_file_generation(
-            run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type
-        )
-
-    def _handle_microscalar(self, run_type: str, entry: Dict, debug: bool) -> Dict:
-        account_id = entry['account_id']
-        today = entry['today']
-        run_date = entry['run_date']
-        identifier_type = entry['identifier_type']
-        action = MicroScalar(
-            queue=self._segment_queue, conn=self.conn, log=self.log, debug=debug
-        )
-        return action.execute_microscalar_calculation(run_type, today, run_date, identifier_type, account_id)
-
-    def _handle_basic_read(self, run_type: str, entry: Dict, debug: bool) -> Dict:
-        account_id = entry['account_id']
-        today = entry['today']
-        run_date = entry['run_date']
-        identifier_type = entry['identifier_type']
-        action = BasicRead(
-            queue=self._segment_queue, conn=self.conn, log=self.log, debug=debug
-        )
-        return action.execute_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
-
-    def _handle_reset_basic_read(self, run_type: str, entry: Dict, debug: bool) -> Dict:
-        account_id = entry['account_id']
-        today = entry['today']
-        run_date = entry['run_date']
-        identifier_type = entry['identifier_type']
-        action = BasicRead(
-            queue=self._segment_queue, conn=self.conn, log=self.log, debug=debug
-        )
-        return action.execute_reset_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
 
     def _handle_segment_jurisdiction_check(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
         run_date = entry['run_date']

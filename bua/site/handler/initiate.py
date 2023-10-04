@@ -17,6 +17,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
     def __init__(
             self, sqs_client, ddb_meterdata_table, ddb_bua_table,
             data_queue, segment_queue, export_queue, failure_queue,
+            basic_queue, mscalar_queue, nem12_queue,
             conn, debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10
     ):
         DBLambdaHandler.__init__(
@@ -26,6 +27,9 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         self.data_queue = Queue(queue=data_queue, debug=debug, log=self.log)
         self.segment_queue = Queue(queue=segment_queue, debug=debug, log=self.log)
         self.export_queue = Queue(queue=export_queue, debug=debug, log=self.log)
+        self.basic_queue = Queue(queue=basic_queue, debug=debug, log=self.log)
+        self.mscalar_queue = Queue(queue=mscalar_queue, debug=debug, log=self.log)
+        self.nem12_queue = Queue(queue=nem12_queue, debug=debug, log=self.log)
         self.util_batch_size = util_batch_size
         self.jur_batch_size = jur_batch_size
         self.tni_batch_size = tni_batch_size
@@ -143,7 +147,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         today: str = body['today']
         run_date: str = body['run_date']
         action = NEM12(
-            queue=self.segment_queue, conn=self.conn, log=self.log, debug=debug
+            queue=self.nem12_queue, conn=self.conn, log=self.log, debug=debug
         )
         identifier_type = body['identifier_type']
         start_inclusive = body.get('start_inclusive')
@@ -161,7 +165,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         today: str = body['today']
         run_date: str = body['run_date']
         action = MicroScalar(
-            queue=self.segment_queue, conn=self.conn, log=self.log, debug=debug
+            queue=self.mscalar_queue, conn=self.conn, log=self.log, debug=debug
         )
         identifier_type = body['identifier_type']
         action.initiate_microscalar_calculation(
@@ -175,7 +179,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         today: str = body['today']
         run_date: str = body['run_date']
         action = BasicRead(
-            queue=self.segment_queue, conn=self.conn, log=self.log, debug=debug
+            queue=self.basic_queue, conn=self.conn, log=self.log, debug=debug
         )
         identifier_type = body['identifier_type']
         action.initiate_basic_read_calculation(
@@ -189,7 +193,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         today: str = body['today']
         run_date: str = body['run_date']
         action = BasicRead(
-            queue=self.segment_queue, conn=self.conn, log=self.log, debug=debug
+            queue=self.basic_queue, conn=self.conn, log=self.log, debug=debug
         )
         identifier_type = body['identifier_type']
         action.initiate_reset_basic_read_calculation(

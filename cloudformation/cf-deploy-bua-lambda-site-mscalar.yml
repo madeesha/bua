@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: |
-  Deploy bottom up accruals initiate extract site profile data lambda function
+  Deploy bottom up accruals calculate micro scalar lambda function
 
 Parameters:
   EnvironmentName:
@@ -31,7 +31,7 @@ Parameters:
   ReservedConcurrentExecutions:
     Description: Number of lambda instances to reserve
     Type: String
-    Default: "1"
+    Default: "32"
   KMSKeyId:
     Description: KMS Key ID to use for encryption
     Type: String
@@ -50,34 +50,10 @@ Parameters:
     AllowedValues:
       - "Yes"
       - "No"
-  UtilityBatchSize:
-    Description: Number of items to put in a Utility data extract request
-    Type: String
-    Default: "8"
-    AllowedValues:
-      - "8"
-      - "4"
-      - "2"
-  JurisdictionBatchSize:
-    Description: Number of items to put in a Jurisdiction profile calculation request
-    Type: String
-    Default: "4"
-    AllowedValues:
-      - "8"
-      - "4"
-      - "2"
-  TNIBatchSize:
-    Description: Number of items to put in a TNI profile calculation request
-    Type: String
-    Default: "4"
-    AllowedValues:
-      - "8"
-      - "4"
-      - "2"
 
 Resources:
 
-  BUASiteInitiateLambdaExecRole:
+  BUASiteMscalarLambdaExecRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -87,7 +63,7 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
             Action: 'sts:AssumeRole'
-      RoleName: !Join [ "_" , [ !Ref ResourcePrefixIAM , "MeterData" , "BUASiteInitiateLambdaExecRole" ] ]
+      RoleName: !Join [ "_" , [ !Ref ResourcePrefixIAM , "MeterData" , "BUASiteMscalarLambdaExecRole" ] ]
       Path: !Join [ "" , [ "/" , !Ref ResourcePrefixPath , "/lambda/" ] ]
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
@@ -117,12 +93,9 @@ Resources:
                 Action:
                   - "sqs:SendMessage"
                 Resource:
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-data-queue" ] ]
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-segment-queue" ] ]
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-export-queue" ] ]
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-queue" ] ]
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-failure-queue" ] ]
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-dlqueue" ] ]
+                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-mscalar-queue" ] ]
+                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-mscalar-failure-queue" ] ]
+                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-mscalar-dlqueue" ] ]
               - Sid: AllowReceiveSQSMessages
                 Effect: Allow
                 Action:
@@ -130,10 +103,12 @@ Resources:
                   - "sqs:DeleteMessage"
                   - "sqs:GetQueueAttributes"
                 Resource:
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-queue" ] ]
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-dlqueue" ] ]
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-data-dlqueue" ] ]
-                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-segment-dlqueue" ] ]
+                  - !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-mscalar-queue" ] ]
+              - Sid: AllowQueryOfDynamoDB
+                Effect: Allow
+                Action:
+                  - 'dynamodb:Query'
+                Resource: !Join [ "" , [ "arn:aws:dynamodb:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":table/" , !Ref ResourcePrefix , "-ddb-meterdata" ] ]
               - Sid: AllowDynamoDBAccess
                 Effect: Allow
                 Action:
@@ -146,43 +121,45 @@ Resources:
                   - 'dynamodb:Scan'
                 Resource:
                   - !Join [ "" , [ "arn:aws:dynamodb:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":table/" , !Ref ResourcePrefix , "-ddb-bua" ] ]
+              - Sid: AllowS3AccessForNEM12Files
+                Effect: Allow
+                Action:
+                  - 's3:GetObject*'
+                  - 's3:PutObject*'
+                  - 's3:DeleteObject*'
+                Resource:
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-meterdata/nem/bua/*" ] ]
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-meterdata/bua/*" ] ]
 
-  BUASiteInitiateLambdaLogGroup:
+  BUASiteMscalarLambdaLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Join [ "" , [ "/aws/lambda/" , !Ref ResourcePrefix , "-lambda-bua-site-initiate" ] ]
+      LogGroupName: !Join [ "" , [ "/aws/lambda/" , !Ref ResourcePrefix , "-lambda-bua-site-mscalar" ] ]
       RetentionInDays: !Ref LogRetentionInDays
 
-  BUASiteInitiateLambda:
+  BUASiteMscalarLambda:
     Type: AWS::Lambda::Function
     DependsOn:
-      - BUASiteInitiateLambdaLogGroup
+      - BUASiteMscalarLambdaLogGroup
     Properties:
-      FunctionName: !Join [ "-" , [ !Ref ResourcePrefix , "lambda-bua-site-initiate" ] ]
-      Description: !Join [ "" , [ "Initiate extract of the site data. Version " , !Ref ProjectVersion ] ]
+      FunctionName: !Join [ "-" , [ !Ref ResourcePrefix , "lambda-bua-site-mscalar" ] ]
+      Description: !Join [ "" , [ "Calculate site profiles. Version " , !Ref ProjectVersion ] ]
       Handler: index.lambda_handler
-      Role: !GetAtt BUASiteInitiateLambdaExecRole.Arn
+      Role: !GetAtt BUASiteMscalarLambdaExecRole.Arn
       Environment:
         Variables:
           meterdataTableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-meterdata" ] ]
           buaTableName: !Join [ "" , [ !Ref ResourcePrefix , "-ddb-bua" ] ]
-          dataQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-data-queue" ] ]
-          segmentQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-segment-queue" ] ]
-          exportQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-export-queue" ] ]
-          failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-failure-queue" ] ]
-          basicQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-basic-queue" ] ]
           mscalarQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-mscalar-queue" ] ]
-          nem12QueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-nem12-queue" ] ]
+          failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-mscalar-failure-queue" ] ]
           rdsSecretName: !Join [ "/" , [ "cicd", !Ref ResourcePrefix , "rds" , !Ref RDSName ] ]
           debugEnabled: !Ref DebugEnabled
-          utilityBatchSize: !Ref UtilityBatchSize
-          jurisdictionBatchSize: !Ref JurisdictionBatchSize
-          tniBatchSize: !Ref TNIBatchSize
+          meterdataBucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "meterdata" ] ]
       Code:
         ZipFile: |
-          from bua.handler.site_initiate import lambda_handler
+          from bua.handler.site_mscalar import lambda_handler
       Runtime: python3.10
-      Timeout: 900
+      Timeout: 240
       Layers:
         - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-python-libs-" , !Ref ProjectVersion , ":1" ] ]
       MemorySize: 512
@@ -191,7 +168,7 @@ Resources:
         SecurityGroupIds: !Ref VPCSecurityGroups
         SubnetIds: !Ref VPCSubnetIds
       DeadLetterConfig:
-        TargetArn: !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-dlqueue" ] ]
+        TargetArn: !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-mscalar-dlqueue" ] ]
       Tags:
         - Key: env
           Value: !Ref EnvironmentName
@@ -200,10 +177,10 @@ Resources:
         - Key: ver
           Value: !Ref ProjectVersion
 
-  BUASiteInitiateLambdaFileEventSourceMapping:
+  BUASiteMscalarLambdaFileEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: 1
+      BatchSize: 2
       Enabled: true
-      EventSourceArn: !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-queue" ] ]
-      FunctionName: !GetAtt BUASiteInitiateLambda.Arn
+      EventSourceArn: !Join [ "" , [ "arn:aws:sqs:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":" , !Ref ResourcePrefix , "-sqs-bua-site-mscalar-queue" ] ]
+      FunctionName: !GetAtt BUASiteMscalarLambda.Arn

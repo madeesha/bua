@@ -80,6 +80,15 @@ deploy:
       # Deploy new site segment aws lambda function version
       python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-site-segment
     - |
+      # Deploy new site basic aws lambda function version
+      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-site-basic
+    - |
+      # Deploy new site mscalar aws lambda function version
+      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-site-mscalar
+    - |
+      # Deploy new site nem12 aws lambda function version
+      python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-site-nem12
+    - |
       # Deploy new site export aws lambda function version
       python3 -m cicd --cmd deploy --version-id $CI_PARENT_PIPELINE_ID --unit deploy-bua-lambda-site-export
     - |

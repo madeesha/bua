@@ -138,6 +138,57 @@ Resources:
         - Key: resource-class
           Value: data
 
+  BUASiteBasicDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-basic-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteMscalarDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-mscalar-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteNEM12DLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-nem12-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
   BUASiteExportDLQ:
     Type: AWS::SQS::Queue
     Properties:
@@ -176,6 +227,57 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-segment-failure-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteBasicFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-basic-failure-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteMscalarFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-mscalar-failure-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteNEM12FailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-nem12-failure-queue" ] ]
       MessageRetentionPeriod: 1209600
       ReceiveMessageWaitTimeSeconds: 20
       VisibilityTimeout: 60
@@ -346,6 +448,66 @@ Resources:
       VisibilityTimeout: 300
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BUASiteSegmentDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteBasicQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-basic-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUASiteBasicDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteMscalarQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-mscalar-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUASiteMscalarDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUASiteNEM12Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-nem12-queue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUASiteNEM12DLQ.Arn
         maxReceiveCount: 10
       Tags:
         - Key: env
