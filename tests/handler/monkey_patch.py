@@ -38,6 +38,10 @@ class MonkeyPatch:
 
     def patch(self, *, environ: Dict):
         self._environ = environ
+        self._client.patch()
+        self._resource.patch()
+        self._session.patch()
+        self._connection.patch()
         os.environ = self.environ
         boto3.session = self
         boto3.Session = self.Session
@@ -48,6 +52,12 @@ class MonkeyPatch:
     def log(self, *args, **kwargs):
         print(*args, **kwargs)
         self._logs.append((args, kwargs))
+
+    def assert_log(self, msg):
+        for _args, _kwargs in self._logs:
+            if msg in _args:
+                return
+        assert False, f'{msg} not in {self._logs}'
 
 
 class MonkeyPatchResource:
@@ -60,6 +70,10 @@ class MonkeyPatchResource:
 
     def Queue(self, *args, **kwargs):
         return self._queue
+
+    def patch(self):
+        self._table.patch()
+        self._queue.patch()
 
 
 class MonkeyPatchClient:
@@ -77,6 +91,9 @@ class MonkeyPatchClient:
             })
         }
 
+    def patch(self):
+        pass
+
 
 class MonkeyPatchSession:
     def __init__(self, client):
@@ -89,6 +106,9 @@ class MonkeyPatchSession:
     def region_name(self):
         return ''
 
+    def patch(self):
+        pass
+
 
 class MonkeyPatchTable:
 
@@ -98,9 +118,13 @@ class MonkeyPatchTable:
     def put_item(self, *args, **kwargs):
         return {}
 
+    def patch(self):
+        pass
+
 
 class MonkeyPatchQueue:
-    pass
+    def patch(self):
+        pass
 
 
 class MonkeyPatchConnection:
@@ -109,6 +133,9 @@ class MonkeyPatchConnection:
 
     def cursor(self):
         return self._cursor
+
+    def patch(self):
+        self._cursor.patch()
 
 
 class MonkeyPatchCursor:
@@ -129,9 +156,14 @@ class MonkeyPatchCursor:
         if self.execute_fails:
             raise RuntimeError('Test execute has an error')
         if self.execute_fails_after_invocations > -1:
-            if self.execute_fails_after_invocations > self._execute_invocations:
+            if self.execute_fails_after_invocations < self._execute_invocations:
                 raise RuntimeError('Test execute has an error')
         return
+
+    def patch(self):
+        self.execute_fails = False
+        self.execute_fails_after_invocations = -1
+        self._execute_invocations = 0
 
 
 patch = MonkeyPatch()

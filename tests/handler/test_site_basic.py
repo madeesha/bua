@@ -41,8 +41,9 @@ class TestCase:
         import tests.handler.monkey_patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         with pytest.raises(RuntimeError) as ex:
-            from bua.handler.site_basic import lambda_handler
-            monkey_patch.patch.connect().cursor().execute_fails_after_invocations = 1
+            from bua.handler.site_basic import lambda_handler, handler
+            handler.log = monkey_patch.patch.log
+            monkey_patch.patch.connect().cursor().execute_fails_after_invocations = 0
             event = {
                 'Records': [
                     {
@@ -53,3 +54,4 @@ class TestCase:
             context = {}
             lambda_handler(event, context)
         assert str(ex.value).startswith('Failed to handle request')
+        monkey_patch.patch.assert_log('Failed to reconnect to the database after a failure')

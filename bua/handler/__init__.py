@@ -19,6 +19,7 @@ class LambdaHandler:
         self._handler: Dict[str, Callable[[str, Dict, bool], None]] = dict()
 
     def handle_request(self, event: Dict):
+        self.log(event)
         if 'Records' in event:
             for record in event['Records']:
                 if record['eventSource'] == 'aws:sqs':
@@ -30,7 +31,7 @@ class LambdaHandler:
 
     def _process_message(self, body):
         debug = self.debug or body.get('debug') is True
-        print(body)
+        self.log(body)
         if 'run_type' in body:
             run_type: str = body['run_type']
             if run_type in self._handler:
