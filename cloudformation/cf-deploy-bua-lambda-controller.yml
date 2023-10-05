@@ -221,6 +221,15 @@ Resources:
                 Action:
                   - 'eks:DescribeUpdate'
                 Resource: "*"
+              - Sid: AllowS3AccessForExportTables
+                Effect: Allow
+                Action:
+                  - 's3:GetObject*'
+                  - 's3:PutObject*'
+                  - 's3:DeleteObject*'
+                  - 's3:ListObject*'
+                Resource:
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/export/*" ] ]
 
   BUAFastControllerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
