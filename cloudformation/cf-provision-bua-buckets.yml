@@ -210,8 +210,8 @@ Resources:
             Action: "s3:*"
             Effect: Deny
             Resource:
-            - !GetAtt Bucket.Arn
-            - !Sub "${Bucket.Arn}/*"
+            - !GetAtt ADHBucket.Arn
+            - !Sub "${ADHBucket.Arn}/*"
             Condition:
               Bool:
                 aws:SecureTransport: false
@@ -220,7 +220,7 @@ Resources:
             Action: "s3:GetObject"
             Effect: Deny
             Resource:
-              - !Sub "${Bucket.Arn}/*"
+              - !Sub "${ADHBucket.Arn}/*"
             Condition:
               StringNotEquals:
                 aws:PrincipalOrgID:
@@ -233,7 +233,7 @@ Resources:
               - "s3:PutObject"
               - "s3:PutObjectAcl"
             Resource:
-            - !Sub "${Bucket.Arn}/*"
+            - !Sub "${ADHBucket.Arn}/*"
             Condition:
               StringEquals:
                 s3:x-amz-acl:
@@ -247,7 +247,7 @@ Resources:
               - "s3:PutObject"
               - "s3:PutObjectAcl"
             Resource:
-            - !Sub "${Bucket.Arn}/*"
+            - !Sub "${ADHBucket.Arn}/*"
             Condition:
               StringLike:
                 s3:x-amz-grant-read:
@@ -258,7 +258,7 @@ Resources:
             Principal: "*"
             Action: "s3:PutBucketAcl"
             Resource:
-            - !GetAtt Bucket.Arn
+            - !GetAtt ADHBucket.Arn
             Condition:
               StringEquals:
                 s3:x-amz-acl:
@@ -270,7 +270,7 @@ Resources:
             Principal: "*"
             Action: "s3:PutBucketAcl"
             Resource:
-            - !GetAtt Bucket.Arn
+            - !GetAtt ADHBucket.Arn
             Condition:
               StringLike:
                 s3:x-amz-grant-read:
