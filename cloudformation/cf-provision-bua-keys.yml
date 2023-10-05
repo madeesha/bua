@@ -11,12 +11,6 @@ Parameters:
   ResourcePrefix:
     Description: Prefix to assign to resources
     Type: String
-  ResourcePrefixIAM:
-    Description: Prefix to assign to resources
-    Type: String
-  OrganizationID:
-    Type: String
-    Default: "o-oswlt23l9n"
 
 Resources:
 
