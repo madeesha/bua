@@ -69,6 +69,7 @@
           },
           "130_copy_s3_objects": {
             "action": "copy_s3_objects",
+            "speed": "slow",
             "args": {
               "source_bucket": "tst-anstead-s3-bua",
               "source_prefix": "export/csv/{run_date}/",
