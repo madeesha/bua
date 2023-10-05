@@ -230,6 +230,7 @@ Resources:
                   - 's3:ListObject*'
                 Resource:
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/export/*" ] ]
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/copy/*" ] ]
 
   BUAFastControllerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
