@@ -71,6 +71,7 @@
             "action": "wait_for_workflows",
             "retry_delay": 120,
             "args": {
+              "acceptable_error_rate": 1,
               "workflow_names": [
                 "ImportNem",
                 "ImportGas",
@@ -81,8 +82,29 @@
             },
             "on": {
               "COMPLETE": {},
-              "FAILED": {},
+              "FAILED": {
+                "next": "238_reschedule_failed_workflows"
+              },
               "ONHOLD": {}
+            }
+          },
+          "238_reschedule_failed_workflows": {
+            "action": "resubmit_failed_workflows",
+            "retries": 1,
+            "args": {
+              "workflow_names": [
+                "ImportNem",
+                "ImportGas",
+                "AggregateReadNmiDate",
+                "RegenerateProfile",
+                "ValidateNEM13Read"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 60,
+                "next": "201_wait_for_generate_NEM12_files_2"
+              }
             }
           }
         }
