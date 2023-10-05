@@ -4,26 +4,42 @@ from typing import Dict, List
 
 import boto3
 import pymysql
+from botocore.exceptions import ClientError
 
 
 class MonkeyPatch:
 
     def __init__(self):
-        self._client = MonkeyPatchClient()
-        self._resource = MonkeyPatchResource()
-        self._session = MonkeyPatchSession(self._client)
+        self._clients = {
+            's3': MonkeyPatchS3Client(),
+            'secretsmanager': MonkeyPatchSecretsManagerClient(),
+            'sqs': MonkeyPatchSQSClient(),
+            'cloudformation': MonkeyPatchCloudformationClient(),
+            'rds': MonkeyPatchRDSClient(),
+            'sts': MonkeyPatchSTSClient(),
+            'eks': MonkeyPatchEKSClient(),
+            'route53': MonkeyPatchRoute53Client(),
+        }
+        self._resources = {
+            'dynamodb': MonkeyPatchDynamoDBResource(),
+            'sqs': MonkeyPatchSQSResource(),
+        }
+        self._session = MonkeyPatchSession(self._clients, self._resources)
         self._connection = MonkeyPatchConnection()
         self._environ = dict()
         self._logs = []
 
+    def cloudformation(self):
+        return self._clients['cloudformation']
+
     def Session(self):
         return self._session
 
-    def client(self, *args, **kwargs):
-        return self._client
+    def client(self, name, *args, **kwargs):
+        return self._clients[name]
 
-    def resource(self, *args, **kwargs):
-        return self._resource
+    def resource(self, name, *args, **kwargs):
+        return self._resources[name]
 
     def connect(self, *args, **kwargs):
         return self._connection
@@ -38,8 +54,10 @@ class MonkeyPatch:
 
     def patch(self, *, environ: Dict):
         self._environ = environ
-        self._client.patch()
-        self._resource.patch()
+        for client in self._clients.values():
+            client.patch()
+        for resource in self._resources.values():
+            resource.patch()
         self._session.patch()
         self._connection.patch()
         os.environ = self.environ
@@ -60,26 +78,114 @@ class MonkeyPatch:
         assert False, f'{msg} not in {self._logs}'
 
 
-class MonkeyPatchResource:
+class MonkeyPatchDynamoDBResource:
     def __init__(self):
         self._table = MonkeyPatchTable()
-        self._queue = MonkeyPatchQueue()
 
     def Table(self, *args, **kwargs):
         return self._table
+
+    def patch(self):
+        self._table.patch()
+
+
+class MonkeyPatchSQSResource:
+    def __init__(self):
+        self._queue = MonkeyPatchQueue()
 
     def Queue(self, *args, **kwargs):
         return self._queue
 
     def patch(self):
-        self._table.patch()
         self._queue.patch()
 
 
-class MonkeyPatchClient:
+class MonkeyPatchS3Client:
 
     def put_object(self, *args, **kwargs):
         return {}
+
+    def patch(self):
+        pass
+
+
+class MonkeyPatchSQSClient:
+
+    def patch(self):
+        pass
+
+
+class MonkeyPatchCloudformationClient:
+
+    def __init__(self):
+        self._describe_stacks_count = 0
+        self._describe_stacks_responses = []
+        self._describe_change_set = 0
+        self._describe_change_set_responses = []
+        self._create_change_set = 0
+        self._create_change_set_responses = []
+
+    def describe_stacks_responses(self, *responses):
+        self._describe_stacks_responses.extend(responses)
+
+    def describe_change_set_responses(self, *responses):
+        self._describe_change_set_responses.extend(responses)
+
+    def create_change_set_responses(self, *responses):
+        self._create_change_set_responses.extend(responses)
+
+    def patch(self):
+        self._describe_stacks_count = 0
+        self._describe_stacks_responses = []
+        self._describe_change_set = 0
+        self._describe_change_set_responses = []
+        self._create_change_set = 0
+        self._create_change_set_responses = []
+
+    def describe_stacks(self, *args, **kwargs):
+        self._describe_stacks_count += 1
+        return self._describe_stacks_responses.pop(0)
+
+    def describe_change_set(self, *args, **kwargs):
+        self._describe_change_set += 1
+        response = self._describe_change_set_responses.pop(0)
+        if isinstance(response, ClientError):
+            raise response
+        return response
+
+    def create_change_set(self, *args, **kwargs):
+        self._create_change_set += 1
+        response = self._create_change_set_responses.pop(0)
+        if isinstance(response, ClientError):
+            raise response
+        return response
+
+
+class MonkeyPatchRDSClient:
+
+    def patch(self):
+        pass
+
+
+class MonkeyPatchSTSClient:
+
+    def patch(self):
+        pass
+
+
+class MonkeyPatchEKSClient:
+
+    def patch(self):
+        pass
+
+
+class MonkeyPatchRoute53Client:
+
+    def patch(self):
+        pass
+
+
+class MonkeyPatchSecretsManagerClient:
 
     def get_secret_value(self, *args, **kwargs):
         return {
@@ -96,11 +202,15 @@ class MonkeyPatchClient:
 
 
 class MonkeyPatchSession:
-    def __init__(self, client):
-        self._client = client
+    def __init__(self, clients, resources):
+        self._clients = clients
+        self._resources = resources
 
-    def client(self, *args, **kwargs):
-        return self._client
+    def client(self, name, *args, **kwargs):
+        return self._clients[name]
+
+    def resource(self, name, *args, **kwargs):
+        return self._resources[name]
 
     @property
     def region_name(self):

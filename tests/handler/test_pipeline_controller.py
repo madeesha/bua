@@ -1,3 +1,6 @@
+from botocore.exceptions import ClientError
+
+
 class TestCase:
 
     _environ = {
@@ -31,6 +34,47 @@ class TestCase:
         from bua.handler.pipeline_controller import lambda_handler
         event = {
             'action': 'get_config'
+        }
+        context = {}
+        lambda_handler(event, context)
+
+    def test_create_upgrade_version_change_set(self):
+        import tests.handler.monkey_patch as monkey_patch
+        monkey_patch.patch.patch(environ=self._environ)
+        monkey_patch.patch.cloudformation().describe_stacks_responses(
+            {
+                'Stacks': [
+                    {
+                        'StackStatus': 'CREATE_COMPLETE',
+                    }
+                ]
+            }
+        )
+        monkey_patch.patch.cloudformation().describe_change_set_responses(
+            ClientError(
+                error_response={
+                    'Error': {
+                        'Code': 'ChangeSetNotFound',
+                        'Message': 'does not exist'
+                    }
+                },
+                operation_name='describe_change_set'
+            )
+        )
+        monkey_patch.patch.cloudformation().create_change_set_responses(
+            {
+
+            }
+        )
+        from bua.handler.pipeline_controller import lambda_handler
+        event = {
+            'action': 'create_upgrade_version_change_set',
+            'args': {
+                'update_id': 1,
+                'suffix': '',
+                'mysql_version': '8.0',
+                'change_set_name': '',
+            }
         }
         context = {}
         lambda_handler(event, context)
