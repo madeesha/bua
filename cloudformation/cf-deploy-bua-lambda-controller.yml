@@ -230,6 +230,17 @@ Resources:
                   - 's3:ListObject*'
                 Resource:
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/export/*" ] ]
+              - Sid: AllowS3AccessForCopyTablesSource
+                Effect: Allow
+                Action:
+                  - 's3:ListBucket*'
+                Resource:
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua" ] ]
+              - Sid: AllowS3AccessForCopyTablesDestination
+                Effect: Allow
+                Action:
+                  - 's3:PutObject*'
+                Resource:
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/copy/*" ] ]
 
   BUAFastControllerLambdaLogGroup:
