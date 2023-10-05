@@ -178,3 +178,101 @@ Resources:
                 s3:x-amz-grant-read:
                   - "*http://acs.amazonaws.com/groups/global/AllUsers*"
                   - "*http://acs.amazonaws.com/groups/global/AuthenticatedUsers*"
+
+  ADHBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Join [ "" , [ !Ref ResourcePrefix , "-s3-bua-adh" ] ]
+      AccessControl: "Private"
+      VersioningConfiguration:
+        Status: 'Enabled'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: "aws:kms"
+              KMSMasterKeyID:
+                Fn::ImportValue:
+                  Fn::Join:
+                    - "-"
+                    - - !Ref ResourcePrefix
+                      - "BUASharedKeyARN"
+
+  ADHBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ADHBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowSSLRequestsOnly
+            Action: "s3:*"
+            Effect: Deny
+            Resource:
+            - !GetAtt Bucket.Arn
+            - !Sub "${Bucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+            Principal: "*"
+          - Sid: RestrictGetObjectToOrg
+            Action: "s3:GetObject"
+            Effect: Deny
+            Resource:
+              - !Sub "${Bucket.Arn}/*"
+            Condition:
+              StringNotEquals:
+                aws:PrincipalOrgID:
+                  - !Ref OrganizationID
+            Principal: "*"
+          - Sid: DenyPublicReadACL
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "s3:PutObject"
+              - "s3:PutObjectAcl"
+            Resource:
+            - !Sub "${Bucket.Arn}/*"
+            Condition:
+              StringEquals:
+                s3:x-amz-acl:
+                  - public-read
+                  - public-read-write
+                  - authenticated-read
+          - Sid: DenyPublicReadGrant
+            Effect: Deny
+            Principal: "*"
+            Action:
+              - "s3:PutObject"
+              - "s3:PutObjectAcl"
+            Resource:
+            - !Sub "${Bucket.Arn}/*"
+            Condition:
+              StringLike:
+                s3:x-amz-grant-read:
+                  - "*http://acs.amazonaws.com/groups/global/AllUsers*"
+                  - "*http://acs.amazonaws.com/groups/global/AuthenticatedUsers*"
+          - Sid: DenyPublicListACL
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:PutBucketAcl"
+            Resource:
+            - !GetAtt Bucket.Arn
+            Condition:
+              StringEquals:
+                s3:x-amz-acl:
+                  - public-read
+                  - public-read-write
+                  - authenticated-read
+          - Sid: DenyPublicListGrant
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:PutBucketAcl"
+            Resource:
+            - !GetAtt Bucket.Arn
+            Condition:
+              StringLike:
+                s3:x-amz-grant-read:
+                  - "*http://acs.amazonaws.com/groups/global/AllUsers*"
+                  - "*http://acs.amazonaws.com/groups/global/AuthenticatedUsers*"

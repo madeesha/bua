@@ -24,6 +24,7 @@ provision:
   script:
     - |
       # Provision AWS resources
+      python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-keys
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-queues
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-buckets
       python3 -m cicd --cmd provision --version-id $CI_PARENT_PIPELINE_ID --unit provision-bua-secrets

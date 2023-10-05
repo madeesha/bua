@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description:  Configure AWS keys
+Parameters:
+  EnvironmentName:
+    Description: The name of the environment to deploy into
+    Type: String
+    AllowedValues: [ "dev", "tst", "prd" ]
+  ClassName:
+    Description: The class of the environment to deploy into
+    Type: String
+  ResourcePrefix:
+    Description: Prefix to assign to resources
+    Type: String
+  ResourcePrefixIAM:
+    Description: Prefix to assign to resources
+    Type: String
+  OrganizationID:
+    Type: String
+    Default: "o-oswlt23l9n"
+
+Resources:
+
+  MasterKeyAlias:
+    Type: "AWS::KMS::Alias"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      AliasName: !Join [ "" , [ "alias/" , !Ref ResourcePrefix , "-bua-master-key" ] ]
+      TargetKeyId: !Ref MasterKey
+
+  MasterKey:
+    Type: "AWS::KMS::Key"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: !Join [ "", [ "Master Key for BUA resources for ", !Ref ResourcePrefix ] ]
+      Enabled: true
+      EnableKeyRotation: false
+      PendingWindowInDays: 30
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: kms
+        - Key: resource-class
+          Value: data
+
+  SharedKeyAlias:
+    Type: "AWS::KMS::Alias"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      AliasName: !Join [ "" , [ "alias/" , !Ref ResourcePrefix , "-bua-shared-key" ] ]
+      TargetKeyId: !Ref SharedKey
+
+  SharedKey:
+    Type: "AWS::KMS::Key"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: !Join [ "", [ "Shared Key for BUA resources for ", !Ref ResourcePrefix ] ]
+      Enabled: true
+      EnableKeyRotation: false
+      PendingWindowInDays: 30
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: kms
+        - Key: resource-class
+          Value: data
+
+Outputs:
+  StackName:
+    Description: The name of this stack
+    Value: !Ref "AWS::StackName"
+  MasterKey:
+    Description: The id of the kms key
+    Value: !Ref MasterKey
+    Export:
+      Name: !Join [ "-" , [ !Ref ResourcePrefix , "BUAMasterKey" ] ]
+  MasterKeyARN:
+    Description: The ARN of the kms key
+    Value: !Join [ "" , [ "arn:aws:kms:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":key/" , !Ref MasterKey ] ]
+    Export:
+      Name: !Join [ "-" , [ !Ref ResourcePrefix , "BUAMasterKeyARN" ] ]
+  SharedKey:
+    Description: The id of the kms key
+    Value: !Ref SharedKey
+    Export:
+      Name: !Join [ "-" , [ !Ref ResourcePrefix , "BUASharedKey" ] ]
+  SharedKeyARN:
+    Description: The ARN of the kms key
+    Value: !Join [ "" , [ "arn:aws:kms:" , !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":key/" , !Ref SharedKey ] ]
+    Export:
+      Name: !Join [ "-" , [ !Ref ResourcePrefix , "BUASharedKeyARN" ] ]

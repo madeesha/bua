@@ -241,7 +241,7 @@ Resources:
                 Action:
                   - 's3:PutObject*'
                 Resource:
-                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/copy/*" ] ]
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua-adh/*" ] ]
 
   BUAFastControllerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
