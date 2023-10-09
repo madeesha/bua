@@ -10,7 +10,7 @@
         },
         "context": {
           "steps.$": "$.steps",
-          "default_steps": "ScaleUpWorkflow,ScaleUpMeterdata",
+          "default_steps": "Restore,ScaleUpWorkflow,Warming,Segments,Microscalar,ScaleUpMeterdata,GenerateNEM12,ResetBasicReads,BasicReads,InvoiceRuns,Export,ScaleDown",
           "splitter": ","
         }
       },
