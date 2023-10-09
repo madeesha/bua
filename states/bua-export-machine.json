@@ -11,7 +11,7 @@
           "schema": "Turkey_BLU",
           "suffix": "bua-sql",
           "update_id": "12",
-          "rdssecret": "cicd/tst-anstead/rds/bua"
+          "rdssecret": "cicd/{{prefix}}/rds/bua"
         }
       },
       "Next": "MergeData"
@@ -71,12 +71,12 @@
             "action": "copy_s3_objects",
             "speed": "slow",
             "args": {
-              "source_bucket": "tst-anstead-s3-bua",
+              "source_bucket": "{{prefix}}-s3-bua",
               "source_prefix": "export/csv/{run_date}/",
-              "target_bucket": "tst-anstead-s3-rw-integration",
+              "target_bucket": "{{prefix}}-s3-rw-integration",
               "target_prefix": "ADH/OUTBOUND/BUA/",
               "sse": "aws:kms",
-              "kms_key_id": "alias/tst-anstead-bua-shared-key"
+              "kms_key_id": "alias/{{prefix}}-bua-shared-key"
             },
             "on": {
               "COMPLETE": {}

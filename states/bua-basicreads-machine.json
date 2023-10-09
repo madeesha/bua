@@ -11,7 +11,7 @@
           "suffix": "bua-sql",
           "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
           "schema": "Turkey_BLU",
-          "rdssecret": "cicd/tst-anstead/rds/bua"
+          "rdssecret": "cicd/{{prefix}}/rds/bua"
         }
       },
       "Next": "MergeData"

@@ -11,7 +11,7 @@
           "schema": "Turkey_BLU",
           "suffix": "bua-sql",
           "update_id": "12",
-          "rdssecret": "cicd/tst-anstead/rds/bua"
+          "rdssecret": "cicd/{{prefix}}/rds/bua"
         }
       },
       "Next": "MergeData"

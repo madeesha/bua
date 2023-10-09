@@ -210,6 +210,7 @@ class BUAControllerHandler:
 
         data = self._get_data(event)
         self._process_args(data, step)
+        self._substitute_values(data)
 
         self._calculate_run_dates(data)
 
@@ -344,6 +345,11 @@ class BUAControllerHandler:
         if 'args' in step:
             for key, value in step['args'].items():
                 data[key] = value
+
+    def _substitute_values(self, data: Dict):
+        for key, value in data.items():
+            if isinstance(value, str) and '{{prefix}}' in value:
+                data[key] = value.replace('{{prefix}}', self.config['prefix'])
 
     @staticmethod
     def _get_data(event: Dict) -> Dict:

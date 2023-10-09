@@ -13,10 +13,10 @@
           "mysql_version": "8.0.32",
           "params_id": "2",
           "schema": "Turkey_BLU",
-          "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-12-bua-sql-mysql8-0-32",
+          "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:{{prefix}}-12-bua-sql-mysql8-0-32",
           "suffix": "bua-sql",
           "update_id": "12",
-          "rdssecret": "cicd/tst-anstead/rds/bua",
+          "rdssecret": "cicd/{{prefix}}/rds/bua",
           "hosted_zone_id": "Z06477101FOH3N8B2WK6N",
           "cluster_name": "anstead",
           "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
@@ -300,7 +300,7 @@
             "comment": "set the user passwords",
             "action": "execute_sql",
             "args": {
-              "sqlsecret": "cicd/tst-anstead/rds/bua/passwords"
+              "sqlsecret": "cicd/{{prefix}}/rds/bua/passwords"
             },
             "on": {
               "COMPLETE": {

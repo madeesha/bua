@@ -11,7 +11,7 @@
           "schema": "Turkey_BLU",
           "suffix": "bua-sql",
           "update_id": "12",
-          "rdssecret": "cicd/tst-anstead/rds/bua",
+          "rdssecret": "cicd/{{prefix}}/rds/bua",
           "cluster_name": "anstead",
           "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
         }
