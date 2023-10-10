@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional, Union
 
 from bua.facade.sqs import SQS, Queue
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
@@ -17,6 +17,7 @@ class LambdaHandler:
         self.failure_queue = Queue(queue=failure_queue, debug=debug, log=self.log)
         self.debug = debug
         self._handler: Dict[str, Callable[[str, Dict, bool], None]] = dict()
+        self._default_handler: Optional[Callable[[Union[Dict, str]], None]] = None
 
     def handle_request(self, event: Dict):
         self.log(event)
@@ -24,50 +25,63 @@ class LambdaHandler:
             for record in event['Records']:
                 if record['eventSource'] == 'aws:sqs':
                     if self.sqs.deduplicate_request(record):
-                        body = json.loads(record['body'])
+                        try:
+                            body = json.loads(record['body'])
+                        except Exception as ex:
+                            self.log(str(ex))
+                            body = record['body']
                         self._process_message(body)
         else:
             self._process_message(event)
 
-    def _process_message(self, body):
-        debug = self.debug or body.get('debug') is True
+    def _process_message(self, body: Union[Dict, str]):
         self.log(body)
-        if 'run_type' in body:
-            run_type: str = body['run_type']
-            if run_type in self._handler:
-                self._handler[run_type](run_type, body, debug)
-            else:
-                cause = f'Do not know how to handle run_type {run_type}'
-                self.log(cause)
-                self.failure_queue.send_failure_event(body, cause)
-            return
-        if 'entries' in body:
-            failure_entries = []
-            failures = []
-            for entry in body['entries']:
-                if 'run_type' in entry:
-                    run_type: str = entry['run_type']
-                    if run_type in self._handler:
-                        result = self._handler[run_type](run_type, entry, debug)
-                        if isinstance(result, dict) and 'status' in result and result['status'] != STATUS_DONE:
-                            failure_entries.append(entry)
-                            failures.append(result)
-                    else:
-                        cause = f'Do not know how to handle run_type {run_type}'
-                        self.log(cause)
+        if isinstance(body, dict):
+            debug = self.debug or body.get('debug') is True
+            if 'run_type' in body:
+                self._process_with_run_type(body, debug)
+                return
+            if 'entries' in body:
+                self._process_with_entries(body, debug)
+                return
+        if self._default_handler is not None:
+            self._default_handler(body)
+
+    def _process_with_entries(self, body, debug):
+        failure_entries = []
+        failures = []
+        for entry in body['entries']:
+            if 'run_type' in entry:
+                run_type: str = entry['run_type']
+                if run_type in self._handler:
+                    result = self._handler[run_type](run_type, entry, debug)
+                    if isinstance(result, dict) and 'status' in result and result['status'] != STATUS_DONE:
                         failure_entries.append(entry)
-                        failures.append({
-                            'status': STATUS_FAIL,
-                            'cause': cause
-                        })
-            if len(failures) > 0:
-                self.failure_queue.send_request([
-                    {
-                        'entries': failure_entries,
-                        'failures': failures
-                    }
-                ])
-            return
+                        failures.append(result)
+                else:
+                    cause = f'Do not know how to handle run_type {run_type}'
+                    self.log(cause)
+                    failure_entries.append(entry)
+                    failures.append({
+                        'status': STATUS_FAIL,
+                        'cause': cause
+                    })
+        if len(failures) > 0:
+            self.failure_queue.send_request([
+                {
+                    'entries': failure_entries,
+                    'failures': failures
+                }
+            ])
+
+    def _process_with_run_type(self, body, debug):
+        run_type: str = body['run_type']
+        if run_type in self._handler:
+            self._handler[run_type](run_type, body, debug)
+        else:
+            cause = f'Do not know how to handle run_type {run_type}'
+            self.log(cause)
+            self.failure_queue.send_failure_event(body, cause)
 
     @staticmethod
     def log(*args, **kwargs):

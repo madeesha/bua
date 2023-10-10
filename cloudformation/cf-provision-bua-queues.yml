@@ -25,6 +25,20 @@ Conditions:
 
 Resources:
 
+  TestingTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Join [ "-" , [ !Ref ResourcePrefix , "sns-bua-testing-topic" ] ]
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sns
+        - Key: resource-class
+          Value: data
+
   NotificationTopicSubscription:
     Type: AWS::SNS::Subscription
     Condition: SubscribeToTopic
@@ -32,7 +46,7 @@ Resources:
       TopicArn: !Ref NotificationTopicArn
       Protocol: sqs
       Endpoint: !GetAtt
-        - BUAControllerNextQueue
+        - BUAControllerNotifyQueue
         - Arn
       RawMessageDelivery: 'true'
 
@@ -74,6 +88,23 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-next-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 120
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerNotifyDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-notify-dlqueue" ] ]
       MessageRetentionPeriod: 1209600
       ReceiveMessageWaitTimeSeconds: 20
       VisibilityTimeout: 120
@@ -210,6 +241,23 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-initiate-dlqueue" ] ]
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
+  BUAControllerNotifyFailureQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-notify-failure-queue" ] ]
       MessageRetentionPeriod: 1209600
       ReceiveMessageWaitTimeSeconds: 20
       VisibilityTimeout: 60
@@ -379,6 +427,26 @@ Resources:
         - Key: resource-class
           Value: data
 
+  BUAControllerSlowQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-slow-queue" ] ]
+      MessageRetentionPeriod: 86400
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 960
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BUAControllerSlowDLQ.Arn
+        maxReceiveCount: 10
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: sqs
+        - Key: resource-class
+          Value: data
+
   BUAControllerNextQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -399,15 +467,15 @@ Resources:
         - Key: resource-class
           Value: data
 
-  BUAControllerSlowQueue:
+  BUAControllerNotifyQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-slow-queue" ] ]
-      MessageRetentionPeriod: 86400
+      QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-controller-notify-queue" ] ]
+      MessageRetentionPeriod: 1209600
       ReceiveMessageWaitTimeSeconds: 20
-      VisibilityTimeout: 960
+      VisibilityTimeout: 120
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt BUAControllerSlowDLQ.Arn
+        deadLetterTargetArn: !GetAtt BUAControllerNotifyDLQ.Arn
         maxReceiveCount: 10
       Tags:
         - Key: env
