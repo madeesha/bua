@@ -38,7 +38,7 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "120_generate_NEM12_files"
+                "next": "110_get_max_workflow_instance"
               }
             }
           },
