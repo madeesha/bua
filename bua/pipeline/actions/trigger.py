@@ -20,10 +20,10 @@ class Trigger:
             return "ABORT", msg
         with open(template_path, 'r') as fp:
             pipeline = yaml.load(fp, Loader=yaml.Loader)
-            for key in {'instance', 'this', 'workflow_instance_id'}:
+            for key in {'this'}:
                 if key in data:
                     pipeline[key] = data[key]
-            for key in {'suffix', 'update_id', 'snapshot_arn', 'run_date', 'today'}:
+            for key in {'suffix', 'update_id', 'snapshot_arn', 'run_date', 'today', 'instance', 'workflow_instance_id'}:
                 if key in data:
                     pipeline['data'][key] = data[key]
             msg = yaml.dump(pipeline, Dumper=yaml.Dumper)

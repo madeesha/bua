@@ -335,9 +335,9 @@ class BUAControllerHandler:
 
     @staticmethod
     def _determine_instance(data: Dict) -> str:
-        if '_instance' not in data or data['_instance'] is None or len(data['_instance']) == 0:
-            data['_instance'] = str(int(datetime.now(timezone.utc).timestamp() * 1000))
-        instance = str(data['_instance'])
+        if 'instance' not in data or data['instance'] is None or len(data['instance']) == 0:
+            data['instance'] = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+        instance = str(data['instance'])
         return instance
 
     @staticmethod
