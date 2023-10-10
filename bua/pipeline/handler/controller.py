@@ -214,7 +214,7 @@ class BUAControllerHandler:
 
         self._calculate_run_dates(data)
 
-        instance = self._determine_instance(event)
+        instance = self._determine_instance(data)
         log_item = self._log_processing_start(instance, name, this)
         status, reason = self._check_retries_exceeded(step)
         if status == 'OK':
@@ -334,10 +334,10 @@ class BUAControllerHandler:
         return log_item
 
     @staticmethod
-    def _determine_instance(event: Dict) -> str:
-        if 'instance' not in event or event['instance'] is None or len(event['instance']) == 0:
-            event['instance'] = str(int(datetime.now(timezone.utc).timestamp() * 1000))
-        instance = str(event['instance'])
+    def _determine_instance(data: Dict) -> str:
+        if '_instance' not in data or data['_instance'] is None or len(data['_instance']) == 0:
+            data['_instance'] = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+        instance = str(data['_instance'])
         return instance
 
     @staticmethod
