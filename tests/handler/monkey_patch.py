@@ -32,6 +32,9 @@ class MonkeyPatch:
     def cloudformation(self):
         return self._clients['cloudformation']
 
+    def sqs(self):
+        return self._clients['sqs']
+
     def Session(self):
         return self._session
 
@@ -111,8 +114,20 @@ class MonkeyPatchS3Client:
 
 class MonkeyPatchSQSClient:
 
+    def __init__(self):
+        self._send_message = []
+
     def patch(self):
-        pass
+        self._send_message = []
+
+    def send_message(self, *args, **kwargs):
+        self._send_message.append((args, kwargs))
+        return {
+            'MessageId': ''
+        }
+
+    def assert_no_messages(self):
+        assert len(self._send_message) == 0, self._send_message
 
 
 class MonkeyPatchCloudformationClient:
@@ -241,6 +256,12 @@ class MonkeyPatchConnection:
     def __init__(self):
         self._cursor = MonkeyPatchCursor()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
     def cursor(self):
         return self._cursor
 
@@ -259,7 +280,7 @@ class MonkeyPatchCursor:
     def __init__(self):
         self.execute_fails = False
         self.execute_fails_after_invocations = -1
-        self._execute_invocations = 0
+        self._execute_invocations = []
         self._result_sets: List[List[Dict]] = []
         self._result_set = None
 
@@ -269,14 +290,24 @@ class MonkeyPatchCursor:
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
 
+    def patch(self):
+        self.execute_fails = False
+        self.execute_fails_after_invocations = -1
+        self._execute_invocations = []
+        self._result_sets = []
+        self._result_set = None
+
+    def assert_n_execute_invocations(self, n=0):
+        assert len(self._execute_invocations) == n, self._execute_invocations
+
     def execute(self, *args, **kwargs):
-        self._result_set = self._result_sets[self._execute_invocations] \
-            if self._execute_invocations < len(self._result_sets) else []
-        self._execute_invocations += 1
+        self._result_set = self._result_sets[len(self._execute_invocations)] \
+            if len(self._execute_invocations) < len(self._result_sets) else []
+        self._execute_invocations.append((args, kwargs))
         if self.execute_fails:
             raise RuntimeError('Test execute has an error')
         if self.execute_fails_after_invocations > -1:
-            if self.execute_fails_after_invocations < self._execute_invocations:
+            if self.execute_fails_after_invocations < len(self._execute_invocations):
                 raise RuntimeError('Test execute has an error')
         return
 
@@ -284,13 +315,6 @@ class MonkeyPatchCursor:
         if self._result_set is None:
             raise RuntimeError('fetchall called before execute')
         return self._result_set
-
-    def patch(self):
-        self.execute_fails = False
-        self.execute_fails_after_invocations = -1
-        self._execute_invocations = 0
-        self._result_sets = []
-        self._result_set = None
 
     def add_result_set(self, result_set: List[Dict]):
         self._result_sets.append(result_set)

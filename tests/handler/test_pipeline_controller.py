@@ -78,3 +78,25 @@ class TestCase:
         }
         context = {}
         lambda_handler(event, context)
+
+    def test_bua_create_macro_profile(self):
+        import tests.handler.monkey_patch as monkey_patch
+        monkey_patch.patch.patch(environ=self._environ)
+        from bua.handler.pipeline_controller import lambda_handler
+        event = {
+            'action': 'bua_create_macro_profile',
+            'args': {
+                'update_id': 1,
+                'suffix': '',
+                'mysql_version': '8.0',
+                'domain': '',
+                'schema': '',
+                'rdssecret': '',
+                'identifier_type': 'SegmentJurisdictionAvgExclEst',
+                "stream_types": ["CONTROL", "PRIMARY", "SOLAR", "UNKNOWN", "GAS"]
+            }
+        }
+        context = {}
+        lambda_handler(event, context)
+        monkey_patch.patch.sqs().assert_no_messages()
+        monkey_patch.patch.connect().cursor().assert_n_execute_invocations(6)

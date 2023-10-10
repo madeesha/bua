@@ -102,6 +102,7 @@ class BUAControllerHandler:
             'scale_nodegroup': kubectl_handler.scale_nodegroup,
             'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup,
             'copy_s3_objects': s3_actions.copy_s3_objects,
+            'bua_create_macro_profile': sql_handler.bua_create_macro_profile,
         }
 
     def get_config(self, request: HandlerRequest):

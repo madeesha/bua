@@ -83,6 +83,34 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
+    def bua_create_macro_profile(self, request: HandlerRequest):
+        data = request.data
+        end_inclusive = data['end_inclusive']
+        run_date = data['run_date']
+        identifier_type = data['identifier_type']
+        stream_types = data['stream_types']
+        jurisdiction_name = data.get('jurisdiction_name', 'ALL')
+        account_type = data.get('account_type', 'ALL')
+        try:
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    stmt = "CALL bua_create_macro_profile(%s, %s, %s, %s, %s, %s, 0)"
+                    for stream_type in stream_types:
+                        in_run_date = '2099-01-01' if stream_type == 'GAS' else run_date
+                        params = (
+                            end_inclusive, in_run_date, identifier_type, jurisdiction_name,
+                            account_type, stream_type
+                        )
+                        cur.execute(stmt, params)
+                    con.commit()
+            return "COMPLETE", f'Executed bua_create_macro_profile for stream type {stream_type} on {run_date}'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def bua_initiate_invoice_runs(self, request: HandlerRequest):
         data = request.data
         run_date = data.get('run_date')
