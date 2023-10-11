@@ -39,6 +39,17 @@ Resources:
         - Key: resource-class
           Value: data
 
+  TestTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: SubscribeToTopic
+    Properties:
+      TopicArn: !Ref TestingTopic
+      Protocol: sqs
+      Endpoint: !GetAtt
+        - BUAControllerNotifyQueue
+        - Arn
+      RawMessageDelivery: 'true'
+
   NotificationTopicSubscription:
     Type: AWS::SNS::Subscription
     Condition: SubscribeToTopic
