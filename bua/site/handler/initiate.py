@@ -17,7 +17,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
     def __init__(
             self, sqs_client, ddb_meterdata_table, ddb_bua_table,
             data_queue, segment_queue, export_queue, failure_queue,
-            basic_queue, mscalar_queue, nem12_queue,
+            basic_queue, mscalar_queue, prepare_queue, nem12_queue,
             conn, debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10
     ):
         DBLambdaHandler.__init__(
@@ -30,6 +30,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         self.export_queue = Queue(queue=export_queue, debug=debug, log=self.log)
         self.basic_queue = Queue(queue=basic_queue, debug=debug, log=self.log)
         self.mscalar_queue = Queue(queue=mscalar_queue, debug=debug, log=self.log)
+        self.prepare_queue = Queue(queue=prepare_queue, debug=debug, log=self.log)
         self.nem12_queue = Queue(queue=nem12_queue, debug=debug, log=self.log)
         self.util_batch_size = util_batch_size
         self.jur_batch_size = jur_batch_size
@@ -46,7 +47,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             'MicroScalar': self._initiate_microscalar,
             'BasicRead': self._initiate_basic_read,
             'ResetBasicRead': self._initiate_reset_basic_read,
-            'ExportTables': self._initiate_export_tables
+            'ExportTables': self._initiate_export_tables,
+            'PrepareExport': self._initiate_prepare_export,
         }
 
     def _initiate_requeue(self, _run_type, body, _debug):
@@ -224,4 +226,18 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             today=today,
             run_type=run_type,
             file_format=file_format
+        )
+
+    def _initiate_prepare_export(self, run_type, body, debug):
+        today: str = body['today']
+        run_date: str = body['run_date']
+        action = Exporter(
+            queue=self.prepare_queue, conn=self.conn, log=self.log, debug=debug, batch_size=100
+        )
+        identifier_type = body['identifier_type']
+        action.initiate_prepare_export(
+            run_type=run_type,
+            today=today,
+            run_date=run_date,
+            identifier_type=identifier_type
         )

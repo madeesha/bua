@@ -9,17 +9,18 @@ from pymysql.cursors import SSDictCursor
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action import Action
+from bua.site.action.accounts import Accounts
 from bua.site.action.control import Control
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
-class Exporter(Action):
+class Exporter(Accounts):
 
     def __init__(
             self, queue: Queue, conn: DB, log: Callable, debug: bool,
             batch_size=1, s3_client=None, bucket_name=None
     ):
-        Action.__init__(self, queue, conn, log, debug)
+        Accounts.__init__(self, queue, conn, log, debug, batch_size)
         self.batch_size = batch_size
         self.s3_client = s3_client
         self.bucket_name = bucket_name
@@ -136,6 +137,27 @@ class Exporter(Action):
                     os.remove(file_path)
                     print(f'Uploaded {file_name} to {self.bucket_name}/{key}')
                     control.insert_control_record(self.conn, cur, file_name, STATUS_DONE)
+                return {
+                    'status': STATUS_DONE
+                }
+        except KeyError or IntegrityError as ex:
+            traceback.print_exception(ex)
+            return {
+                'status': STATUS_FAIL,
+                'cause': str(ex)
+            }
+
+    def initiate_prepare_export(self, run_type: str, today: str, run_date: str, identifier_type: str):
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, all_accounts=True)
+
+    def prepare_export(self, entry: Dict):
+        try:
+            with self.conn.cursor() as cur:
+                account_id = entry['account_id']
+                stmt = f'CALL bua_prepare_export_data(%s, %s, 1)'
+                params = (account_id, account_id)
+                cur.execute(stmt, params)
+                self.conn.commit()
                 return {
                     'status': STATUS_DONE
                 }

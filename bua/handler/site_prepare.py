@@ -1,5 +1,5 @@
 import os
-from bua.site.handler.initiate import BUASiteInitiateHandler
+from bua.site.handler.prepare import BUASitePrepareHandler
 import boto3
 import botocore.config
 import json
@@ -7,23 +7,15 @@ import pymysql
 import pymysql.cursors
 import traceback
 
-
 ddb_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 ddb = boto3.resource('dynamodb', config=ddb_config)
-ddb_meterdata_table = ddb.Table(os.environ['meterdataTableName'])
 ddb_bua_table = ddb.Table(os.environ['buaTableName'])
 
 sqs_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 sqs = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
 sqs_client = boto3.client('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
-data_queue = sqs.Queue(os.environ['dataQueueURL'])
-segment_queue = sqs.Queue(os.environ['segmentQueueURL'])
-export_queue = sqs.Queue(os.environ['exportQueueURL'])
-failure_queue = sqs.Queue(os.environ['failureQueueURL'])
-basic_queue = sqs.Queue(os.environ['basicQueueURL'])
-mscalar_queue = sqs.Queue(os.environ['mscalarQueueURL'])
 prepare_queue = sqs.Queue(os.environ['prepareQueueURL'])
-nem12_queue = sqs.Queue(os.environ['nem12QueueURL'])
+failure_queue = sqs.Queue(os.environ['failureQueueURL'])
 
 rdssecret = os.environ['rdsSecretName']
 session = boto3.Session()
@@ -38,16 +30,12 @@ conn = pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, 
                        cursorclass=pymysql.cursors.SSDictCursor)
 
 debug = os.environ['debugEnabled'] == 'Yes'
-util_batch_size = int(os.environ['utilityBatchSize'])
-jur_batch_size = int(os.environ['jurisdictionBatchSize'])
-tni_batch_size = int(os.environ['tniBatchSize'])
 
-handler = BUASiteInitiateHandler(
-    sqs_client=sqs_client, ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
-    data_queue=data_queue, segment_queue=segment_queue, export_queue=export_queue, failure_queue=failure_queue,
-    basic_queue=basic_queue, mscalar_queue=mscalar_queue, prepare_queue=prepare_queue, nem12_queue=nem12_queue,
-    conn=conn, debug=debug,
-    util_batch_size=util_batch_size, jur_batch_size=jur_batch_size, tni_batch_size=tni_batch_size
+handler = BUASitePrepareHandler(
+    sqs_client=sqs_client, ddb_bua_table=ddb_bua_table,
+    prepare_queue=prepare_queue, failure_queue=failure_queue,
+    conn=conn,
+    debug=debug
 )
 
 
@@ -59,7 +47,7 @@ def lambda_handler(event, context):
         try:
             handler.reconnect(
                 pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
-                                cursorclass=pymysql.cursors.SSDictCursor))
+                                cursorclass=pymysql.cursors.DictCursor))
         except Exception as ex2:
             print('Failed to reconnect to the database after a failure')
             traceback.print_exception(ex2)

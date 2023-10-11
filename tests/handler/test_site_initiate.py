@@ -12,6 +12,7 @@ class TestCase:
         'failureQueueURL': '',
         'basicQueueURL': '',
         'mscalarQueueURL': '',
+        'prepareQueueURL': '',
         'nem12QueueURL': '',
         'rdsSecretName': '',
         'debugEnabled': 'Yes',

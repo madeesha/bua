@@ -262,12 +262,13 @@ class TestClass:
         failure_queue = {}
         basic_queue = {}
         mscalar_queue = {}
+        prepare_queue = {}
         nem12_queue = {}
         conn = Database(rowcount=10)
         handler = BUASiteInitiateHandler(
             sqs_client=sqs_client, ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
             data_queue=data_queue, segment_queue=segment_queue, export_queue=export_queue, failure_queue=failure_queue,
-            basic_queue=basic_queue, mscalar_queue=mscalar_queue, nem12_queue=nem12_queue,
+            basic_queue=basic_queue, mscalar_queue=mscalar_queue, prepare_queue=prepare_queue, nem12_queue=nem12_queue,
             conn=conn
         )
         event = {

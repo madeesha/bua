@@ -16,12 +16,15 @@ class Accounts(Action):
             run_type: str,
             today: str,
             run_date: str,
-            identifier_type: str
+            identifier_type: str,
+            all_accounts=False
     ):
         with self.conn.cursor() as cur:
             try:
-
-                sql = "CALL bua_list_unbilled_accounts(%s,%s,%s,%s)"
+                if all_accounts:
+                    sql = "CALL bua_list_all_accounts(%s,%s,%s,%s)"
+                else:
+                    sql = "CALL bua_list_unbilled_accounts(%s,%s,%s,%s)"
                 params = (None, None, today, run_date)
                 cur.execute(sql, params)
 
