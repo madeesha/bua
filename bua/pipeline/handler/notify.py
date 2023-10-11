@@ -1,6 +1,8 @@
 import json
 import uuid
 from typing import Union, Dict
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from bua.handler import LambdaHandler
 
@@ -20,8 +22,16 @@ class BUANotifyHandler(LambdaHandler):
             'steps': 'DoNothing',
             'snapshot_arn': body
         }
+        run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
+        unique_id = uuid.uuid4().hex
+        id_part_1 = unique_id[0:8]
+        id_part_2 = unique_id[8:12]
+        id_part_3 = unique_id[12:16]
+        id_part_4 = unique_id[16:20]
+        id_part_5 = unique_id[20:]
+        step_execution_name = f"{run_date}-Notify-{id_part_1}-{id_part_2}-{id_part_3}-{id_part_4}-{id_part_5}"
         self.sfn_client.start_execution(
             stateMachineArn=self.config['state_machine_arn'],
-            name=uuid.uuid4().hex,
+            name=step_execution_name,
             input=json.dumps(event)
         )
