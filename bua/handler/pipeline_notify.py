@@ -5,7 +5,8 @@ import botocore.config
 
 sqs_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 sqs_client = boto3.client('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
-failure_queue = sqs_client.Queue(os.environ['failureQueueURL'])
+sqs_resource = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
+failure_queue = sqs_resource.Queue(os.environ['failureQueueURL'])
 
 ddb_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 ddb_resource = boto3.resource('dynamodb', config=ddb_config)
