@@ -41,7 +41,6 @@ Resources:
 
   TestTopicSubscription:
     Type: AWS::SNS::Subscription
-    Condition: SubscribeToTopic
     Properties:
       TopicArn: !Ref TestingTopic
       Protocol: sqs
