@@ -732,3 +732,33 @@ Resources:
             Condition:
               ArnLike:
                 "aws:SourceArn": !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua" ] ]
+
+  BUAControllerNotifyQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref BUAControllerNotifyQueue
+      PolicyDocument:
+        Id: BUAControllerNotifyQueuePolicy
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PermitTestSubscription
+            Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt BUAControllerNotifyQueue.Arn
+            Condition:
+              ArnEquals:
+                "aws:SourceArn": !Ref TestingTopic
+          - Sid: PermitNotifySubscription
+            Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action:
+              - "sqs:SendMessage"
+            Resource: !GetAtt BUAControllerNotifyQueue.Arn
+            Condition:
+              ArnEquals:
+                "aws:SourceArn": !Ref NotificationTopicArn
