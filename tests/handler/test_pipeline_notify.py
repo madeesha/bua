@@ -8,6 +8,8 @@ class TestCase:
         'buaTableName': '',
         'failureQueueURL': '',
         'stateMachineArn': '',
+        'updateId': '',
+        'pipelineSteps': '',
     }
 
     def test_invoke_handler(self):

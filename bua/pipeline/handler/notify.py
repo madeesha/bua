@@ -18,11 +18,13 @@ class BUANotifyHandler(LambdaHandler):
         self._default_handler = self._handle_event
 
     def _handle_event(self, body: Union[Dict, str]):
-        event = {
-            'steps': 'DoNothing',
-            'snapshot_arn': body
-        }
         run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
+        event = {
+            'steps': self.config['pipeline_steps'],
+            'snapshot_arn': body,
+            'update_id': self.config['update_id'],
+            'run_date': run_date,
+        }
         unique_id = uuid.uuid4().hex
         id_part_1 = unique_id[0:8]
         id_part_2 = unique_id[8:12]

@@ -16,7 +16,9 @@ sfn_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 sfn_client = boto3.client('stepfunctions', config=sfn_config)
 
 config = {
-    'state_machine_arn': os.environ['stateMachineArn']
+    'state_machine_arn': os.environ['stateMachineArn'],
+    'update_id': os.environ['updateId'],
+    'pipeline_steps': os.environ['pipelineSteps'],
 }
 
 handler = BUANotifyHandler(

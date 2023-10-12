@@ -36,7 +36,8 @@
       "Parameters": {
         "data": {
           "run_date.$": "$.run_date",
-          "snapshot_arn.$": "$.snapshot_arn"
+          "snapshot_arn.$": "$.snapshot_arn",
+          "update_id.$": "$.update_id"
         },
         "context": {
           "steps.$": "$.steps"
@@ -48,7 +49,8 @@
       "Type": "Pass",
       "Parameters": {
         "data": {
-          "snapshot_arn.$": "$.snapshot_arn"
+          "snapshot_arn.$": "$.snapshot_arn",
+          "update_id.$": "$.update_id"
         },
         "context": {
           "steps.$": "$.steps"
@@ -60,7 +62,8 @@
       "Type": "Pass",
       "Parameters": {
         "data": {
-          "run_date.$": "$.run_date"
+          "run_date.$": "$.run_date",
+          "update_id.$": "$.update_id"
         },
         "context": {
           "steps.$": "$.steps"
@@ -72,6 +75,7 @@
       "Type": "Pass",
       "Parameters": {
         "data": {
+          "update_id.$": "$.update_id"
         },
         "context": {
           "steps.$": "$.steps"
