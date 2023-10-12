@@ -6,6 +6,7 @@ class TestCase:
     _environ = {
         'meterdataTableName': '',
         'buaTableName': '',
+        'buaBucketName': '',
         'dataQueueURL': '',
         'segmentQueueURL': '',
         'exportQueueURL': '',

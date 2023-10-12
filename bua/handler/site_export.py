@@ -33,10 +33,9 @@ debug = os.environ['debugEnabled'] == 'Yes'
 
 s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 s3_client = boto3.client('s3', config=s3_config)
-bua_bucket_name = os.environ['buaBucketName']
 
 handler = BUASiteExportHandler(
-    s3_client=s3_client, bua_bucket_name=bua_bucket_name,
+    s3_client=s3_client,
     sqs_client=sqs_client, ddb_bua_table=ddb_bua_table,
     export_queue=export_queue, failure_queue=failure_queue,
     conn=conn,

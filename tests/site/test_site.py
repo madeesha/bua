@@ -254,6 +254,7 @@ class TestClass:
 
     def test_site_initiate_handler(self):
         sqs_client = {}
+        s3_client = {}
         ddb_meterdata_table = {}
         ddb_bua_table = {}
         data_queue = {}
@@ -266,7 +267,9 @@ class TestClass:
         nem12_queue = {}
         conn = Database(rowcount=10)
         handler = BUASiteInitiateHandler(
-            sqs_client=sqs_client, ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
+            sqs_client=sqs_client,
+            s3_client=s3_client,
+            ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
             data_queue=data_queue, segment_queue=segment_queue, export_queue=export_queue, failure_queue=failure_queue,
             basic_queue=basic_queue, mscalar_queue=mscalar_queue, prepare_queue=prepare_queue, nem12_queue=nem12_queue,
             conn=conn

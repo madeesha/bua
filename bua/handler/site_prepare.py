@@ -11,6 +11,9 @@ ddb_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10,
 ddb = boto3.resource('dynamodb', config=ddb_config)
 ddb_bua_table = ddb.Table(os.environ['buaTableName'])
 
+s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
+s3_client = boto3.client('s3', config=s3_config)
+
 sqs_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 sqs = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
 sqs_client = boto3.client('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
@@ -32,10 +35,11 @@ conn = pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, 
 debug = os.environ['debugEnabled'] == 'Yes'
 
 handler = BUASitePrepareHandler(
-    sqs_client=sqs_client, ddb_bua_table=ddb_bua_table,
+    sqs_client=sqs_client,
+    ddb_bua_table=ddb_bua_table,
+    s3_client=s3_client,
     prepare_queue=prepare_queue, failure_queue=failure_queue,
-    conn=conn,
-    debug=debug
+    conn=conn, debug=debug
 )
 
 

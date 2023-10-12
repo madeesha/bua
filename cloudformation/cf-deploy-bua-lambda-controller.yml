@@ -239,7 +239,10 @@ Resources:
               - Sid: AllowS3AccessForCopyTablesDestination
                 Effect: Allow
                 Action:
+                  - 's3:GetObject*'
                   - 's3:PutObject*'
+                  - 's3:DeleteObject*'
+                  - 's3:ListObject*'
                 Resource:
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-rw-integration/ADH/OUTBOUND/BUA/*" ] ]
 

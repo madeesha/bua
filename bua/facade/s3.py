@@ -13,16 +13,16 @@ class S3:
     def __init__(self, *, s3_client):
         self.s3_client = s3_client
 
-    def list_objects(self, *, source_bucket: str, source_prefix: str) -> List[str]:
+    def list_objects(self, *, bucket_name: str, bucket_prefix: str) -> List[str]:
         """Get a list of object keys from the S3 bucket"""
         objects = []
         response = self.s3_client.list_objects_v2(
-            Bucket=source_bucket, Prefix=source_prefix
+            Bucket=bucket_name, Prefix=bucket_prefix
         )
         self._append_object_keys(objects, response)
         while 'NextContinuationToken' in response and 'IsTruncated' in response and response['IsTruncated'] is True:
             response = self.s3_client.list_objects_v2(
-                Bucket=source_bucket, Prefix=source_prefix,
+                Bucket=bucket_name, Prefix=bucket_prefix,
                 ContinuationToken=response['NextContinuationToken']
             )
             self._append_object_keys(objects, response)
@@ -50,3 +50,9 @@ class S3:
                 for content in response['Contents']
                 if 'Key' in content and 'StorageClass' in content and content['StorageClass'] == 'STANDARD'
             ])
+
+    def upload_fileobj(self, *, fp, bucket_name: str, key: str):
+        self.s3_client.upload_fileobj(Fileobj=fp, Bucket=bucket_name, Key=key)
+
+    def delete_object(self, *, bucket_name: str, bucket_key: str):
+        self.s3_client.delete_object(Bucket=bucket_name, Key=bucket_key)

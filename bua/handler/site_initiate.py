@@ -13,6 +13,9 @@ ddb = boto3.resource('dynamodb', config=ddb_config)
 ddb_meterdata_table = ddb.Table(os.environ['meterdataTableName'])
 ddb_bua_table = ddb.Table(os.environ['buaTableName'])
 
+s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
+s3_client = boto3.client('s3', config=s3_config)
+
 sqs_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)
 sqs = boto3.resource('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
 sqs_client = boto3.client('sqs', config=sqs_config, endpoint_url='https://sqs.ap-southeast-2.amazonaws.com')
@@ -43,7 +46,9 @@ jur_batch_size = int(os.environ['jurisdictionBatchSize'])
 tni_batch_size = int(os.environ['tniBatchSize'])
 
 handler = BUASiteInitiateHandler(
-    sqs_client=sqs_client, ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
+    sqs_client=sqs_client,
+    s3_client=s3_client,
+    ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
     data_queue=data_queue, segment_queue=segment_queue, export_queue=export_queue, failure_queue=failure_queue,
     basic_queue=basic_queue, mscalar_queue=mscalar_queue, prepare_queue=prepare_queue, nem12_queue=nem12_queue,
     conn=conn, debug=debug,

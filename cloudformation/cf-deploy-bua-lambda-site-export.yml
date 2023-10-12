@@ -148,7 +148,6 @@ Resources:
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-export-failure-queue" ] ]
           rdsSecretName: !Join [ "/" , [ "cicd", !Ref ResourcePrefix , "rds" , !Ref RDSName ] ]
           debugEnabled: !Ref DebugEnabled
-          buaBucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "bua" ] ]
       Code:
         ZipFile: |
           from bua.handler.site_export import lambda_handler

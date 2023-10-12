@@ -30,8 +30,8 @@ class Initiator:
             'source_date': source_date,
             'identifier_type': identifier_type,
         }
-        for key, value in other_args.items():
-            message[key] = value
+        for key in other_args.keys():
+            message[key] = data[key]
         body = json.dumps(message)
         self.sqs.send_message(self.queue_url, body)
         return "COMPLETE", f'Initiated BUA {run_type} as at {today}'

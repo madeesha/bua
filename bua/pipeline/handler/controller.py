@@ -102,6 +102,7 @@ class BUAControllerHandler:
             'scale_nodegroup': kubectl_handler.scale_nodegroup,
             'wait_for_scale_nodegroup': kubectl_handler.wait_for_scale_nodegroup,
             'copy_s3_objects': s3_actions.copy_s3_objects,
+            'remove_s3_objects': s3_actions.remove_s3_objects,
             'bua_create_macro_profile': sql_handler.bua_create_macro_profile,
         }
 
@@ -211,9 +212,8 @@ class BUAControllerHandler:
 
         data = self._get_data(event)
         self._process_args(data, step)
-        self._substitute_values(data)
-
         self._calculate_run_dates(data)
+        self._substitute_values(data)
 
         instance = self._determine_instance(data)
         log_item = self._log_processing_start(instance, name, this)
@@ -351,6 +351,11 @@ class BUAControllerHandler:
         for key, value in data.items():
             if isinstance(value, str) and '{{prefix}}' in value:
                 data[key] = value.replace('{{prefix}}', self.config['prefix'])
+            if isinstance(value, str) and '{{run_date}}' in value:
+                data[key] = value.replace('{{run_date}}', data['run_date'])
+            if isinstance(value, str) and '{{run_date|short}}' in value:
+                run_date = data['run_date'][0:10].replace('-', '')
+                data[key] = value.replace('{{run_date|short}}', run_date)
 
     @staticmethod
     def _get_data(event: Dict) -> Dict:

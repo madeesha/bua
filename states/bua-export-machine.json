@@ -28,18 +28,44 @@
       "Parameters": {
         "type": "step",
         "name": "BUA Export",
-        "next": "090_reset_output_tables",
+        "next": "085_reset_output_tables",
         "speed": "fast",
         "retry_delay": 120,
         "data.$": "$.data",
         "steps": {
-          "090_reset_output_tables": {
+          "085_reset_output_tables": {
             "action": "execute_sql",
             "args": {
               "sql": [
                 "TRUNCATE TABLE BUAAccountSummary",
                 "TRUNCATE TABLE InvoiceLineItemMonthly"
               ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "090_remove_exported_objects"
+              }
+            }
+          },
+          "090_remove_exported_objects": {
+            "action": "remove_s3_objects",
+            "speed": "slow",
+            "args": {
+              "bucket_name": "{{prefix}}-s3-bua",
+              "bucket_prefix": "export/csv/{{run_date|short}}/"
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "095_remove_copied_objects"
+              }
+            }
+          },
+          "095_remove_copied_objects": {
+            "action": "remove_s3_objects",
+            "speed": "slow",
+            "args": {
+              "bucket_name": "{{prefix}}-s3-rw-integration",
+              "bucket_prefix": "ADH/OUTBOUND/BUA/"
             },
             "on": {
               "COMPLETE": {
@@ -95,7 +121,8 @@
               "run_type": "ExportTables",
               "table_names": ["BUAAccountSummary", "InvoiceLineItemMonthly"],
               "file_format": "csv",
-              "bucket_prefix": "export/csv/{run_date}/",
+              "bucket_name": "{{prefix}}-s3-bua",
+              "bucket_prefix": "export/csv/{{run_date|short}}/",
               "index_col": "id"
             },
             "on": {
@@ -119,7 +146,7 @@
             "speed": "slow",
             "args": {
               "source_bucket": "{{prefix}}-s3-bua",
-              "source_prefix": "export/csv/{run_date}/",
+              "source_prefix": "export/csv/{{run_date|short}}/",
               "target_bucket": "{{prefix}}-s3-rw-integration",
               "target_prefix": "ADH/OUTBOUND/BUA/",
               "sse": "aws:kms",

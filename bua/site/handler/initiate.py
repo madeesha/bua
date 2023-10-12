@@ -1,3 +1,4 @@
+from bua.facade.s3 import S3
 from bua.facade.sqs import Queue
 from bua.handler import DBLambdaHandler
 from bua.site.action.basicread import BasicRead
@@ -15,10 +16,14 @@ from bua.site.action.requeue import SiteRequeue
 class BUASiteInitiateHandler(DBLambdaHandler):
     """AWS Lambda handler for bottom up accruals initiate site data extract"""
     def __init__(
-            self, sqs_client, ddb_meterdata_table, ddb_bua_table,
+            self, *,
+            sqs_client,
+            s3_client,
+            ddb_meterdata_table, ddb_bua_table,
             data_queue, segment_queue, export_queue, failure_queue,
             basic_queue, mscalar_queue, prepare_queue, nem12_queue,
-            conn, debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10
+            conn,
+            debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10
     ):
         DBLambdaHandler.__init__(
             self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
@@ -32,6 +37,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         self.mscalar_queue = Queue(queue=mscalar_queue, debug=debug, log=self.log)
         self.prepare_queue = Queue(queue=prepare_queue, debug=debug, log=self.log)
         self.nem12_queue = Queue(queue=nem12_queue, debug=debug, log=self.log)
+        self.s3 = S3(s3_client=s3_client)
         self.util_batch_size = util_batch_size
         self.jur_batch_size = jur_batch_size
         self.tni_batch_size = tni_batch_size
@@ -210,7 +216,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         run_date: str = body['run_date']
         today: str = body['today']
         action = Exporter(
-            queue=self.export_queue, conn=self.conn, log=self.log, debug=debug
+            queue=self.export_queue, conn=self.conn, log=self.log, debug=debug,
+            s3=self.s3
         )
         table_names = body['table_names']
         partitions = body.get('partitions')
@@ -232,7 +239,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         today: str = body['today']
         run_date: str = body['run_date']
         action = Exporter(
-            queue=self.prepare_queue, conn=self.conn, log=self.log, debug=debug, batch_size=100
+            queue=self.prepare_queue, conn=self.conn, log=self.log, debug=debug, batch_size=100,
+            s3=self.s3
         )
         identifier_type = body['identifier_type']
         action.initiate_prepare_export(

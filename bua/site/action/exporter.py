@@ -7,8 +7,8 @@ from pymysql import IntegrityError
 from pymysql.cursors import SSDictCursor
 
 from bua.facade.connection import DB
+from bua.facade.s3 import S3
 from bua.facade.sqs import Queue
-from bua.site.action import Action
 from bua.site.action.accounts import Accounts
 from bua.site.action.control import Control
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
@@ -17,13 +17,15 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 class Exporter(Accounts):
 
     def __init__(
-            self, queue: Queue, conn: DB, log: Callable, debug: bool,
-            batch_size=1, s3_client=None, bucket_name=None
+            self, *,
+            queue: Queue,
+            conn: DB, log: Callable, debug: bool,
+            s3: S3,
+            batch_size=1
     ):
         Accounts.__init__(self, queue, conn, log, debug, batch_size)
         self.batch_size = batch_size
-        self.s3_client = s3_client
-        self.bucket_name = bucket_name
+        self.s3 = s3
 
     def _reset_control_records(self, run_type: str, today: str, run_date: str, identifier_type: str):
         with self.conn.cursor() as cur:
@@ -102,7 +104,8 @@ class Exporter(Accounts):
                 offset = entry['offset']
                 batch_size = entry['batch_size']
                 run_date = entry['run_date']
-                bucket_prefix = entry['bucket_prefix'].replace('{run_date}', run_date[0:10]).replace('-', '')
+                bucket_name = entry['bucket_name']
+                bucket_prefix = entry['bucket_prefix']
                 file_format = entry['file_format']
                 identifier_type = entry['identifier_type']
                 run_type = entry['run_type']
@@ -133,9 +136,9 @@ class Exporter(Accounts):
                     }
                 if os.path.isfile(file_path):
                     with open(file_path, 'rb') as fp:
-                        self.s3_client.upload_fileobj(fp, self.bucket_name, key)
+                        self.s3.upload_fileobj(fp=fp, bucket_name=bucket_name, key=key)
                     os.remove(file_path)
-                    print(f'Uploaded {file_name} to {self.bucket_name}/{key}')
+                    print(f'Uploaded {file_name} to {bucket_name}/{key}')
                     control.insert_control_record(self.conn, cur, file_name, STATUS_DONE)
                 return {
                     'status': STATUS_DONE
@@ -147,7 +150,9 @@ class Exporter(Accounts):
                 'cause': str(ex)
             }
 
-    def initiate_prepare_export(self, run_type: str, today: str, run_date: str, identifier_type: str):
+    def initiate_prepare_export(
+            self, run_type: str, today: str, run_date: str, identifier_type: str
+    ):
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type, all_accounts=True)
 
     def prepare_export(self, entry: Dict):
