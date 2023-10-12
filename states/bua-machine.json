@@ -85,7 +85,7 @@
         "data.$": "$.data",
         "context": {
           "steps.$": "$.context.steps",
-          "default_steps": "Restore,ScaleUpWorkflow,Warming,Segments,Microscalar,ScaleUpMeterdata,GenerateNEM12,ResetBasicReads,BasicReads,InvoiceRuns,Export,ScaleDown",
+          "default_steps": "Restore,ScaleUpWorkflow,Warming,Segments,Microscalar,ResetBasicReads,BasicReads,ScaleUpMeterdata,GenerateNEM12,InvoiceRuns,ScaleDown,Export",
           "splitter": ","
         }
       },
