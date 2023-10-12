@@ -223,11 +223,13 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         partitions = body.get('partitions')
         file_format = body.get('file_format', 'csv')
         batch_size = body.get('batch_size', 1000000)
+        bucket_name = body['bucket_name']
         bucket_prefix = body.get('bucket_prefix', 'export')
         action.initiate_export_tables(
             table_names=table_names,
             partitions=partitions,
             batch_size=batch_size,
+            bucket_name=bucket_name,
             bucket_prefix=bucket_prefix,
             run_date=run_date,
             today=today,
