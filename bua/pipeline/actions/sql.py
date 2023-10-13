@@ -398,7 +398,7 @@ class SQL:
                 with cur:
                     workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
                     con.commit()
-                    cur.execute("CALL core_warm_database_statistics(%s)", (concurrency, ))
+                    cur.execute("CALL core_warm_database_statistics(%s, 1)", (concurrency, ))
                     con.commit()
 
             return "COMPLETE", f'CORE warm database statistics, max wfi {workflow_instance_id}'
@@ -417,7 +417,7 @@ class SQL:
                 with cur:
                     workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
                     con.commit()
-                    cur.execute("CALL core_warm_database_indexes(%s)", (concurrency, ))
+                    cur.execute("CALL core_warm_database_indexes(%s, 1)", (concurrency, ))
                     con.commit()
             return "COMPLETE", f'CORE warm database indexes, max wfi {workflow_instance_id}'
         except pymysql.err.OperationalError as e:
