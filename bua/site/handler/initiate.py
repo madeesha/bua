@@ -173,6 +173,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
     def _initiate_microscalar(self, run_type, body, debug):
         today: str = body['today']
         run_date: str = body['run_date']
+        end_inclusive: str = body['end_inclusive']
         action = MicroScalar(
             queue=self.mscalar_queue, conn=self.conn, log=self.log, debug=debug
         )
@@ -181,12 +182,14 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             run_type=run_type,
             today=today,
             run_date=run_date,
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            end_inclusive=end_inclusive
         )
 
     def _initiate_basic_read(self, run_type, body, debug):
         today: str = body['today']
         run_date: str = body['run_date']
+        end_inclusive: str = body['end_inclusive']
         action = BasicRead(
             queue=self.basic_queue, conn=self.conn, log=self.log, debug=debug
         )
@@ -195,12 +198,14 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             run_type=run_type,
             today=today,
             run_date=run_date,
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            end_inclusive=end_inclusive
         )
 
     def _initiate_reset_basic_read(self, run_type, body, debug):
         today: str = body['today']
         run_date: str = body['run_date']
+        end_inclusive: str = body['end_inclusive']
         action = BasicRead(
             queue=self.basic_queue, conn=self.conn, log=self.log, debug=debug
         )
@@ -209,7 +214,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             run_type=run_type,
             today=today,
             run_date=run_date,
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            end_inclusive=end_inclusive
         )
 
     def _initiate_export_tables(self, run_type, body, debug):
@@ -240,6 +246,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
     def _initiate_prepare_export(self, run_type, body, debug):
         today: str = body['today']
         run_date: str = body['run_date']
+        end_inclusive: str = body['end_inclusive']
         action = Exporter(
             queue=self.prepare_queue, conn=self.conn, log=self.log, debug=debug, batch_size=100,
             s3=self.s3
@@ -249,5 +256,6 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             run_type=run_type,
             today=today,
             run_date=run_date,
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            end_inclusive=end_inclusive
         )

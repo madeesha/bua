@@ -12,13 +12,17 @@ class BasicRead(Accounts):
     def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool, batch_size=100):
         Accounts.__init__(self, queue, conn, log, debug, batch_size)
 
-    def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
+    def initiate_basic_read_calculation(
+            self, run_type: str, today: str, run_date: str, identifier_type: str, end_inclusive: str
+    ):
         self._reset_control_records(run_type, today, run_date, identifier_type)
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type)
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, end_inclusive, all_accounts=False)
 
-    def initiate_reset_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
+    def initiate_reset_basic_read_calculation(
+            self, run_type: str, today: str, run_date: str, identifier_type: str, end_inclusive: str
+    ):
         self._reset_control_records('BasicRead', today, run_date, identifier_type)
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type)
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, end_inclusive, all_accounts=False)
 
     def _reset_control_records(self, run_type: str, today: str, run_date: str, identifier_type: str):
         with self.conn.cursor() as cur:

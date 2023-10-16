@@ -152,16 +152,17 @@ class Exporter(Accounts):
             }
 
     def initiate_prepare_export(
-            self, run_type: str, today: str, run_date: str, identifier_type: str
+            self, run_type: str, today: str, run_date: str, identifier_type: str, end_inclusive: str
     ):
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, all_accounts=True)
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, end_inclusive, all_accounts=True)
 
     def prepare_export(self, entry: Dict):
         try:
             with self.conn.cursor() as cur:
                 account_id = entry['account_id']
-                stmt = f'CALL bua_prepare_export_data(%s, %s, 1)'
-                params = (account_id, account_id)
+                end_inclusive = entry['end_inclusive']
+                stmt = f'CALL bua_prepare_export_data(%s, %s, %s, 1)'
+                params = (account_id, account_id, end_inclusive)
                 cur.execute(stmt, params)
                 self.conn.commit()
                 return {

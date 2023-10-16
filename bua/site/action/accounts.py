@@ -17,6 +17,7 @@ class Accounts(Action):
             today: str,
             run_date: str,
             identifier_type: str,
+            end_inclusive: str,
             all_accounts=False
     ):
         with self.conn.cursor() as cur:
@@ -40,7 +41,8 @@ class Accounts(Action):
                         'run_type': run_type,
                         'today': today,
                         'run_date': run_date,
-                        'identifier_type': identifier_type
+                        'identifier_type': identifier_type,
+                        'end_inclusive': end_inclusive
                     }
                     bodies.append(body)
                     total += 1

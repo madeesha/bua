@@ -10,8 +10,10 @@ class MicroScalar(Accounts):
     def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool, batch_size=100):
         Accounts.__init__(self, queue, conn, log, debug, batch_size)
 
-    def initiate_microscalar_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str):
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type)
+    def initiate_microscalar_calculation(
+            self, run_type: str, today: str, run_date: str, identifier_type: str, end_inclusive: str
+    ):
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, end_inclusive, all_accounts=False)
 
     def execute_microscalar_calculation(self, run_type, today, run_date, identifier_type, account_id):
         with self.conn.cursor() as cur:
