@@ -57,8 +57,8 @@ class NEM12(Action):
                             'today': today,
                             'run_date': run_date,
                             'nmi': nmi,
-                            'start_inclusive': start_date.strftime('%Y%m%d'),
-                            'end_exclusive': end_date.strftime('%Y%m%d'),
+                            'start_inclusive': start_date.strftime('%Y-%m-%d'),
+                            'end_exclusive': end_date.strftime('%Y-%m-%d'),
                             'identifier_type': identifier_type
                         }
                         bodies.append(body)
@@ -92,8 +92,13 @@ class NEM12Generator(Control):
         self.s3_client = s3_client
         self.bucket_name = bucket_name
 
-        self.file_date_time = datetime.strptime(self.run_date, '%Y-%m-%d %H:%M:%S').strftime('%Y%m%d%H%M')
-        self.update_date_time = datetime.strptime(self.run_date, '%Y-%m-%d %H:%M:%S')
+        if len(run_date) == 10:
+            run_date = datetime.strptime(self.run_date, '%Y-%m-%d')
+        else:
+            run_date = datetime.strptime(self.run_date, '%Y-%m-%d %H:%M:%S')
+
+        self.file_date_time = run_date.strftime('%Y%m%d%H%M')
+        self.update_date_time = run_date
         self.update_date_time = self.update_date_time - timedelta(days=36525)
         self.update_date_time = self.update_date_time.strftime('%Y%m%d%H%M%S')
         self.unique_id = f'{self.identifier}{self.file_date_time}'
