@@ -20,6 +20,7 @@ class MonkeyPatch:
             'eks': MonkeyPatchEKSClient(),
             'route53': MonkeyPatchRoute53Client(),
             'stepfunctions': MonkeyPatchStepFunctionsClient(),
+            'ssm': MonkeyPatchSSMClient(),
         }
         self._resources = {
             'dynamodb': MonkeyPatchDynamoDBResource(),
@@ -222,6 +223,12 @@ class MonkeyPatchEKSClient:
 
 
 class MonkeyPatchRoute53Client:
+
+    def patch(self):
+        pass
+
+
+class MonkeyPatchSSMClient:
 
     def patch(self):
         pass

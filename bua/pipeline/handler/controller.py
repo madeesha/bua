@@ -10,10 +10,12 @@ from datetime import datetime, timezone, timedelta
 from dateutil.relativedelta import relativedelta
 
 from bua.facade.s3 import S3
+from bua.facade.ssm import SSM
 from bua.pipeline.actions.choice import Choice
 from bua.pipeline.actions.dns import DNS
 from bua.pipeline.actions.initiator import Initiator
 from bua.pipeline.actions.kube import KubeCtl
+from bua.pipeline.actions.parameters import ParameterActions
 from bua.pipeline.actions.profiles import Profiles
 from bua.pipeline.actions.reset import Reset
 from bua.pipeline.actions.restore import Restore
@@ -33,13 +35,14 @@ class BUAControllerHandler:
 
     def __init__(
             self, config, r53_client, sm_client, s3_client, ddb_bua_table, sqs_client, cf_client, rds_client,
-            sts_client, eks_client, session, mysql=pymysql, kubes=kubernetes
+            sts_client, eks_client, ssm_client, session, mysql=pymysql, kubes=kubernetes
     ):
         self.config = config
         self.s3_client = s3_client
         self.ddb_table = ddb_bua_table
         self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_bua_table)
         self.s3 = S3(s3_client=s3_client)
+        self.ssm = SSM(ssm_client=ssm_client)
         secret_manager = SecretManager(sm_client=sm_client)
         sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager, mysql=mysql)
         rds_handler = RDS(rds_client=rds_client)
@@ -57,6 +60,7 @@ class BUAControllerHandler:
         choice_handler = Choice()
         initiator_handler = Initiator(config=config, sqs=self.sqs)
         s3_actions = S3Actions(s3=self.s3)
+        ssm_actions = ParameterActions(ssm=self.ssm)
 
         self.handlers: Dict[str, Any] = {
             'get_config': self.get_config,
@@ -104,6 +108,7 @@ class BUAControllerHandler:
             'copy_s3_objects': s3_actions.copy_s3_objects,
             'remove_s3_objects': s3_actions.remove_s3_objects,
             'bua_create_macro_profile': sql_handler.bua_create_macro_profile,
+            'get_parameters': ssm_actions.get_parameters,
         }
 
     def get_config(self, request: HandlerRequest):

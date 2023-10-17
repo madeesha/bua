@@ -33,6 +33,9 @@ sm_client = boto3.client('secretsmanager', config=sm_config)
 r53_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 r53_client = boto3.client('route53', config=r53_config)
 
+ssm_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
+ssm_client = boto3.client('ssm', config=ssm_config)
+
 config = {
     'version': os.environ['projectVersion'],
     'prefix': os.environ['resourcePrefix'],
@@ -49,7 +52,7 @@ config = {
 handler = BUAControllerHandler(
     config=config, r53_client=r53_client, sm_client=sm_client, s3_client=s3_client,
     ddb_bua_table=ddb_bua_table, sqs_client=sqs_client, cf_client=cf_client, rds_client=rds_client,
-    sts_client=sts_client, eks_client=eks_client, session=session
+    sts_client=sts_client, eks_client=eks_client, ssm_client=ssm_client, session=session
 )
 
 

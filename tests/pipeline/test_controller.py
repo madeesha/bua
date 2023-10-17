@@ -15,6 +15,7 @@ from tests.pipeline.stubs.s3_client_stub import S3ClientStub
 from tests.pipeline.stubs.session_stub import SessionStub
 from tests.pipeline.stubs.sm_client_stub import SecretsManagerClientStub
 from tests.pipeline.stubs.sqs_client_stub import SQSClientStub
+from tests.pipeline.stubs.ssm_client_stub import SSMClientStub
 from tests.pipeline.stubs.sts_client_stub import STSClientStub
 
 
@@ -136,6 +137,10 @@ class TestCase:
         return EKSClientStub()
 
     @fixture(autouse=True)
+    def ssm(self):
+        return SSMClientStub()
+
+    @fixture(autouse=True)
     def session(self, sts):
         clients = {
             'sts': sts
@@ -168,11 +173,11 @@ class TestCase:
         }
 
     @fixture(autouse=True)
-    def handler(self, r53, sm, s3, ddb_table, sqs, cf, rds, sts, eks, session, config, mysql, kubes):
+    def handler(self, r53, sm, s3, ddb_table, sqs, cf, rds, sts, eks, ssm, session, config, mysql, kubes):
         return BUAControllerHandler(
             config=config,
             r53_client=r53, sm_client=sm, s3_client=s3, ddb_bua_table=ddb_table, sqs_client=sqs, cf_client=cf,
-            rds_client=rds, sts_client=sts, eks_client=eks, session=session, mysql=mysql, kubes=kubes
+            rds_client=rds, sts_client=sts, eks_client=eks, ssm_client=ssm, session=session, mysql=mysql, kubes=kubes
         )
 
     def test_stepfunction_invocation(self, handler, sqs, update_id, suffix):
