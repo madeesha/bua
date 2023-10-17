@@ -292,6 +292,21 @@
             "action": "disable_workflow_instances",
             "on": {
               "COMPLETE": {
+                "next": "055_truncate_working_tables"
+              }
+            }
+          },
+          "055_truncate_working_tables": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "TRUNCATE TABLE WorkflowInstance",
+                "TRUNCATE TABLE EventLog"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
                 "next": "060_set_user_passwords"
               }
             }
