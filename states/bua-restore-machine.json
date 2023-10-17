@@ -7,7 +7,6 @@
       "Parameters": {
         "data.$": "$.data",
         "defaults": {
-          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
           "instance_class": "DBInstanceClassR6i",
           "instance_type": "8xlarge",
           "mysql_version": "8.0.32",
@@ -36,11 +35,24 @@
       "Parameters": {
         "type": "step",
         "name": "BUA Restore",
-        "next": "000_restore_database",
+        "next": "000_get_parameters",
         "speed": "fast",
         "retry_delay": 120,
         "data.$": "$.data",
         "steps": {
+          "000_get_parameters": {
+            "action": "get_parameters",
+            "args": {
+              "names": [
+                "domain"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "000_restore_database"
+              }
+            }
+          },
           "000_restore_database": {
             "action": "choice",
             "args": {

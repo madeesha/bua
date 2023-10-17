@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description:  Configure AWS parameters
+Parameters:
+  EnvironmentName:
+    Description: The name of the environment to deploy into
+    Type: String
+    AllowedValues: [ "dev", "tst", "prd" ]
+  ClassName:
+    Description: The class of the environment to deploy into
+    Type: String
+  ResourcePrefix:
+    Description: Prefix to assign to resources
+    Type: String
+  RDSDomain:
+    Description: RDS domain name
+    Type: String
+
+Resources:
+
+  RDSDomainParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/domain"
+      Description: "RDS domain name"
+      Type: "String"
+      Value: !Ref RDSDomain
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: ssm
+        - Key: resource-class
+          Value: data

@@ -9,7 +9,6 @@
         "defaults": {
           "update_id": "12",
           "suffix": "bua-sql",
-          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
           "schema": "Turkey_BLU",
           "rdssecret": "cicd/{{prefix}}/rds/bua"
         }
@@ -28,11 +27,24 @@
       "Parameters": {
         "type": "step",
         "name": "Basic Reads",
-        "next": "220_clear_error_queues",
+        "next": "000_get_parameters",
         "speed": "slow",
         "retry_delay": 120,
         "data.$": "$.data",
         "steps": {
+          "000_get_parameters": {
+            "action": "get_parameters",
+            "args": {
+              "names": [
+                "domain"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "220_clear_error_queues"
+              }
+            }
+          },
           "220_clear_error_queues": {
             "action": "empty_site_errors_queues",
             "on": {

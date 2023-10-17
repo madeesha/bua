@@ -7,7 +7,6 @@
       "Parameters": {
         "data.$": "$.data",
         "defaults": {
-          "domain": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com",
           "schema": "Turkey_BLU",
           "suffix": "bua-sql",
           "update_id": "12",
@@ -28,11 +27,24 @@
       "Parameters": {
         "type": "step",
         "name": "BUA Microscalar",
-        "next": "180_clear_error_queues",
+        "next": "000_get_parameters",
         "speed": "fast",
         "retry_delay": 120,
         "data.$": "$.data",
         "steps": {
+          "000_get_parameters": {
+            "action": "get_parameters",
+            "args": {
+              "names": [
+                "domain"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_clear_error_queues"
+              }
+            }
+          },
           "180_clear_error_queues": {
             "action": "empty_site_errors_queues",
             "on": {

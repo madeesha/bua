@@ -60,7 +60,7 @@ class BUAControllerHandler:
         choice_handler = Choice()
         initiator_handler = Initiator(config=config, sqs=self.sqs)
         s3_actions = S3Actions(s3=self.s3)
-        ssm_actions = ParameterActions(ssm=self.ssm)
+        ssm_actions = ParameterActions(config=config, ssm=self.ssm)
 
         self.handlers: Dict[str, Any] = {
             'get_config': self.get_config,
