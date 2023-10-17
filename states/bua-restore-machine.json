@@ -296,19 +296,11 @@
             "action": "disable_workflow_schedules",
             "on": {
               "COMPLETE": {
-                "next": "050_disable_workflow_instances"
+                "next": "050_truncate_working_tables"
               }
             }
           },
-          "050_disable_workflow_instances": {
-            "action": "disable_workflow_instances",
-            "on": {
-              "COMPLETE": {
-                "next": "055_truncate_working_tables"
-              }
-            }
-          },
-          "055_truncate_working_tables": {
+          "050_truncate_working_tables": {
             "action": "execute_sql",
             "speed": "slow",
             "args": {

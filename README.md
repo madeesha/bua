@@ -119,7 +119,7 @@ ANSTEAD-Export-StepFunction --> ANSTEAD-Terminate-StepFunction;
 1. Execute Cloudformation template to create an RDS instance from a snapshot.
 2. Reset the core_admin password of the new RDS instance.
 3. Disable all workflow schedules
-4. Disable all workflow instances
+4. Truncate WorkflowInstance and EventLog tables
 5. Set user passwords (for workflow, meterdata, and lambda)
 6. Calculate statistics for AggregatedRead
 7. Scale down any workflow or meterdata pods
