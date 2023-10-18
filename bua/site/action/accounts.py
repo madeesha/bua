@@ -26,9 +26,13 @@ class Accounts(Action):
             start_inclusive: str,
             end_exclusive: str,
             end_inclusive: str,
-            all_accounts=False
+            all_accounts=False,
+            account_limit=-1,
+            proc_name=None
     ):
-        self._prepare_accounts_to_process(all_accounts, identifier_type, run_date, run_type, today)
+        self._prepare_accounts_to_process(all_accounts, identifier_type, run_date, run_type, today,
+                                          start_inclusive, end_exclusive,
+                                          account_limit=account_limit, proc_name=proc_name)
         self._queue_accounts_to_process(end_exclusive, end_inclusive, identifier_type, run_date, run_type,
                                         start_inclusive, today)
 
@@ -60,14 +64,19 @@ class Accounts(Action):
             self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
             self.log(f'{total} accounts to generate {run_type} data')
 
-    def _prepare_accounts_to_process(self, all_accounts, identifier_type, run_date, run_type, today):
-        control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
+    def _prepare_accounts_to_process(
+            self, all_accounts, identifier_type, run_date, run_type, today, start_inclusive, end_exclusive,
+            account_limit=-1, proc_name=None
+    ):
+        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             try:
-                if all_accounts:
-                    sql = "CALL bua_list_all_accounts(%s,%s,%s,%s)"
-                else:
-                    sql = "CALL bua_list_unbilled_accounts(%s,%s,%s,%s)"
+                if proc_name is None:
+                    if all_accounts:
+                        proc_name = "bua_list_all_accounts"
+                    else:
+                        proc_name = "bua_list_unbilled_accounts"
+                sql = f"CALL {proc_name}(%s,%s,%s,%s)"
                 params = (None, None, today, run_date)
                 cur.execute(sql, params)
                 total = 0
@@ -75,6 +84,8 @@ class Accounts(Action):
                     account_id = record['account_id']
                     control.insert_control_record(f'{account_id}', 'PREP', commit=False)
                     total += 1
+                    if 0 < account_limit <= total:
+                        break
                 self.conn.commit()
                 control.conn.commit()
                 self.log(f'{total} accounts prepared for {run_type} data')

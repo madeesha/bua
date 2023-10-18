@@ -1,7 +1,7 @@
 import traceback
 from typing import Callable
 
-from pymysql import IntegrityError
+from pymysql import DatabaseError
 
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
@@ -16,12 +16,14 @@ class MicroScalar(Accounts):
 
     def initiate_microscalar_calculation(
             self, run_type: str, today: str, run_date: str, identifier_type: str,
-            start_inclusive: str, end_exclusive: str, end_inclusive: str
+            start_inclusive: str, end_exclusive: str, end_inclusive: str,
+            account_limit=-1, proc_name=None
     ):
         self.reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(
             run_type, today, run_date, identifier_type,
-            start_inclusive, end_exclusive, end_inclusive, all_accounts=False
+            start_inclusive, end_exclusive, end_inclusive,
+            all_accounts=False, account_limit=account_limit, proc_name=proc_name
         )
 
     def execute_microscalar_calculation(
@@ -49,10 +51,10 @@ class MicroScalar(Accounts):
                 return {
                     'status': STATUS_DONE
                 }
-            except IntegrityError as ex:
+            except DatabaseError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.update_control_record(f'{account_id}', STATUS_FAIL, reason='IntegrityError', extra=str(ex))
+                control.update_control_record(f'{account_id}', STATUS_FAIL, reason='DatabaseError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex),
@@ -64,4 +66,12 @@ class MicroScalar(Accounts):
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                raise
+                control.update_control_record(f'{account_id}', STATUS_FAIL, reason='UnhandledError', extra=str(ex))
+                return {
+                    'status': STATUS_FAIL,
+                    'cause': str(ex),
+                    'context': {
+                        'sql': sql,
+                        'params': params
+                    }
+                }
