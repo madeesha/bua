@@ -35,19 +35,20 @@ class BasicRead(Accounts):
     ) -> Dict:
         control = Control(run_type, today, today, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
+            sql = """
+            CALL bua_create_basic_read(JSON_OBJECT(
+                'in_accrual_end_date', DATE_SUB(%s, INTERVAL 1 DAY),
+                'in_debug', 0,
+                'in_account_id', %s,
+                'in_invoice_id', 0,
+                'in_tolerance_days', 1,
+                'in_run_date', %s,
+                'in_utility_profile_type', %s 
+            ))"""
+            params = (today, account_id, run_date, identifier_type)
             try:
                 self.log(f'Executing {run_type} for account {account_id}')
-                sql = """
-                CALL bua_create_basic_read(JSON_OBJECT(
-                    'in_accrual_end_date', DATE_SUB(%s, INTERVAL 1 DAY),
-                    'in_debug', 0,
-                    'in_account_id', %s,
-                    'in_invoice_id', 0,
-                    'in_tolerance_days', 1,
-                    'in_run_date', %s,
-                    'in_utility_profile_type', %s 
-                ))"""
-                cur.execute(sql, (today, account_id, run_date, identifier_type))
+                cur.execute(sql, params)
                 cur.fetchall()
                 self.conn.commit()
                 control.insert_control_record(self.conn, cur, str(account_id), STATUS_DONE)
@@ -62,7 +63,11 @@ class BasicRead(Accounts):
                 )
                 return {
                     'status': STATUS_FAIL,
-                    'cause': str(ex)
+                    'cause': str(ex),
+                    'context': {
+                        'sql': sql,
+                        'params': list(params),
+                    }
                 }
             except Exception as ex:
                 traceback.print_exception(ex)
@@ -74,11 +79,13 @@ class BasicRead(Accounts):
     ) -> Dict:
         control = Control(run_type, today, today, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
+            sql = """
+            CALL bua_reset_basic_read(%s,0)
+            """
+            params = (account_id,)
             try:
                 self.log(f'Executing {run_type} for account {account_id}')
-                sql = """
-                CALL bua_reset_basic_read(%s,0)"""
-                cur.execute(sql, (account_id,))
+                cur.execute(sql, params)
                 cur.fetchall()
                 self.conn.commit()
                 control.insert_control_record(self.conn, cur, str(account_id), STATUS_DONE)
@@ -93,7 +100,11 @@ class BasicRead(Accounts):
                 )
                 return {
                     'status': STATUS_FAIL,
-                    'cause': str(ex)
+                    'cause': str(ex),
+                    'context': {
+                        'sql': sql,
+                        'params': list(params),
+                    }
                 }
             except Exception as ex:
                 traceback.print_exception(ex)
