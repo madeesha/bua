@@ -37,13 +37,16 @@ check_aggread = os.environ['checkAggRead'] == 'Yes'
 s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 s3_client = boto3.client('s3', config=s3_config)
 bucket_name = os.environ['bucketName']
+max_receive_count = int(os.environ['maxReceiveCount'])
 
-handler = BUASiteDataHandler(s3_client=s3_client, bucket_name=bucket_name,
-                             sqs_client=sqs_client,
-                             ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
-                             site_data_queue=site_data_queue, failure_queue=failure_queue,
-                             conn=conn,
-                             debug=debug, check_nem=check_nem, check_aggread=check_aggread)
+handler = BUASiteDataHandler(
+    s3_client=s3_client, bucket_name=bucket_name,
+    sqs_client=sqs_client,
+    ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
+    site_data_queue=site_data_queue, failure_queue=failure_queue,
+    conn=conn,
+    debug=debug, check_nem=check_nem, check_aggread=check_aggread, max_receive_count=max_receive_count
+)
 
 
 def lambda_handler(event, context):

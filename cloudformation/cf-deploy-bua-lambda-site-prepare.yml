@@ -50,6 +50,10 @@ Parameters:
     AllowedValues:
       - "Yes"
       - "No"
+  MaxReceiveCount:
+    Description: Maximum number of attempts to process a request
+    Type: String
+    Default: "10"
 
 Resources:
 
@@ -139,6 +143,7 @@ Resources:
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-prepare-failure-queue" ] ]
           rdsSecretName: !Join [ "/" , [ "cicd", !Ref ResourcePrefix , "rds" , !Ref RDSName ] ]
           debugEnabled: !Ref DebugEnabled
+          maxReceiveCount: !Ref MaxReceiveCount
       Code:
         ZipFile: |
           from bua.handler.site_prepare import lambda_handler

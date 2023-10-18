@@ -23,11 +23,11 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             data_queue, segment_queue, export_queue, failure_queue,
             basic_queue, mscalar_queue, prepare_queue, nem12_queue,
             conn,
-            debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10
+            debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
             self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
-            lock_wait_timeout=900
+            lock_wait_timeout=900, max_receive_count=max_receive_count
         )
         self.ddb_meterdata_table = ddb_meterdata_table
         self.data_queue = Queue(queue=data_queue, debug=debug, log=self.log)

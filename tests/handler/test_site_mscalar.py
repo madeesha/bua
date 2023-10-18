@@ -11,6 +11,7 @@ class TestCase:
         'rdsSecretName': '',
         'debugEnabled': 'Yes',
         'meterdataBucketName': '',
+        'maxReceiveCount': '100',
     }
 
     def test_invoke_handler(self):

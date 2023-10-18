@@ -13,6 +13,7 @@ class TestCase:
         'checkNEM': 'Yes',
         'checkAggRead': 'Yes',
         'bucketName': '',
+        'maxReceiveCount': '100',
     }
 
     def test_invoke_handler(self):

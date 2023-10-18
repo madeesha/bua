@@ -10,6 +10,7 @@ class TestCase:
         'rdsSecretName': '',
         'debugEnabled': 'Yes',
         'buaBucketName': '',
+        'maxReceiveCount': '100',
     }
 
     def test_invoke_handler(self):

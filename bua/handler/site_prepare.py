@@ -34,12 +34,14 @@ conn = pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, 
 
 debug = os.environ['debugEnabled'] == 'Yes'
 
+max_receive_count = int(os.environ['maxReceiveCount'])
+
 handler = BUASitePrepareHandler(
     sqs_client=sqs_client,
     ddb_bua_table=ddb_bua_table,
     s3_client=s3_client,
     prepare_queue=prepare_queue, failure_queue=failure_queue,
-    conn=conn, debug=debug
+    conn=conn, debug=debug, max_receive_count=max_receive_count
 )
 
 

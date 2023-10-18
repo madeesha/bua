@@ -50,6 +50,10 @@ Parameters:
     AllowedValues:
       - "Yes"
       - "No"
+  MaxReceiveCount:
+    Description: Maximum number of attempts to process a request
+    Type: String
+    Default: "10"
 
 Resources:
 
@@ -155,6 +159,7 @@ Resources:
           rdsSecretName: !Join [ "/" , [ "cicd", !Ref ResourcePrefix , "rds" , !Ref RDSName ] ]
           debugEnabled: !Ref DebugEnabled
           meterdataBucketName: !Join [ "-" , [ !Ref ResourcePrefix , "s3", "meterdata" ] ]
+          maxReceiveCount: !Ref MaxReceiveCount
       Code:
         ZipFile: |
           from bua.handler.site_segment import lambda_handler

@@ -15,10 +15,11 @@ class BUASitePrepareHandler(DBLambdaHandler):
             ddb_bua_table,
             prepare_queue, failure_queue,
             conn,
-            debug=False
+            debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
-            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue
+            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
+            max_receive_count=max_receive_count
         )
         self.prepare_queue = prepare_queue
         self.s3 = S3(s3_client=s3_client)

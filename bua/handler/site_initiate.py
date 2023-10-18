@@ -45,6 +45,8 @@ util_batch_size = int(os.environ['utilityBatchSize'])
 jur_batch_size = int(os.environ['jurisdictionBatchSize'])
 tni_batch_size = int(os.environ['tniBatchSize'])
 
+max_receive_count = int(os.environ['maxReceiveCount'])
+
 handler = BUASiteInitiateHandler(
     sqs_client=sqs_client,
     s3_client=s3_client,
@@ -52,7 +54,8 @@ handler = BUASiteInitiateHandler(
     data_queue=data_queue, segment_queue=segment_queue, export_queue=export_queue, failure_queue=failure_queue,
     basic_queue=basic_queue, mscalar_queue=mscalar_queue, prepare_queue=prepare_queue, nem12_queue=nem12_queue,
     conn=conn, debug=debug,
-    util_batch_size=util_batch_size, jur_batch_size=jur_batch_size, tni_batch_size=tni_batch_size
+    util_batch_size=util_batch_size, jur_batch_size=jur_batch_size, tni_batch_size=tni_batch_size,
+    max_receive_count=max_receive_count
 )
 
 

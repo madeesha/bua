@@ -36,12 +36,15 @@ s3_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 s3_client = boto3.client('s3', config=s3_config)
 meterdata_bucket_name = os.environ['meterdataBucketName']
 
+max_receive_count = int(os.environ['maxReceiveCount'])
+
 handler = BUASiteNEM12Handler(
     s3_client=s3_client, meterdata_bucket_name=meterdata_bucket_name,
     sqs_client=sqs_client, ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
     nem12_queue=nem12_queue, failure_queue=failure_queue,
     conn=conn,
-    debug=debug
+    debug=debug,
+    max_receive_count=max_receive_count
 )
 
 

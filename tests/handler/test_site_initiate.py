@@ -20,6 +20,7 @@ class TestCase:
         'utilityBatchSize': '10',
         'jurisdictionBatchSize': '10',
         'tniBatchSize': '10',
+        'maxReceiveCount': '100',
     }
 
     def test_invoke_handler(self):

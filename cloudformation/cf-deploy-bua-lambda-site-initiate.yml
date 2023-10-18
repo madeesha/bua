@@ -74,6 +74,10 @@ Parameters:
       - "8"
       - "4"
       - "2"
+  MaxReceiveCount:
+    Description: Maximum number of attempts to process a request
+    Type: String
+    Default: "10"
 
 Resources:
 
@@ -183,6 +187,7 @@ Resources:
           utilityBatchSize: !Ref UtilityBatchSize
           jurisdictionBatchSize: !Ref JurisdictionBatchSize
           tniBatchSize: !Ref TNIBatchSize
+          maxReceiveCount: !Ref MaxReceiveCount
       Code:
         ZipFile: |
           from bua.handler.site_initiate import lambda_handler
