@@ -37,6 +37,7 @@ class NEM12(Action):
     ):
         control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
         control.reset_control_records()
+
         with self.conn.cursor() as cur:
             try:
                 cur.execute(
@@ -44,10 +45,37 @@ class NEM12(Action):
                     (start_inclusive, end_exclusive, today, run_date)
                 )
                 total = 0
+                for record in cur.fetchall_unbuffered():
+                    nmi = record['nmi']
+                    start_date: date = record['start_inclusive']
+                    end_date: date = record['end_exclusive']
+                    if start_date <= end_date:
+                        total += 1
+                        control.insert_control_record(nmi, 'PREP',
+                                                      start_inclusive=start_date, end_exclusive=end_date,
+                                                      commit=False)
+                self.log(f'{total} sites prepared to generate {run_type} profiled estimates data')
+                self.conn.commit()
+                control.conn.commit()
+            except Exception as ex:
+                traceback.print_exception(ex)
+                self.conn.rollback()
+                raise
+
+        with self.conn.cursor() as cur:
+            try:
+                stmt = """
+                SELECT identifier, start_inclusive, end_exclusive 
+                FROM BUAControl 
+                WHERE run_type = %s AND run_date = %s AND status = 'PREP'
+                """
+                params = (run_type, run_date)
+                cur.execute(stmt, params)
+                total = 0
                 bodies = []
                 body = None
                 for record in cur.fetchall_unbuffered():
-                    nmi = record['nmi']
+                    nmi = record['identifier']
                     start_date: date = record['start_inclusive']
                     end_date: date = record['end_exclusive']
                     if start_date <= end_date:
@@ -64,7 +92,6 @@ class NEM12(Action):
                         }
                         bodies.append(body)
                         total += 1
-                        control.insert_control_record(nmi, 'QUEUED')
                 self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 self.log(f'{total} sites to generate {run_type} profiled estimates data')
                 self.conn.commit()
@@ -179,10 +206,11 @@ class NEM12Generator:
                          f'profiled estimates for '
                          f'{self.identifier}. {self.status} : {self.reason} : {self.extra}')
                 self.conn.commit()
-                self.control.insert_control_record(
+                self.control.update_control_record(
                     self.identifier, self.status,
                     rows_counted=self.rows_counted, rows_written=self.rows_written,
-                    reason=self.reason, extra=self.extra, key=self.key
+                    reason=self.reason, extra=self.extra, key=self.key,
+                    start_inclusive=self.start_inclusive
                 )
                 return {
                     'status': STATUS_DONE
@@ -193,10 +221,11 @@ class NEM12Generator:
                 self.status = "FAIL"
                 self.reason = "Exception raised"
                 self.extra = str(ex)[0:255]
-                self.control.insert_control_record(
+                self.control.update_control_record(
                     self.identifier, self.status,
                     rows_counted=self.rows_counted, rows_written=self.rows_written,
-                    reason=self.reason, extra=self.extra, key=self.key
+                    reason=self.reason, extra=self.extra, key=self.key,
+                    start_inclusive=self.start_inclusive
                 )
                 return {
                     'status': STATUS_FAIL,

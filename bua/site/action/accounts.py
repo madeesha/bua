@@ -29,6 +29,7 @@ class Accounts(Action):
             all_accounts=False
     ):
         control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
+
         with self.conn.cursor() as cur:
             try:
                 if all_accounts:
@@ -37,31 +38,41 @@ class Accounts(Action):
                     sql = "CALL bua_list_unbilled_accounts(%s,%s,%s,%s)"
                 params = (None, None, today, run_date)
                 cur.execute(sql, params)
-
                 total = 0
-                bodies = []
-                body = None
                 for record in cur.fetchall_unbuffered():
                     account_id = record['account_id']
-                    if body is not None:
-                        self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size)
-                    body = {
-                        'account_id': account_id,
-                        'run_type': run_type,
-                        'today': today,
-                        'run_date': run_date,
-                        'identifier_type': identifier_type,
-                        'start_inclusive': start_inclusive,
-                        'end_exclusive': end_exclusive,
-                        'end_inclusive': end_inclusive
-                    }
-                    bodies.append(body)
+                    control.insert_control_record(f'{account_id}', 'PREP', commit=False)
                     total += 1
-                    control.insert_control_record(f'{account_id}', 'QUEUED')
-                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
-                self.log(f'{total} accounts to generate {run_type} data')
                 self.conn.commit()
+                control.conn.commit()
+                self.log(f'{total} accounts prepared for {run_type} data')
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
                 raise
+
+        with self.conn.cursor() as cur:
+            stmt = "SELECT identifier FROM BUAControl WHERE run_type = %s AND run_date = %s AND status = 'PREP'"
+            params = (run_type, run_date)
+            cur.execute(stmt, params)
+            total = 0
+            bodies = []
+            body = None
+            for record in cur.fetchall_unbuffered():
+                account_id = int(record['identifier'])
+                if body is not None:
+                    self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size)
+                body = {
+                    'account_id': account_id,
+                    'run_type': run_type,
+                    'today': today,
+                    'run_date': run_date,
+                    'identifier_type': identifier_type,
+                    'start_inclusive': start_inclusive,
+                    'end_exclusive': end_exclusive,
+                    'end_inclusive': end_inclusive
+                }
+                bodies.append(body)
+                total += 1
+            self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+            self.log(f'{total} accounts to generate {run_type} data')

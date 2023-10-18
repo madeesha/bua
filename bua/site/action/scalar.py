@@ -45,14 +45,14 @@ class MicroScalar(Accounts):
                 cur.execute(sql, params)
                 cur.fetchall()
                 self.conn.commit()
-                control.insert_control_record(f'{account_id}', STATUS_DONE)
+                control.update_control_record(f'{account_id}', STATUS_DONE)
                 return {
                     'status': STATUS_DONE
                 }
             except IntegrityError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.insert_control_record(f'{account_id}', STATUS_FAIL, reason='IntegrityError', extra=str(ex))
+                control.update_control_record(f'{account_id}', STATUS_FAIL, reason='IntegrityError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex),

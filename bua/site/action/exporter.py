@@ -159,19 +159,29 @@ class Exporter(Accounts):
 
     def prepare_export(self, entry: Dict):
         try:
+            run_type = entry['run_type']
+            start_inclusive = entry['start_inclusive']
+            end_exclusive = entry['end_exclusive']
+            today = entry['today']
+            run_date = entry['run_date']
+            identifier_type = entry['identifier_type']
             account_id = entry['account_id']
             end_inclusive = entry['end_inclusive']
             stmt = f'CALL bua_prepare_export_data(%s, %s, %s, 1)'
             params = (account_id, account_id, end_inclusive)
+            control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
             with self.conn.cursor() as cur:
                 try:
                     cur.execute(stmt, params)
                     self.conn.commit()
+                    control.update_control_record(f'{account_id}', STATUS_DONE)
                     return {
                         'status': STATUS_DONE
                     }
                 except IntegrityError as ex:
                     traceback.print_exception(ex)
+                    control.update_control_record(f'{account_id}', STATUS_FAIL,
+                                                  reason='IntegrityError', extra=str(ex))
                     return {
                         'status': STATUS_FAIL,
                         'cause': str(ex),
