@@ -158,17 +158,28 @@ class Exporter(Accounts):
 
     def prepare_export(self, entry: Dict):
         try:
+            account_id = entry['account_id']
+            end_inclusive = entry['end_inclusive']
+            stmt = f'CALL bua_prepare_export_data(%s, %s, %s, 1)'
+            params = (account_id, account_id, end_inclusive)
             with self.conn.cursor() as cur:
-                account_id = entry['account_id']
-                end_inclusive = entry['end_inclusive']
-                stmt = f'CALL bua_prepare_export_data(%s, %s, %s, 1)'
-                params = (account_id, account_id, end_inclusive)
-                cur.execute(stmt, params)
-                self.conn.commit()
-                return {
-                    'status': STATUS_DONE
-                }
-        except KeyError or IntegrityError as ex:
+                try:
+                    cur.execute(stmt, params)
+                    self.conn.commit()
+                    return {
+                        'status': STATUS_DONE
+                    }
+                except IntegrityError as ex:
+                    traceback.print_exception(ex)
+                    return {
+                        'status': STATUS_FAIL,
+                        'cause': str(ex),
+                        'context': {
+                            'sql': stmt,
+                            'params': list(params),
+                        }
+                    }
+        except KeyError as ex:
             traceback.print_exception(ex)
             return {
                 'status': STATUS_FAIL,
