@@ -306,7 +306,9 @@
             "args": {
               "sql": [
                 "TRUNCATE TABLE WorkflowInstance",
-                "TRUNCATE TABLE EventLog"
+                "SET FOREIGN_KEY_CHECKS=0",
+                "TRUNCATE TABLE EventLog",
+                "SET FOREIGN_KEY_CHECKS=1"
               ]
             },
             "on": {
