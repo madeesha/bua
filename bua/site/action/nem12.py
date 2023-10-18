@@ -35,33 +35,10 @@ class NEM12(Action):
             end_exclusive: Optional[str],
             identifier_type: str
     ):
-        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
-        control.reset_control_records()
+        self._prepare_nem12_files_to_process(end_exclusive, identifier_type, run_date, run_type, start_inclusive, today)
+        self._queue_nem12_files_to_process(identifier_type, run_date, run_type, today)
 
-        with self.conn.cursor() as cur:
-            try:
-                cur.execute(
-                    "CALL bua_list_profile_nmis(%s, %s, %s, %s)",
-                    (start_inclusive, end_exclusive, today, run_date)
-                )
-                total = 0
-                for record in cur.fetchall_unbuffered():
-                    nmi = record['nmi']
-                    start_date: date = record['start_inclusive']
-                    end_date: date = record['end_exclusive']
-                    if start_date <= end_date:
-                        total += 1
-                        control.insert_control_record(nmi, 'PREP',
-                                                      start_inclusive=start_date, end_exclusive=end_date,
-                                                      commit=False)
-                self.log(f'{total} sites prepared to generate {run_type} profiled estimates data')
-                self.conn.commit()
-                control.conn.commit()
-            except Exception as ex:
-                traceback.print_exception(ex)
-                self.conn.rollback()
-                raise
-
+    def _queue_nem12_files_to_process(self, identifier_type, run_date, run_type, today):
         with self.conn.cursor() as cur:
             try:
                 stmt = """
@@ -95,6 +72,34 @@ class NEM12(Action):
                 self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 self.log(f'{total} sites to generate {run_type} profiled estimates data')
                 self.conn.commit()
+            except Exception as ex:
+                traceback.print_exception(ex)
+                self.conn.rollback()
+                raise
+
+    def _prepare_nem12_files_to_process(self, end_exclusive, identifier_type, run_date, run_type, start_inclusive,
+                                        today):
+        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        control.reset_control_records()
+        with self.conn.cursor() as cur:
+            try:
+                cur.execute(
+                    "CALL bua_list_profile_nmis(%s, %s, %s, %s)",
+                    (start_inclusive, end_exclusive, today, run_date)
+                )
+                total = 0
+                for record in cur.fetchall_unbuffered():
+                    nmi = record['nmi']
+                    start_date: date = record['start_inclusive']
+                    end_date: date = record['end_exclusive']
+                    if start_date <= end_date:
+                        total += 1
+                        control.insert_control_record(nmi, 'PREP',
+                                                      start_inclusive=start_date, end_exclusive=end_date,
+                                                      commit=False)
+                self.log(f'{total} sites prepared to generate {run_type} profiled estimates data')
+                self.conn.commit()
+                control.conn.commit()
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
