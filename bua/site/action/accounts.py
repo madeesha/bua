@@ -28,29 +28,12 @@ class Accounts(Action):
             end_inclusive: str,
             all_accounts=False
     ):
-        control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
+        self._prepare_accounts_to_process(all_accounts, identifier_type, run_date, run_type, today)
+        self._queue_accounts_to_process(end_exclusive, end_inclusive, identifier_type, run_date, run_type,
+                                        start_inclusive, today)
 
-        with self.conn.cursor() as cur:
-            try:
-                if all_accounts:
-                    sql = "CALL bua_list_all_accounts(%s,%s,%s,%s)"
-                else:
-                    sql = "CALL bua_list_unbilled_accounts(%s,%s,%s,%s)"
-                params = (None, None, today, run_date)
-                cur.execute(sql, params)
-                total = 0
-                for record in cur.fetchall_unbuffered():
-                    account_id = record['account_id']
-                    control.insert_control_record(f'{account_id}', 'PREP', commit=False)
-                    total += 1
-                self.conn.commit()
-                control.conn.commit()
-                self.log(f'{total} accounts prepared for {run_type} data')
-            except Exception as ex:
-                traceback.print_exception(ex)
-                self.conn.rollback()
-                raise
-
+    def _queue_accounts_to_process(self, end_exclusive, end_inclusive, identifier_type, run_date, run_type,
+                                   start_inclusive, today):
         with self.conn.cursor() as cur:
             stmt = "SELECT identifier FROM BUAControl WHERE run_type = %s AND run_date = %s AND status = 'PREP'"
             params = (run_type, run_date)
@@ -76,3 +59,26 @@ class Accounts(Action):
                 total += 1
             self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
             self.log(f'{total} accounts to generate {run_type} data')
+
+    def _prepare_accounts_to_process(self, all_accounts, identifier_type, run_date, run_type, today):
+        control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
+        with self.conn.cursor() as cur:
+            try:
+                if all_accounts:
+                    sql = "CALL bua_list_all_accounts(%s,%s,%s,%s)"
+                else:
+                    sql = "CALL bua_list_unbilled_accounts(%s,%s,%s,%s)"
+                params = (None, None, today, run_date)
+                cur.execute(sql, params)
+                total = 0
+                for record in cur.fetchall_unbuffered():
+                    account_id = record['account_id']
+                    control.insert_control_record(f'{account_id}', 'PREP', commit=False)
+                    total += 1
+                self.conn.commit()
+                control.conn.commit()
+                self.log(f'{total} accounts prepared for {run_type} data')
+            except Exception as ex:
+                traceback.print_exception(ex)
+                self.conn.rollback()
+                raise
