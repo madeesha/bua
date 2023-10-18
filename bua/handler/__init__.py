@@ -12,13 +12,14 @@ class LambdaHandler:
 
     Override the _process_message(event) method in subclasses.
     """
-    def __init__(self, sqs_client, ddb_table, debug, failure_queue):
+    def __init__(self, sqs_client, ddb_table, debug, failure_queue, max_receive_count=10):
         self.sqs_client = sqs_client
         self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
         self.failure_queue = Queue(queue=failure_queue, debug=debug, log=self.log)
         self.debug = debug
         self._handler: Dict[str, Callable[[str, Dict, bool], None]] = dict()
         self._default_handler: Optional[Callable[[Union[Dict, str]], None]] = None
+        self.max_receive_count = max_receive_count
 
     def handle_request(self, event: Dict):
         self.log(event)
@@ -36,17 +37,32 @@ class LambdaHandler:
                         except Exception as ex:
                             self.log('Failed to process body')
                             traceback.print_exception(ex)
+                            if self._handle_too_many_retries(record, ex):
+                                return
                             if self.sqs.undo_deduplicate_request(record):
-                                raise
-                            else:
-                                self.failure_queue.send_request([
-                                    {
-                                        'body': record['body'],
-                                        'failure': str(ex)
-                                    }
-                                ])
+                                raise ex
+                            self.failure_queue.send_request([
+                                {
+                                    'body': record['body'],
+                                    'failure': str(ex)
+                                }
+                            ])
         else:
             self._process_message(event)
+
+    def _handle_too_many_retries(self, record, ex):
+        if self.max_receive_count >= 0:
+            if 'attributes' in record and 'ApproximateReceiveCount' in record['attributes']:
+                receive_count = record['attributes']['ApproximateReceiveCount']
+                if receive_count >= self.max_receive_count:
+                    self.failure_queue.send_request([
+                        {
+                            'body': record['body'],
+                            'failure': f'Too many retries: {ex}'
+                        }
+                    ])
+                    return True
+        return False
 
     def _process_message(self, body: Union[Dict, str]):
         self.log(body)
@@ -109,9 +125,10 @@ class DBLambdaHandler(LambdaHandler):
     Override the _process_message(event) and _initialise_connection() methods in subclasses.
     """
 
-    def __init__(self, sqs_client, ddb_table, conn, debug, failure_queue, lock_wait_timeout=60):
+    def __init__(self, sqs_client, ddb_table, conn, debug, failure_queue, lock_wait_timeout=60, max_receive_count=10):
         LambdaHandler.__init__(
-            self, sqs_client=sqs_client, ddb_table=ddb_table, debug=debug, failure_queue=failure_queue
+            self, sqs_client=sqs_client, ddb_table=ddb_table, debug=debug, failure_queue=failure_queue,
+            max_receive_count=max_receive_count
         )
         self.conn = conn
         self.lock_wait_timeout = lock_wait_timeout
