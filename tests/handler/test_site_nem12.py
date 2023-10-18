@@ -53,7 +53,13 @@ class TestCase:
                         'messageId': '123',
                         'eventSourceARN': 'aws:123',
                         'body': json.dumps({
-                            'run_type': 'NEM12'
+                            'run_type': 'NEM12',
+                            'nmi': '123',
+                            'start_inclusive': '2023-01-01',
+                            'end_exclusive': '2023-01-01',
+                            'today': '2023-01-01',
+                            'run_date': '2023-01-01',
+                            'identifier_type': 'ABC',
                         }),
                     }
                 ]

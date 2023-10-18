@@ -3,7 +3,7 @@ import os
 import traceback
 from typing import List, Optional, Dict, Callable
 
-from pymysql import IntegrityError
+from pymysql import IntegrityError, InternalError
 from pymysql.cursors import SSDictCursor
 
 from bua.facade.connection import DB
@@ -140,6 +140,9 @@ class Exporter(Accounts):
                 return {
                     'status': STATUS_DONE
                 }
+        except InternalError as ex:
+            traceback.print_exception(ex)
+            raise
         except KeyError or IntegrityError as ex:
             traceback.print_exception(ex)
             return {
@@ -178,6 +181,9 @@ class Exporter(Accounts):
                     return {
                         'status': STATUS_DONE
                     }
+                except InternalError as ex:
+                    traceback.print_exception(ex)
+                    raise
                 except IntegrityError as ex:
                     traceback.print_exception(ex)
                     control.update_control_record(f'{account_id}', STATUS_FAIL,

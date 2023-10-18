@@ -7,6 +7,8 @@ from typing import Optional, List, Dict, Set, Any, Callable
 from datetime import datetime, timedelta, date
 import csv
 
+from pymysql import InternalError
+
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action import Action
@@ -220,6 +222,9 @@ class NEM12Generator:
                 return {
                     'status': STATUS_DONE
                 }
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

@@ -1,6 +1,6 @@
 import traceback
 from typing import Dict, Callable
-from pymysql import DatabaseError
+from pymysql import DatabaseError, InternalError
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
@@ -54,6 +54,9 @@ class BasicRead(Accounts):
                 return {
                     'status': STATUS_DONE
                 }
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
             except DatabaseError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -98,6 +101,9 @@ class BasicRead(Accounts):
                 return {
                     'status': STATUS_DONE
                 }
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
             except DatabaseError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

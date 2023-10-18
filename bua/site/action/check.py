@@ -1,7 +1,7 @@
 import traceback
 from typing import Callable
 
-from pymysql import IntegrityError
+from pymysql import IntegrityError, InternalError
 
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
@@ -34,6 +34,9 @@ class Check(DatesToCheck):
                 return {
                     'status': STATUS_DONE
                 }
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
             except IntegrityError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

@@ -5,6 +5,7 @@ from typing import Dict, List
 import boto3
 import pymysql
 from botocore.exceptions import ClientError
+from pymysql import InternalError
 
 
 class MonkeyPatch:
@@ -285,6 +286,11 @@ class MonkeyPatchQueue:
     def patch(self):
         pass
 
+    def send_message(self, MessageBody):
+        return {
+            'MessageId': '123'
+        }
+
 
 class MonkeyPatchConnection:
     def __init__(self):
@@ -339,15 +345,15 @@ class MonkeyPatchCursor:
             if len(self._execute_invocations) < len(self._result_sets) else []
         self._execute_invocations.append((args, kwargs))
         if self.execute_fails:
-            raise RuntimeError('Test execute has an error')
+            raise InternalError('Database connection lost')
         if self.execute_fails_after_invocations > -1:
             if self.execute_fails_after_invocations < len(self._execute_invocations):
-                raise RuntimeError('Test execute has an error')
+                raise InternalError('Database connection lost')
         return
 
     def fetchall(self):
         if self._result_set is None:
-            raise RuntimeError('fetchall called before execute')
+            raise InternalError('fetchall called before execute')
         return self._result_set
 
     def add_result_set(self, result_set: List[Dict]):
