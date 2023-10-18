@@ -20,19 +20,20 @@ class MicroScalar(Accounts):
 
     def execute_microscalar_calculation(self, run_type, today, run_date, identifier_type, account_id):
         with self.conn.cursor() as cur:
+            sql = """
+            CALL bua_create_invoice_scalar(JSON_OBJECT(
+                'in_accrual_end_date', DATE_SUB(%s, INTERVAL 1 DAY),
+                'in_debug', 0,
+                'in_account_id', %s,
+                'in_invoice_id', -1,
+                'in_tolerance_days', 1,
+                'in_run_date', %s,
+                'in_utility_profile_type', %s 
+            ))"""
+            params = [today, account_id, run_date, identifier_type]
             try:
                 self.log(f'Executing {run_type} for account {account_id}')
-                sql = """
-                CALL bua_create_invoice_scalar(JSON_OBJECT(
-                    'in_accrual_end_date', DATE_SUB(%s, INTERVAL 1 DAY),
-                    'in_debug', 0,
-                    'in_account_id', %s,
-                    'in_invoice_id', -1,
-                    'in_tolerance_days', 1,
-                    'in_run_date', %s,
-                    'in_utility_profile_type', %s 
-                ))"""
-                cur.execute(sql, (today, account_id, run_date, identifier_type))
+                cur.execute(sql, params)
                 cur.fetchall()
                 self.conn.commit()
                 return {
@@ -43,7 +44,11 @@ class MicroScalar(Accounts):
                 self.conn.rollback()
                 return {
                     'status': STATUS_FAIL,
-                    'cause': str(ex)
+                    'cause': str(ex),
+                    'context': {
+                        'sql': sql,
+                        'params': params
+                    }
                 }
             except Exception as ex:
                 traceback.print_exception(ex)
