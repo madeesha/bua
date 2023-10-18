@@ -84,8 +84,17 @@ class LambdaHandler:
             if 'run_type' in entry:
                 run_type: str = entry['run_type']
                 if run_type in self._handler:
-                    result = self._handler[run_type](run_type, entry, debug)
-                    if isinstance(result, dict) and 'status' in result and result['status'] != STATUS_DONE:
+                    try:
+                        result = self._handler[run_type](run_type, entry, debug)
+                        if isinstance(result, dict) and 'status' in result and result['status'] != STATUS_DONE:
+                            failure_entries.append(entry)
+                            failures.append(result)
+                    except KeyError as ex:
+                        traceback.print_exception(ex)
+                        result = {
+                            'status': STATUS_FAIL,
+                            'cause': str(ex)
+                        }
                         failure_entries.append(entry)
                         failures.append(result)
                 else:
@@ -107,7 +116,11 @@ class LambdaHandler:
     def _process_with_run_type(self, body, debug):
         run_type: str = body['run_type']
         if run_type in self._handler:
-            self._handler[run_type](run_type, body, debug)
+            try:
+                self._handler[run_type](run_type, body, debug)
+            except KeyError as ex:
+                traceback.print_exception(ex)
+                self.failure_queue.send_failure_event(body, str(ex))
         else:
             cause = f'Do not know how to handle run_type {run_type}'
             self.log(cause)
