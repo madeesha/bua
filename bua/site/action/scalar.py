@@ -1,9 +1,12 @@
 import traceback
 from typing import Callable
+
+from pymysql import IntegrityError
+
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
-from bua.site.handler import STATUS_DONE
+from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
 class MicroScalar(Accounts):
@@ -34,6 +37,13 @@ class MicroScalar(Accounts):
                 self.conn.commit()
                 return {
                     'status': STATUS_DONE
+                }
+            except IntegrityError as ex:
+                traceback.print_exception(ex)
+                self.conn.rollback()
+                return {
+                    'status': STATUS_FAIL,
+                    'cause': str(ex)
                 }
             except Exception as ex:
                 traceback.print_exception(ex)
