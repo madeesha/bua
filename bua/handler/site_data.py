@@ -56,6 +56,6 @@ def lambda_handler(event, context):
                 pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
                                 cursorclass=pymysql.cursors.DictCursor))
         except Exception as ex2:
-            print('Failed to reconnect to the database after a failure')
+            handler.log('Failed to reconnect to the database after a failure')
             traceback.print_exception(ex2)
         raise RuntimeError(f'Failed to handle request: {event}')

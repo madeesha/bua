@@ -48,7 +48,12 @@ class TestCase:
             event = {
                 'Records': [
                     {
-                        'eventSource': 'aws:sqs'
+                        'eventSource': 'aws:sqs',
+                        'messageId': '123',
+                        'eventSourceARN': 'aws:123',
+                        'body': json.dumps({
+                            'run_type': 'NEM12'
+                        }),
                     }
                 ]
             }
