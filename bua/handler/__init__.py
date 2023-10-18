@@ -1,4 +1,5 @@
 import json
+import traceback
 from typing import Dict, Callable, Optional, Union
 
 from bua.facade.sqs import SQS, Queue
@@ -30,7 +31,20 @@ class LambdaHandler:
                         except Exception as ex:
                             self.log(str(ex))
                             body = record['body']
-                        self._process_message(body)
+                        try:
+                            self._process_message(body)
+                        except Exception as ex:
+                            self.log('Failed to process body')
+                            traceback.print_exception(ex)
+                            if self.sqs.undo_deduplicate_request(record):
+                                raise
+                            else:
+                                self.failure_queue.send_request([
+                                    {
+                                        'body': record['body'],
+                                        'failure': str(ex)
+                                    }
+                                ])
         else:
             self._process_message(event)
 

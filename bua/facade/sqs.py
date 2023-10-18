@@ -1,4 +1,5 @@
 import json
+import traceback
 from datetime import datetime, timedelta
 import time
 from typing import List, Dict
@@ -28,6 +29,19 @@ class SQS:
             if e.operation_name == 'PutItem' and e.response['Error']['Code'] == 'ConditionalCheckFailedException':
                 return False
             raise
+
+    def undo_deduplicate_request(self, record):
+        message_id = record['messageId']
+        source_arn = record['eventSourceARN']
+        try:
+            self.ddb.delete_item(Key={
+                'PK': f'X:SQS:{source_arn}',
+                'SK': f'{message_id}',
+            })
+            return True
+        except ClientError as e:
+            traceback.print_exception(e)
+            return False
 
     def send_message(self, queue_url, body, delay=0):
         return self.sqs.send_message(QueueUrl=queue_url, MessageBody=body, DelaySeconds=delay)
