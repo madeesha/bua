@@ -14,8 +14,9 @@ class Initiator:
     def bua_initiate(self, request: HandlerRequest):
         data = request.data
         run_type = data['run_type']
-        start_inclusive = data.get('start_inclusive')
-        end_exclusive = data.get('end_exclusive')
+        start_inclusive = data['start_inclusive']
+        end_exclusive = data['end_exclusive']
+        end_inclusive = data['end_inclusive']
         today = data['today']
         run_date = data['run_date']
         source_date = data.get('source_date')
@@ -27,6 +28,7 @@ class Initiator:
             'today': today,
             'start_inclusive': start_inclusive,
             'end_exclusive': end_exclusive,
+            'end_inclusive': end_inclusive,
             'source_date': source_date,
             'identifier_type': identifier_type,
         }
