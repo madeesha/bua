@@ -41,6 +41,19 @@
             },
             "on": {
               "COMPLETE": {
+                "next": "100_truncate_invoice_scalar"
+              }
+            }
+          },
+          "100_truncate_invoice_scalar": {
+            "action": "execute_sql",
+            "args": {
+              "sql": [
+                "TRUNCATE TABLE InvoiceScalar"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
                 "next": "180_clear_error_queues"
               }
             }
