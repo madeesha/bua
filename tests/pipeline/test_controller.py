@@ -138,7 +138,8 @@ class TestCase:
 
     @fixture(autouse=True)
     def ssm(self):
-        return SSMClientStub()
+        parameters = {}
+        return SSMClientStub(parameters=parameters)
 
     @fixture(autouse=True)
     def session(self, sts):

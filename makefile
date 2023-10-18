@@ -17,6 +17,7 @@ lint: venv
 	source venv/bin/activate && ./cf-lint
 
 test: venv
+	venv/bin/pytest tests
 	venv/bin/coverage run --branch -m pytest --durations=0 tests
 	venv/bin/coverage report -m
 

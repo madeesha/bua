@@ -11,10 +11,12 @@ class ParameterActions:
 
     def get_parameters(self, request: HandlerRequest):
         data = request.data
-        names = [f"/{self.prefix}/bua/{name}" for name in data['names']]
+        prefix = f"/{self.prefix}/bua/"
+        names = [f"{prefix}{name}" for name in data['names']]
         try:
             params = self.ssm.get_parameters(names=names)
             for key, value in params.items():
+                key = key[len(prefix):]
                 data[key] = value
             return "COMPLETE", f"Retrieved {len(params)} parameters"
         except ValueError as ex:
