@@ -66,11 +66,16 @@ class Control:
                     self.today, self.run_date,
                     self.identifier_type, rows_counted, rows_written, status, reason,
                     extra, key)
-            self.cur.execute(sql, args)
+            row_count = self.cur.execute(sql, args)
+            if row_count == 0:
+                msg = f'NO INSERT OF BUAControl FOR {self.run_type}, {identifier}, {self.run_date}, {start_inclusive}'
+                print(msg)
             if commit:
                 self.commit()
         except Exception as e2:
             traceback.print_exception(e2)
+            msg = f'NO INSERT OF BUAControl FOR {self.run_type}, {identifier}, {self.run_date}, {start_inclusive}'
+            print(msg)
             if commit:
                 self.rollback()
 
@@ -111,10 +116,15 @@ class Control:
                 status, rows_counted, rows_written, reason, extra, key,
                 self.run_type, identifier, self.run_date, start_inclusive
             )
-            self.cur.execute(sql, args)
+            row_count = self.cur.execute(sql, args)
+            if row_count == 0:
+                msg = f'NO UPDATE OF BUAControl FOR {self.run_type}, {identifier}, {self.run_date}, {start_inclusive}'
+                print(msg)
             if commit:
                 self.commit()
         except Exception as e2:
             traceback.print_exception(e2)
+            msg = f'NO UPDATE OF BUAControl FOR {self.run_type}, {identifier}, {self.run_date}, {start_inclusive}'
+            print(msg)
             if commit:
                 self.rollback()
