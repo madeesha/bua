@@ -53,7 +53,7 @@ class LambdaHandler:
     def _handle_too_many_retries(self, record, ex):
         if self.max_receive_count >= 0:
             if 'attributes' in record and 'ApproximateReceiveCount' in record['attributes']:
-                receive_count = record['attributes']['ApproximateReceiveCount']
+                receive_count = int(record['attributes']['ApproximateReceiveCount'])
                 if receive_count >= self.max_receive_count:
                     self.failure_queue.send_request([
                         {
