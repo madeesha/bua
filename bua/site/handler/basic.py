@@ -10,12 +10,12 @@ class BUASiteBasicHandler(DBLambdaHandler):
             self, s3_client, meterdata_bucket_name,
             sqs_client, ddb_meterdata_table, ddb_bua_table,
             basic_queue, failure_queue,
-            conn,
+            conn, ctl_conn,
             debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
-            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
-            max_receive_count=max_receive_count
+            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, ctl_conn=ctl_conn, debug=debug,
+            failure_queue=failure_queue, max_receive_count=max_receive_count
         )
         self._s3_client = s3_client
         self._meterdata_bucket_name = meterdata_bucket_name
@@ -32,7 +32,7 @@ class BUASiteBasicHandler(DBLambdaHandler):
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
         action = BasicRead(
-            queue=self._segment_queue, conn=self.conn, log=self.log, debug=debug
+            queue=self._segment_queue, conn=self.conn, ctl_conn=self.ctl_conn, log=self.log, debug=debug
         )
         return action.execute_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
 
@@ -42,6 +42,6 @@ class BUASiteBasicHandler(DBLambdaHandler):
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
         action = BasicRead(
-            queue=self._segment_queue, conn=self.conn, log=self.log, debug=debug
+            queue=self._segment_queue, conn=self.conn, ctl_conn=self.ctl_conn, log=self.log, debug=debug
         )
         return action.execute_reset_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)

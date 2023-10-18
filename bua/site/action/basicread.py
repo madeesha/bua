@@ -9,31 +9,21 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
 class BasicRead(Accounts):
-    def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool, batch_size=100):
-        Accounts.__init__(self, queue, conn, log, debug, batch_size)
+    def __init__(self, queue: Queue, conn: DB, ctl_conn: DB, log: Callable, debug: bool, batch_size=100):
+        Accounts.__init__(self, queue, conn, ctl_conn, log, debug, batch_size)
 
-    def initiate_basic_read_calculation(
-            self, run_type: str, today: str, run_date: str, identifier_type: str, end_inclusive: str
-    ):
-        self._reset_control_records(run_type, today, run_date, identifier_type)
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, end_inclusive, all_accounts=False)
+    def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str, start_inclusive: str, end_exclusive: str, end_inclusive: str):
+        self.reset_control_records(run_type, today, run_date, identifier_type)
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, start_inclusive, end_exclusive, end_inclusive, all_accounts=False)
 
-    def initiate_reset_basic_read_calculation(
-            self, run_type: str, today: str, run_date: str, identifier_type: str, end_inclusive: str
-    ):
-        self._reset_control_records('BasicRead', today, run_date, identifier_type)
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, end_inclusive, all_accounts=False)
-
-    def _reset_control_records(self, run_type: str, today: str, run_date: str, identifier_type: str):
-        with self.conn.cursor() as cur:
-            control = Control(run_type, today, today, today, run_date, identifier_type)
-            control.reset_control_records(cur)
-            self.conn.commit()
+    def initiate_reset_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str, start_inclusive: str, end_exclusive: str, end_inclusive: str):
+        self.reset_control_records(run_type, today, run_date, identifier_type)
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, start_inclusive, end_exclusive, end_inclusive, all_accounts=False)
 
     def execute_basic_read_calculation(
             self, run_type: str, today: str, run_date: str, identifier_type: str, account_id: int
     ) -> Dict:
-        control = Control(run_type, today, today, today, run_date, identifier_type)
+        control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             sql = """
             CALL bua_create_basic_read(JSON_OBJECT(
@@ -51,16 +41,14 @@ class BasicRead(Accounts):
                 cur.execute(sql, params)
                 cur.fetchall()
                 self.conn.commit()
-                control.insert_control_record(self.conn, cur, str(account_id), STATUS_DONE)
+                control.insert_control_record(str(account_id), STATUS_DONE)
                 return {
                     'status': STATUS_DONE
                 }
             except IntegrityError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.insert_control_record(
-                    self.conn, cur, str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex)
-                )
+                control.insert_control_record(str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex),
@@ -77,7 +65,7 @@ class BasicRead(Accounts):
     def execute_reset_basic_read_calculation(
             self, run_type: str, today: str, run_date: str, identifier_type: str, account_id: int
     ) -> Dict:
-        control = Control(run_type, today, today, today, run_date, identifier_type)
+        control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             sql = """
             CALL bua_reset_basic_read(%s,0)
@@ -88,16 +76,14 @@ class BasicRead(Accounts):
                 cur.execute(sql, params)
                 cur.fetchall()
                 self.conn.commit()
-                control.insert_control_record(self.conn, cur, str(account_id), STATUS_DONE)
+                control.insert_control_record(str(account_id), STATUS_DONE)
                 return {
                     'status': STATUS_DONE
                 }
             except IntegrityError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.insert_control_record(
-                    self.conn, cur, str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex)
-                )
+                control.insert_control_record(str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex),

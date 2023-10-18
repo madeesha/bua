@@ -10,11 +10,13 @@ class BUASiteMscalarHandler(DBLambdaHandler):
             self, s3_client, meterdata_bucket_name,
             sqs_client, ddb_meterdata_table, ddb_bua_table,
             mscalar_queue, failure_queue,
-            conn,
+            conn, ctl_conn,
             debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
-            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
+            self, sqs_client=sqs_client, ddb_table=ddb_bua_table,
+            conn=conn, ctl_conn=ctl_conn,
+            debug=debug, failure_queue=failure_queue,
             max_receive_count=max_receive_count
         )
         self._s3_client = s3_client
@@ -30,7 +32,13 @@ class BUASiteMscalarHandler(DBLambdaHandler):
         today = entry['today']
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
+        start_inclusive = entry['start_inclusive']
+        end_exclusive = entry['end_exclusive']
         action = MicroScalar(
-            queue=self._segment_queue, conn=self.conn, log=self.log, debug=debug
+            queue=self._segment_queue,
+            conn=self.conn, ctl_conn=self.ctl_conn,
+            log=self.log, debug=debug
         )
-        return action.execute_microscalar_calculation(run_type, today, run_date, identifier_type, account_id)
+        return action.execute_microscalar_calculation(
+            run_type, today, run_date, identifier_type, start_inclusive, end_exclusive, account_id
+        )

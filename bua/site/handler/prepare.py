@@ -14,11 +14,13 @@ class BUASitePrepareHandler(DBLambdaHandler):
             s3_client,
             ddb_bua_table,
             prepare_queue, failure_queue,
-            conn,
+            conn, ctl_conn,
             debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
-            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
+            self, sqs_client=sqs_client, ddb_table=ddb_bua_table,
+            conn=conn, ctl_conn=ctl_conn,
+            debug=debug, failure_queue=failure_queue,
             max_receive_count=max_receive_count
         )
         self.prepare_queue = prepare_queue
@@ -29,7 +31,9 @@ class BUASitePrepareHandler(DBLambdaHandler):
 
     def _handle_prepare_export(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
         action = Exporter(
-            queue=self.prepare_queue, conn=self.conn, log=self.log, debug=debug,
+            queue=self.prepare_queue,
+            conn=self.conn, ctl_conn=self.ctl_conn,
+            log=self.log, debug=debug,
             s3=self.s3
         )
         return action.prepare_export(entry)

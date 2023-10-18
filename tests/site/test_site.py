@@ -266,13 +266,14 @@ class TestClass:
         prepare_queue = {}
         nem12_queue = {}
         conn = Database(rowcount=10)
+        ctl_conn = Database(rowcount=10)
         handler = BUASiteInitiateHandler(
             sqs_client=sqs_client,
             s3_client=s3_client,
             ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
             data_queue=data_queue, segment_queue=segment_queue, export_queue=export_queue, failure_queue=failure_queue,
             basic_queue=basic_queue, mscalar_queue=mscalar_queue, prepare_queue=prepare_queue, nem12_queue=nem12_queue,
-            conn=conn
+            conn=conn, ctl_conn=ctl_conn
         )
         event = {
             'run_type': 'SegmentJurisdiction',

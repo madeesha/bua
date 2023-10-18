@@ -27,8 +27,11 @@ rdshost = decoded['rdshost']
 username = decoded['username']
 password = decoded['password']
 dbname = decoded['dbname']
+
 conn = pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
-                       cursorclass=pymysql.cursors.DictCursor)
+                       cursorclass=pymysql.cursors.SSDictCursor)
+ctl_conn = pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
+                           cursorclass=pymysql.cursors.SSDictCursor)
 
 debug = os.environ['debugEnabled'] == 'Yes'
 check_nem = os.environ['checkNEM'] == 'Yes'
@@ -44,7 +47,7 @@ handler = BUASiteDataHandler(
     sqs_client=sqs_client,
     ddb_meterdata_table=ddb_meterdata_table, ddb_bua_table=ddb_bua_table,
     site_data_queue=site_data_queue, failure_queue=failure_queue,
-    conn=conn,
+    conn=conn, ctl_conn=ctl_conn,
     debug=debug, check_nem=check_nem, check_aggread=check_aggread, max_receive_count=max_receive_count
 )
 
@@ -57,7 +60,10 @@ def lambda_handler(event, context):
         try:
             handler.reconnect(
                 pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
-                                cursorclass=pymysql.cursors.DictCursor))
+                                cursorclass=pymysql.cursors.DictCursor),
+                pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
+                                cursorclass=pymysql.cursors.DictCursor)
+            )
         except Exception as ex2:
             handler.log('Failed to reconnect to the database after a failure')
             traceback.print_exception(ex2)

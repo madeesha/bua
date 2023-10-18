@@ -13,11 +13,13 @@ class BUASiteSegmentHandler(DBLambdaHandler):
             self, s3_client, meterdata_bucket_name,
             sqs_client, ddb_meterdata_table, ddb_bua_table,
             segment_queue, failure_queue,
-            conn,
+            conn, ctl_conn,
             debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
-            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
+            self, sqs_client=sqs_client, ddb_table=ddb_bua_table,
+            conn=conn, ctl_conn=ctl_conn,
+            debug=debug, failure_queue=failure_queue,
             max_receive_count=max_receive_count
         )
         self._s3_client = s3_client

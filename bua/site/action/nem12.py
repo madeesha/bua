@@ -17,10 +17,11 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 class NEM12(Action):
 
     def __init__(
-            self, queue: Queue, conn: DB, log: Callable, debug: bool,
+            self, queue: Queue, conn: DB, ctl_conn: DB, log: Callable, debug: bool,
             batch_size=100, s3_client=None, bucket_name=None
     ):
         Action.__init__(self, queue, conn, log, debug)
+        self.ctl_conn = ctl_conn
         self.batch_size = batch_size
         self.s3_client = s3_client
         self.bucket_name = bucket_name
@@ -34,10 +35,10 @@ class NEM12(Action):
             end_exclusive: Optional[str],
             identifier_type: str
     ):
-        control = Control(run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        control.reset_control_records()
         with self.conn.cursor() as cur:
             try:
-                control.reset_control_records(cur)
                 cur.execute(
                     "CALL bua_list_profile_nmis(%s, %s, %s, %s)",
                     (start_inclusive, end_exclusive, today, run_date)
@@ -63,6 +64,7 @@ class NEM12(Action):
                         }
                         bodies.append(body)
                         total += 1
+                        control.insert_control_record(nmi, 'QUEUED')
                 self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 self.log(f'{total} sites to generate {run_type} profiled estimates data')
                 self.conn.commit()
@@ -75,22 +77,28 @@ class NEM12(Action):
             self, run_type: str, nmi: str, start_inclusive: str, end_exclusive: str,
             today: str, run_date: str, identifier_type: str
     ):
-        generator = NEM12Generator(self.log, self.conn, self.s3_client, self.bucket_name, run_type, nmi,
+        generator = NEM12Generator(self.log, self.conn, self.ctl_conn, self.s3_client, self.bucket_name, run_type, nmi,
                                    start_inclusive, end_exclusive, today, run_date, identifier_type)
         return generator.generate()
 
 
-class NEM12Generator(Control):
+class NEM12Generator:
     def __init__(
-            self, log, conn: DB, s3_client, bucket_name, run_type: str, nmi: str,
+            self, log, conn: DB, ctl_conn: DB, s3_client, bucket_name, run_type: str, nmi: str,
             start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str
     ):
-        Control.__init__(self, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        self.control = Control(ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
         self.identifier = nmi
         self.log = log
         self.conn = conn
         self.s3_client = s3_client
         self.bucket_name = bucket_name
+        self.run_date = run_date
+        self.run_type = run_type
+        self.start_inclusive = start_inclusive
+        self.end_exclusive = end_exclusive
+        self.today = today
+        self.identifier_type = identifier_type
 
         if len(run_date) == 10:
             run_date = datetime.strptime(self.run_date, '%Y-%m-%d')
@@ -152,7 +160,7 @@ class NEM12Generator(Control):
                     self.current_record = record
                     values = [
                         decimal.Decimal(record[f'value_{index:02}']) * scalar
-                        for index in range(start_row+1, end_row+1)
+                        for index in range(start_row + 1, end_row + 1)
                     ]
                     self.current_read_values = [
                         *self.current_read_values[0:start_row],
@@ -171,8 +179,8 @@ class NEM12Generator(Control):
                          f'profiled estimates for '
                          f'{self.identifier}. {self.status} : {self.reason} : {self.extra}')
                 self.conn.commit()
-                self.insert_control_record(
-                    self.conn, cur, self.identifier, self.status,
+                self.control.insert_control_record(
+                    self.identifier, self.status,
                     rows_counted=self.rows_counted, rows_written=self.rows_written,
                     reason=self.reason, extra=self.extra, key=self.key
                 )
@@ -185,8 +193,8 @@ class NEM12Generator(Control):
                 self.status = "FAIL"
                 self.reason = "Exception raised"
                 self.extra = str(ex)[0:255]
-                self.insert_control_record(
-                    self.conn, cur, self.identifier, self.status,
+                self.control.insert_control_record(
+                    self.identifier, self.status,
                     rows_counted=self.rows_counted, rows_written=self.rows_written,
                     reason=self.reason, extra=self.extra, key=self.key
                 )

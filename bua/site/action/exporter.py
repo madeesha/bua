@@ -19,26 +19,21 @@ class Exporter(Accounts):
     def __init__(
             self, *,
             queue: Queue,
-            conn: DB, log: Callable, debug: bool,
+            conn: DB, ctl_conn: DB,
+            log: Callable, debug: bool,
             s3: S3,
             batch_size=1
     ):
-        Accounts.__init__(self, queue, conn, log, debug, batch_size)
+        Accounts.__init__(self, queue, conn, ctl_conn, log, debug, batch_size)
         self.batch_size = batch_size
         self.s3 = s3
-
-    def _reset_control_records(self, run_type: str, today: str, run_date: str, identifier_type: str):
-        with self.conn.cursor() as cur:
-            control = Control(run_type, today, today, today, run_date, identifier_type)
-            control.reset_control_records(cur)
-            self.conn.commit()
 
     def initiate_export_tables(
             self, table_names: List[str], partitions: List[str], batch_size: int,
             bucket_name: str, bucket_prefix: str, run_date: str, today: str, run_type: str, file_format: str
     ):
         identifier_type = f'Export {file_format}'
-        self._reset_control_records(run_type, today, run_date, identifier_type)
+        self.reset_control_records(run_type, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             try:
                 for table_name in table_names:
@@ -111,7 +106,7 @@ class Exporter(Accounts):
                 identifier_type = entry['identifier_type']
                 run_type = entry['run_type']
                 today = entry['today']
-                control = Control(run_type, today, today, today, run_date, identifier_type)
+                control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
 
                 file_run_date = run_date[0:10].replace('-', '')
                 file_name = f"BUA_{table_name}_{file_run_date}_{counter:05d}.{file_format}"
@@ -121,26 +116,27 @@ class Exporter(Accounts):
                     sql = f"SELECT * FROM {table_name} PARTITION ({partition}) LIMIT {batch_size} OFFSET {offset}"
                 else:
                     sql = f"SELECT * FROM {table_name} LIMIT {batch_size} OFFSET {offset}"
-                if file_format == 'csv':
-                    cur.execute(sql)
-                    with open(file_path, 'w', newline='') as fp:
-                        writer = csv.writer(fp, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                        column_names = [col[0] for col in cur.description]
-                        writer.writerow(column_names)
-                        for record in cur.fetchall_unbuffered():
-                            row = [record[name] for name in column_names]
-                            writer.writerow(row)
-                else:
+                if not file_format == 'csv':
+                    reason = f'Unsupported file format {file_format}'
+                    control.insert_control_record(file_name, STATUS_FAIL, reason='Unsupported', extra=reason)
                     return {
                         'status': STATUS_FAIL,
-                        'cause': f'Unsupported file format {file_format}'
+                        'cause': reason
                     }
-                if os.path.isfile(file_path):
-                    with open(file_path, 'rb') as fp:
-                        self.s3.upload_fileobj(fp=fp, bucket_name=bucket_name, key=key)
-                    os.remove(file_path)
-                    print(f'Uploaded {file_name} to {bucket_name}/{key}')
-                    control.insert_control_record(self.conn, cur, file_name, STATUS_DONE)
+                cur.execute(sql)
+                with open(file_path, 'w', newline='') as fp:
+                    writer = csv.writer(fp, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    column_names = [col[0] for col in cur.description]
+                    writer.writerow(column_names)
+                    for record in cur.fetchall_unbuffered():
+                        row = [record[name] for name in column_names]
+                        writer.writerow(row)
+                self.conn.commit()
+                with open(file_path, 'rb') as fp:
+                    self.s3.upload_fileobj(fp=fp, bucket_name=bucket_name, key=key)
+                os.remove(file_path)
+                print(f'Uploaded {file_name} to {bucket_name}/{key}')
+                control.insert_control_record(file_name, STATUS_DONE)
                 return {
                     'status': STATUS_DONE
                 }
@@ -152,9 +148,14 @@ class Exporter(Accounts):
             }
 
     def initiate_prepare_export(
-            self, run_type: str, today: str, run_date: str, identifier_type: str, end_inclusive: str
+            self, run_type: str, today: str, run_date: str, identifier_type: str,
+            start_inclusive: str, end_exclusive: str, end_inclusive: str
     ):
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, end_inclusive, all_accounts=True)
+        self.reset_control_records(run_type, today, run_date, identifier_type)
+        self.queue_eligible_accounts(
+            run_type, today, run_date, identifier_type,
+            start_inclusive, end_exclusive, end_inclusive, all_accounts=True
+        )
 
     def prepare_export(self, entry: Dict):
         try:

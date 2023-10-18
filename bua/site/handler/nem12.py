@@ -10,12 +10,14 @@ class BUASiteNEM12Handler(DBLambdaHandler):
             self, s3_client, meterdata_bucket_name,
             sqs_client, ddb_meterdata_table, ddb_bua_table,
             nem12_queue, failure_queue,
-            conn,
+            conn, ctl_conn,
             debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
-            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
-            max_receive_count=max_receive_count
+            self, sqs_client=sqs_client, ddb_table=ddb_bua_table,
+            conn=conn, ctl_conn=ctl_conn,
+            debug=debug,
+            failure_queue=failure_queue, max_receive_count=max_receive_count
         )
         self._s3_client = s3_client
         self._meterdata_bucket_name = meterdata_bucket_name
@@ -33,7 +35,7 @@ class BUASiteNEM12Handler(DBLambdaHandler):
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
         action = NEM12(
-            queue=self._segment_queue, conn=self.conn, log=self.log, debug=debug,
+            queue=self._segment_queue, conn=self.conn, ctl_conn=self.ctl_conn, log=self.log, debug=debug,
             s3_client=self._s3_client, bucket_name=self._meterdata_bucket_name
         )
         return action.nem12_file_generation(

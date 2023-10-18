@@ -14,12 +14,14 @@ class BUASiteExportHandler(DBLambdaHandler):
             sqs_client,
             ddb_bua_table,
             export_queue, failure_queue,
-            conn,
+            conn, ctl_conn,
             debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
-            self, sqs_client=sqs_client, ddb_table=ddb_bua_table, conn=conn, debug=debug, failure_queue=failure_queue,
-            max_receive_count=10
+            self, sqs_client=sqs_client, ddb_table=ddb_bua_table,
+            conn=conn, ctl_conn=ctl_conn,
+            debug=debug, failure_queue=failure_queue,
+            max_receive_count=max_receive_count
         )
         self.s3 = S3(s3_client=s3_client)
         self.export_queue = export_queue
@@ -30,7 +32,8 @@ class BUASiteExportHandler(DBLambdaHandler):
     def _handle_export_tables(self, _run_type: str, entry: Dict, debug: bool) -> Dict:
         action = Exporter(
             queue=self.export_queue,
-            conn=self.conn, log=self.log, debug=debug,
+            conn=self.conn, ctl_conn=self.ctl_conn,
+            log=self.log, debug=debug,
             s3=self.s3
         )
         return action.export_table(entry)
