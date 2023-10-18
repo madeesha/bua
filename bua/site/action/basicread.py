@@ -1,6 +1,6 @@
 import traceback
 from typing import Dict, Callable
-from pymysql import IntegrityError
+from pymysql import DatabaseError
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
@@ -12,18 +12,27 @@ class BasicRead(Accounts):
     def __init__(self, queue: Queue, conn: DB, ctl_conn: DB, log: Callable, debug: bool, batch_size=100):
         Accounts.__init__(self, queue, conn, ctl_conn, log, debug, batch_size)
 
-    def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str, start_inclusive: str, end_exclusive: str, end_inclusive: str):
+    def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str,
+                                        start_inclusive: str, end_exclusive: str, end_inclusive: str,
+                                        account_limit=-1, proc_name=None):
         self.reset_control_records(run_type, today, run_date, identifier_type)
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, start_inclusive, end_exclusive, end_inclusive, all_accounts=False)
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type,
+                                     start_inclusive, end_exclusive, end_inclusive,
+                                     all_accounts=False, account_limit=account_limit, proc_name=proc_name)
 
-    def initiate_reset_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str, start_inclusive: str, end_exclusive: str, end_inclusive: str):
+    def initiate_reset_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str,
+                                              start_inclusive: str, end_exclusive: str, end_inclusive: str,
+                                              account_limit=-1, proc_name=None):
         self.reset_control_records(run_type, today, run_date, identifier_type)
-        self.queue_eligible_accounts(run_type, today, run_date, identifier_type, start_inclusive, end_exclusive, end_inclusive, all_accounts=False)
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type,
+                                     start_inclusive, end_exclusive, end_inclusive,
+                                     all_accounts=False, account_limit=account_limit, proc_name=proc_name)
 
     def execute_basic_read_calculation(
-            self, run_type: str, today: str, run_date: str, identifier_type: str, account_id: int
+            self, run_type: str, today: str, run_date: str, identifier_type: str,
+            start_inclusive: str, end_exclusive: str, account_id: int
     ) -> Dict:
-        control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
+        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             sql = """
             CALL bua_create_basic_read(JSON_OBJECT(
@@ -45,10 +54,10 @@ class BasicRead(Accounts):
                 return {
                     'status': STATUS_DONE
                 }
-            except IntegrityError as ex:
+            except DatabaseError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.update_control_record(str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex))
+                control.update_control_record(str(account_id), STATUS_FAIL, reason='DatabaseError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex),
@@ -60,12 +69,21 @@ class BasicRead(Accounts):
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                raise
+                control.update_control_record(str(account_id), STATUS_FAIL, reason='UnhandledError', extra=str(ex))
+                return {
+                    'status': STATUS_FAIL,
+                    'cause': str(ex),
+                    'context': {
+                        'sql': sql,
+                        'params': list(params),
+                    }
+                }
 
     def execute_reset_basic_read_calculation(
-            self, run_type: str, today: str, run_date: str, identifier_type: str, account_id: int
+            self, run_type: str, today: str, run_date: str, identifier_type: str,
+            start_inclusive: str, end_exclusive: str, account_id: int
     ) -> Dict:
-        control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
+        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
         with self.conn.cursor() as cur:
             sql = """
             CALL bua_reset_basic_read(%s,0)
@@ -80,10 +98,10 @@ class BasicRead(Accounts):
                 return {
                     'status': STATUS_DONE
                 }
-            except IntegrityError as ex:
+            except DatabaseError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                control.update_control_record(str(account_id), STATUS_FAIL, reason='IntegrityError', extra=str(ex))
+                control.update_control_record(str(account_id), STATUS_FAIL, reason='DatabaseError', extra=str(ex))
                 return {
                     'status': STATUS_FAIL,
                     'cause': str(ex),
@@ -95,4 +113,12 @@ class BasicRead(Accounts):
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                raise
+                control.update_control_record(str(account_id), STATUS_FAIL, reason='UnhandledError', extra=str(ex))
+                return {
+                    'status': STATUS_FAIL,
+                    'cause': str(ex),
+                    'context': {
+                        'sql': sql,
+                        'params': list(params),
+                    }
+                }

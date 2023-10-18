@@ -31,17 +31,23 @@ class BUASiteBasicHandler(DBLambdaHandler):
         today = entry['today']
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
+        start_inclusive = entry['start_inclusive']
+        end_exclusive = entry['end_exclusive']
         action = BasicRead(
             queue=self._segment_queue, conn=self.conn, ctl_conn=self.ctl_conn, log=self.log, debug=debug
         )
-        return action.execute_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
+        return action.execute_basic_read_calculation(run_type, today, run_date, identifier_type,
+                                                     start_inclusive, end_exclusive, account_id)
 
     def _handle_reset_basic_read(self, run_type: str, entry: Dict, debug: bool) -> Dict:
         account_id = entry['account_id']
         today = entry['today']
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
+        start_inclusive = entry['start_inclusive']
+        end_exclusive = entry['end_exclusive']
         action = BasicRead(
             queue=self._segment_queue, conn=self.conn, ctl_conn=self.ctl_conn, log=self.log, debug=debug
         )
-        return action.execute_reset_basic_read_calculation(run_type, today, run_date, identifier_type, account_id)
+        return action.execute_reset_basic_read_calculation(run_type, today, run_date, identifier_type,
+                                                           start_inclusive, end_exclusive, account_id)

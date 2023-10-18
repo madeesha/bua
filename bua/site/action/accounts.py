@@ -82,7 +82,7 @@ class Accounts(Action):
                 total = 0
                 for record in cur.fetchall_unbuffered():
                     account_id = record['account_id']
-                    control.insert_control_record(f'{account_id}', 'PREP', commit=False)
+                    control.insert_control_record(str(account_id), 'PREP', commit=False)
                     total += 1
                     if 0 < account_limit <= total:
                         break
