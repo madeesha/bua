@@ -85,23 +85,11 @@ class NEM12(Action):
         control.reset_control_records()
         with self.conn.cursor() as cur:
             try:
-                cur.execute(
-                    "CALL bua_list_profile_nmis(%s, %s, %s, %s)",
-                    (start_inclusive, end_exclusive, today, run_date)
-                )
-                total = 0
-                for record in cur.fetchall_unbuffered():
-                    nmi = record['nmi']
-                    start_date: date = record['start_inclusive']
-                    end_date: date = record['end_exclusive']
-                    if start_date <= end_date:
-                        total += 1
-                        control.insert_control_record(nmi, 'PREP',
-                                                      start_inclusive=start_date, end_exclusive=end_date,
-                                                      commit=False)
+                stmt = "CALL bua_prep_profile_nmis(%s, %s, %s, %s, %s, %s)"
+                params = (start_inclusive, end_exclusive, today, run_date, run_type, identifier_type)
+                total = cur.execute(stmt, params)
                 self.log(f'{total} sites prepared to generate {run_type} profiled estimates data')
                 self.conn.commit()
-                control.conn.commit()
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
