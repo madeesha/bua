@@ -18,28 +18,36 @@ class SQS:
         source_arn = record['eventSourceARN']
         when_expires = datetime.today() + timedelta(minutes=15)
         ttl = int(time.mktime(when_expires.timetuple()))
+        pk = f'X:SQS:{source_arn}'
+        sk = f'{message_id}'
         try:
             self.ddb.put_item(Item={
-                'PK': f'X:SQS:{source_arn}',
-                'SK': f'{message_id}',
+                'PK': pk,
+                'SK': sk,
                 'TTL': ttl
             }, ConditionExpression=Attr('SK').not_exists())
+            print(f'Record duplicate check for PK=[{pk}], SK=[{sk}]')
             return True
         except ClientError as e:
             if e.operation_name == 'PutItem' and e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                print(f'Found duplicate check for PK=[{pk}], SK=[{sk}]')
                 return False
             raise
 
     def undo_deduplicate_request(self, record):
         message_id = record['messageId']
         source_arn = record['eventSourceARN']
+        pk = f'X:SQS:{source_arn}'
+        sk = f'{message_id}'
         try:
             self.ddb.delete_item(Key={
-                'PK': f'X:SQS:{source_arn}',
-                'SK': f'{message_id}',
+                'PK': pk,
+                'SK': sk,
             })
+            print(f'Delete duplicate check for PK=[{pk}], SK=[{sk}]')
             return True
         except ClientError as e:
+            print(f'Failed to delete duplicate check for PK=[{pk}], SK=[{sk}]')
             traceback.print_exception(e)
             return False
 
