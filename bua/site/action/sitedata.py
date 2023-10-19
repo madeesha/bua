@@ -4,6 +4,8 @@ import struct
 import traceback
 from typing import Optional, Callable
 from boto3.dynamodb.conditions import Key
+from pymysql import InternalError, InterfaceError
+
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action import Action
@@ -102,6 +104,12 @@ class SiteData(Action):
                 run_method = "extract" if run_type == 'Utility' else "validate"
                 self.log(f'{total} sites to {run_method} profile data for (limit {limit})')
                 self.conn.commit()
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -375,6 +383,12 @@ class SiteData(Action):
                 )
                 self.log('Imported', len(records), 'records for nmi', nmi)
                 self.conn.commit()
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -571,6 +585,12 @@ class SiteData(Action):
                 Action.record_processing_summary(cur, run_date, run_type, nmi, start_inclusive, rows_affected)
                 self.log(rows_affected, 'variances identified for nmi', nmi)
                 self.conn.commit()
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

@@ -1,6 +1,8 @@
 import traceback
 from typing import Callable
 
+from pymysql import InternalError, InterfaceError
+
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action import Action
@@ -37,6 +39,12 @@ class DatesToCheck(Action):
                 self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 self.conn.commit()
                 self.log(f'{total} dates to check')
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

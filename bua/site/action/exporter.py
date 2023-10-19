@@ -3,7 +3,7 @@ import os
 import traceback
 from typing import List, Optional, Dict, Callable
 
-from pymysql import IntegrityError, InternalError
+from pymysql import IntegrityError, InternalError, InterfaceError
 from pymysql.cursors import SSDictCursor
 
 from bua.facade.connection import DB
@@ -52,6 +52,12 @@ class Exporter(Accounts):
                         )
                     print(f'Initiate export of {counter} files to S3 for {table_name} to {bucket_prefix}')
                 self.conn.commit()
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -143,6 +149,9 @@ class Exporter(Accounts):
         except InternalError as ex:
             traceback.print_exception(ex)
             raise
+        except InterfaceError as ex:
+            traceback.print_exception(ex)
+            raise
         except KeyError or IntegrityError as ex:
             traceback.print_exception(ex)
             return {
@@ -182,6 +191,9 @@ class Exporter(Accounts):
                         'status': STATUS_DONE
                     }
                 except InternalError as ex:
+                    traceback.print_exception(ex)
+                    raise
+                except InterfaceError as ex:
                     traceback.print_exception(ex)
                     raise
                 except IntegrityError as ex:

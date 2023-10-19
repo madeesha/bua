@@ -57,6 +57,9 @@ class BasicRead(Accounts):
             except InternalError as ex:
                 traceback.print_exception(ex)
                 raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except DatabaseError as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -69,9 +72,6 @@ class BasicRead(Accounts):
                         'params': list(params),
                     }
                 }
-            except InterfaceError as ex:
-                traceback.print_exception(ex)
-                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -105,6 +105,9 @@ class BasicRead(Accounts):
                     'status': STATUS_DONE
                 }
             except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
                 traceback.print_exception(ex)
                 raise
             except DatabaseError as ex:

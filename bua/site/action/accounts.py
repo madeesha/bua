@@ -1,5 +1,8 @@
 import traceback
 from typing import Callable
+
+from pymysql import InternalError, InterfaceError
+
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action import Action
@@ -79,6 +82,12 @@ class Accounts(Action):
                 total = cur.execute(sql, params)
                 self.conn.commit()
                 self.log(f'{total} accounts prepared for {run_type} data')
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

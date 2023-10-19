@@ -1,5 +1,8 @@
 import traceback
 from typing import Callable
+
+from pymysql import InternalError, InterfaceError
+
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action import Action
@@ -77,6 +80,12 @@ class SegmentTNI(Action):
                 )
                 self.log(f'{total} tni profile segment calculations initiated')
                 self.conn.commit()
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

@@ -1,7 +1,7 @@
 import traceback
 from typing import Callable
 
-from pymysql import DatabaseError, InternalError
+from pymysql import DatabaseError, InternalError, InterfaceError
 
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
@@ -52,6 +52,9 @@ class MicroScalar(Accounts):
                     'status': STATUS_DONE
                 }
             except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
                 traceback.print_exception(ex)
                 raise
             except DatabaseError as ex:

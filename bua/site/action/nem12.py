@@ -7,7 +7,7 @@ from typing import Optional, List, Dict, Set, Any, Callable
 from datetime import datetime, timedelta, date
 import csv
 
-from pymysql import InternalError
+from pymysql import InternalError, InterfaceError
 
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
@@ -74,6 +74,12 @@ class NEM12(Action):
                 self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 self.log(f'{total} sites to generate {run_type} profiled estimates data')
                 self.conn.commit()
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -90,6 +96,12 @@ class NEM12(Action):
                 total = cur.execute(stmt, params)
                 self.log(f'{total} sites prepared to generate {run_type} profiled estimates data')
                 self.conn.commit()
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
@@ -211,6 +223,9 @@ class NEM12Generator:
                     'status': STATUS_DONE
                 }
             except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
                 traceback.print_exception(ex)
                 raise
             except Exception as ex:
