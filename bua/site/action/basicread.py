@@ -1,6 +1,6 @@
 import traceback
 from typing import Dict, Callable
-from pymysql import DatabaseError, InternalError
+from pymysql import DatabaseError, InternalError, InterfaceError
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
@@ -69,6 +69,9 @@ class BasicRead(Accounts):
                         'params': list(params),
                     }
                 }
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()

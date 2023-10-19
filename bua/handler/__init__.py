@@ -151,6 +151,7 @@ class DBLambdaHandler(LambdaHandler):
         self._initialise_connection()
 
     def reconnect(self, conn, ctl_conn):
+        self.log('Reconnected to the database')
         self.conn = conn
         self.ctl_conn = ctl_conn
         self._initialise_connection()
