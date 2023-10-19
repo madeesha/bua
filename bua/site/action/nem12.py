@@ -147,83 +147,29 @@ class NEM12Generator:
         self.file_name = f'nem12#{self.unique_id}#bua#bua.csv'
 
         self.rows_counted = 0
-        self.rows_written = 0
+
         self.status = 'PASS'
         self.reason = None
         self.extra = None
-        self.key = None
 
-        self.non_zero_counted = 0
+        self.s3_key = None
 
-        self.nmi_configurations: Dict[Any, Set] = dict()
-
-        self.current_record = None
-        self.current_read_values = self._default_read_values()
-        self.current_markers = self._default_markers()
-
-    @staticmethod
-    def _default_read_values():
-        return [decimal.Decimal(0) for _ in range(48)]
-
-    @staticmethod
-    def _default_markers():
-        return [0 for _ in range(48)]
+        self.generator = NEM12ContentGenerator(
+            file_date_time=self.file_date_time,
+            update_date_time=self.update_date_time,
+            identifier=self.identifier
+        )
 
     def generate(self):
         with self.conn.cursor() as cur:
             try:
-                decimal.getcontext().prec = 6
                 records = self._fetch_missing_periods(cur)
-                output = io.StringIO()
-                writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                writer.writerow(['100', 'NEM12', self.file_date_time, 'BUA', 'BUA'])
-                self._calculate_nmi_configurations(records)
-                for index, record in enumerate(records):
-                    start_row = record['start_row']
-                    end_row = record['end_row']
-                    if start_row is None or end_row is None:
-                        continue
-                    if not self._valid_register(record):
-                        break
-                    if not self._valid_suffix(record):
-                        break
-                    if not self._valid_uom(record):
-                        break
-                    scalar = self._convert_scalar(record)
-                    if scalar is None:
-                        break
-                    if not self._valid_time_set(record):
-                        break
-                    is_new = self._is_new_reading(record)
-                    if is_new:
-                        if not self._all_intervals_mapped(record):
-                            break
-                        self._construct_read_row(writer)
-                        self.current_read_values = self._default_read_values()
-                        self.current_markers = self._default_markers()
-                    self.current_record = record
-                    values = [
-                        decimal.Decimal(record[f'value_{index:02}']) * scalar
-                        for index in range(start_row + 1, end_row + 1)
-                    ]
-                    markers = [1 for _index in range(start_row + 1, end_row + 1)]
-                    self.current_read_values = [
-                        *self.current_read_values[0:start_row],
-                        *values,
-                        *self.current_read_values[end_row:]
-                    ]
-                    self.current_markers = [
-                        *self.current_markers[0:start_row],
-                        *markers,
-                        *self.current_markers[end_row:]
-                    ]
-                if self.current_record is not None:
-                    if self._all_intervals_mapped(record):
-                        self._construct_read_row(writer)
-                if self.non_zero_counted == 0:
-                    if self.reason is None:
-                        self.reason = 'All rows are zero values'
-                writer.writerow(['900'])
+
+                output = self.generator.generate_nem12_file_content(records)
+                self.status = self.generator.status
+                self.reason = self.generator.reason
+                self.extra = self.generator.extra
+
                 if self.status == 'PASS':
                     self._write_nem12_file(self.file_name, output)
                 self.log(f'{len(records)} {self.run_type} '
@@ -232,8 +178,8 @@ class NEM12Generator:
                 self.conn.commit()
                 self.control.update_control_record(
                     self.identifier, self.status,
-                    rows_counted=self.rows_counted, rows_written=self.rows_written,
-                    reason=self.reason, extra=self.extra, key=self.key,
+                    rows_counted=self.rows_counted, rows_written=self.generator.rows_written,
+                    reason=self.reason, extra=self.extra, key=self.s3_key,
                     start_inclusive=self.start_inclusive
                 )
                 return {
@@ -253,8 +199,8 @@ class NEM12Generator:
                 self.extra = str(ex)[0:255]
                 self.control.update_control_record(
                     self.identifier, self.status,
-                    rows_counted=self.rows_counted, rows_written=self.rows_written,
-                    reason=self.reason, extra=self.extra, key=self.key,
+                    rows_counted=self.rows_counted, rows_written=self.generator.rows_written,
+                    reason=self.reason, extra=self.extra, key=self.s3_key,
                     start_inclusive=self.start_inclusive
                 )
                 return {
@@ -262,28 +208,7 @@ class NEM12Generator:
                     'cause': str(ex)
                 }
 
-    def _calculate_nmi_configurations(self, records: List[Dict]):
-        for record in records:
-            nmi_config = self.nmi_configurations.get(record['read_date'], set())
-            self.nmi_configurations[record['read_date']] = nmi_config
-            nmi_config.add(record['suffix_id'])
-
-    def _is_new_reading(self, record: Dict):
-        if self.current_record is None:
-            return False
-        if self.current_record['read_date'] != record['read_date']:
-            return True
-        if self.current_record['suffix_id'] != record['suffix_id']:
-            return True
-        if self.current_record['serial'] != record['serial']:
-            return True
-        if self.current_record['register_id'] != record['register_id']:
-            return True
-        if self.current_record['unit_of_measure'] != record['unit_of_measure']:
-            return True
-        return False
-
-    def _fetch_missing_periods(self, cur):
+    def _fetch_missing_periods(self, cur) -> List[Dict]:
         cur.execute(
             "CALL bua_list_missing_periods(%s, %s, %s, %s, %s, %s)",
             (self.identifier, self.start_inclusive, self.end_exclusive, self.today, self.run_date, self.identifier_type)
@@ -295,29 +220,82 @@ class NEM12Generator:
         return records
 
     def _write_nem12_file(self, file_name, output):
-        if self.rows_written > 0:
-            self.key = f'nem/bua/{self.run_date}/{file_name}'
+        if self.generator.rows_written > 0:
+            self.s3_key = f'nem/bua/{self.run_date}/{file_name}'
             body = output.getvalue().encode('utf-8')
             md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
-                Key=self.key,
+                Key=self.s3_key,
                 ContentMD5=md5sum,
                 ContentType='text/plain',
                 Body=body,
                 ContentLength=len(body)
             )
 
-    def _all_intervals_mapped(self, record: Dict):
-        if 0 in self.current_markers:
-            self.status = 'FAIL'
-            self.reason = 'Missing intervals'
-            suffix_id = record['suffix_id']
-            serial = record['serial']
-            read_date = record['read_date']
-            self.extra = f'Not all intervals mapped for {self.identifier} {suffix_id} {serial} on {read_date}'
-            return False
-        return True
+
+class NEM12ContentGenerator:
+
+    def __init__(self, *, file_date_time, update_date_time, identifier):
+        self.file_date_time = file_date_time
+        self.update_date_time = update_date_time
+        self.identifier = identifier
+        self.nmi_configurations: Dict[Any, Set] = dict()
+        self.non_zero_counted = 0
+        self.rows_written = 0
+        self.current_record = None
+        self.current_read_values = None
+        self.status = 'PASS'
+        self.reason = None
+        self.extra = None
+
+    def generate_nem12_file_content(self, records: List):
+        decimal.getcontext().prec = 6
+        output = io.StringIO()
+        writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(['100', 'NEM12', self.file_date_time, 'BUA', 'BUA'])
+        self._calculate_nmi_configurations(records)
+        for index, record in enumerate(records):
+            start_row = record['start_row']
+            end_row = record['end_row']
+            if not self._valid_register(record):
+                break
+            if not self._valid_suffix(record):
+                break
+            if not self._valid_uom(record):
+                break
+            scalar = self._convert_scalar(record)
+            is_first = self.current_record is None
+            if is_first:
+                self.current_read_values = self._default_read_values(record)
+            is_new = self._is_new_reading(record)
+            if is_new:
+                self._construct_read_row(writer)
+                self.current_read_values = self._default_read_values(record)
+            self.current_record = record
+            if start_row is not None and end_row is not None:
+                values = [
+                    decimal.Decimal(record[f'value_{index:02}']) * scalar
+                    for index in range(start_row + 1, end_row + 1)  # start_row zero based , end_row exclusive
+                ]
+                self.current_read_values = [
+                    *self.current_read_values[0:start_row],
+                    *values,
+                    *self.current_read_values[end_row:]
+                ]
+        if self.current_record is not None:
+            self._construct_read_row(writer)
+        if self.non_zero_counted == 0:
+            if self.reason is None:
+                self.reason = 'All rows are zero values'
+        writer.writerow(['900'])
+        return output
+
+    def _calculate_nmi_configurations(self, records: List[Dict]):
+        for record in records:
+            nmi_config = self.nmi_configurations.get(record['read_date'], set())
+            self.nmi_configurations[record['read_date']] = nmi_config
+            nmi_config.add(record['suffix_id'])
 
     def _valid_register(self, record: Dict):
         if len(record['register_id']) < 1:
@@ -351,35 +329,37 @@ class NEM12Generator:
             return False
         return True
 
-    def _convert_scalar(self, record):
+    @staticmethod
+    def _convert_scalar(record):
         scalar = record['scalar']
-        suffix_id = record['suffix_id']
-        read_date = record['read_date']
         if scalar is None:
-            self.status = 'FAIL'
-            self.reason = 'No scalar defined'
-            self.extra = f'No scalar defined for {self.identifier} {suffix_id} on {read_date}'
-            return None
+            return decimal.Decimal(1)
         scalar = decimal.Decimal(scalar)
-        if scalar.is_zero():
-            self.status = 'FAIL'
-            self.reason = 'Scalar defined as zero'
-            self.extra = f'Scalar defined as zero for {self.identifier} {suffix_id} on {read_date}'
-            return None
+        if scalar <= decimal.Decimal(0):
+            return decimal.Decimal(1)
         return scalar
 
-    def _valid_time_set(self, record):
-        time_set_id = record['time_set_id']
-        start_row = record['start_row']
-        end_row = record['end_row']
-        if time_set_id is not None and start_row is None or end_row is None:
-            self.status = 'FAIL'
-            self.reason = 'No valid time periods'
-            suffix_id = record['suffix_id']
-            read_date = record['read_date']
-            self.extra = f'No time periods for {self.identifier} {suffix_id} on {read_date}'
+    @staticmethod
+    def _default_read_values(record: Dict):
+        return [
+            decimal.Decimal(record[f'value_{index:02}'])
+            for index in range(1, 49)
+        ]
+
+    def _is_new_reading(self, record: Dict):
+        if self.current_record is None:
             return False
-        return True
+        if self.current_record['read_date'] != record['read_date']:
+            return True
+        if self.current_record['suffix_id'] != record['suffix_id']:
+            return True
+        if self.current_record['serial'] != record['serial']:
+            return True
+        if self.current_record['register_id'] != record['register_id']:
+            return True
+        if self.current_record['unit_of_measure'] != record['unit_of_measure']:
+            return True
+        return False
 
     def _construct_read_row(self, writer):
         total_value = sum(self.current_read_values)
