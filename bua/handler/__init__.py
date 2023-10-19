@@ -56,6 +56,7 @@ class LambdaHandler:
             if 'attributes' in record and 'ApproximateReceiveCount' in record['attributes']:
                 receive_count = int(record['attributes']['ApproximateReceiveCount'])
                 if receive_count >= self.max_receive_count:
+                    self.log('Too many retries. Sending to the failure queue.')
                     self.failure_queue.send_request([
                         {
                             'body': record['body'],
