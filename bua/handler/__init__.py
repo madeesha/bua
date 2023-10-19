@@ -27,15 +27,16 @@ class LambdaHandler:
             for record in event['Records']:
                 if record['eventSource'] == 'aws:sqs':
                     if self.sqs.deduplicate_request(record):
+                        body = record['body']
+                        self.log(body)
                         try:
                             body = json.loads(record['body'])
                         except Exception as ex:
                             self.log(str(ex))
-                            body = record['body']
                         try:
                             self._process_message(body)
                         except Exception as ex:
-                            self.log('Failed to process body')
+                            self.log('Failed to process request')
                             traceback.print_exception(ex)
                             if self._handle_too_many_retries(record, ex):
                                 return
