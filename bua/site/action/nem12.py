@@ -159,10 +159,15 @@ class NEM12Generator:
 
         self.current_record = None
         self.current_read_values = self._default_read_values()
+        self.current_markers = self._default_markers()
 
     @staticmethod
     def _default_read_values():
         return [decimal.Decimal(0) for _ in range(48)]
+
+    @staticmethod
+    def _default_markers():
+        return [0 for _ in range(48)]
 
     def generate(self):
         with self.conn.cursor() as cur:
@@ -176,6 +181,8 @@ class NEM12Generator:
                 for index, record in enumerate(records):
                     start_row = record['start_row']
                     end_row = record['end_row']
+                    if start_row is None or end_row is None:
+                        continue
                     if not self._valid_register(record):
                         break
                     if not self._valid_suffix(record):
@@ -189,20 +196,30 @@ class NEM12Generator:
                         break
                     is_new = self._is_new_reading(record)
                     if is_new:
+                        if not self._all_intervals_mapped(record):
+                            break
                         self._construct_read_row(writer)
                         self.current_read_values = self._default_read_values()
+                        self.current_markers = self._default_markers()
                     self.current_record = record
                     values = [
                         decimal.Decimal(record[f'value_{index:02}']) * scalar
                         for index in range(start_row + 1, end_row + 1)
                     ]
+                    markers = [1 for _index in range(start_row + 1, end_row + 1)]
                     self.current_read_values = [
                         *self.current_read_values[0:start_row],
                         *values,
                         *self.current_read_values[end_row:]
                     ]
+                    self.current_markers = [
+                        *self.current_markers[0:start_row],
+                        *markers,
+                        *self.current_markers[end_row:]
+                    ]
                 if self.current_record is not None:
-                    self._construct_read_row(writer)
+                    if self._all_intervals_mapped(record):
+                        self._construct_read_row(writer)
                 if self.non_zero_counted == 0:
                     if self.reason is None:
                         self.reason = 'All rows are zero values'
@@ -290,6 +307,17 @@ class NEM12Generator:
                 Body=body,
                 ContentLength=len(body)
             )
+
+    def _all_intervals_mapped(self, record: Dict):
+        if 0 in self.current_markers:
+            self.status = 'FAIL'
+            self.reason = 'Missing intervals'
+            suffix_id = record['suffix_id']
+            serial = record['serial']
+            read_date = record['read_date']
+            self.extra = f'Not all intervals mapped for {self.identifier} {suffix_id} {serial} on {read_date}'
+            return False
+        return True
 
     def _valid_register(self, record: Dict):
         if len(record['register_id']) < 1:
