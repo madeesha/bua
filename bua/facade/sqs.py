@@ -16,7 +16,9 @@ class SQS:
     def deduplicate_request(self, record):
         message_id = record['messageId']
         source_arn = record['eventSourceARN']
-        when_expires = datetime.today() + timedelta(minutes=15)
+        when_now = datetime.today()
+        ttl_now = int(time.mktime(when_now.timetuple()))
+        when_expires = when_now + timedelta(minutes=2)
         ttl = int(time.mktime(when_expires.timetuple()))
         pk = f'X:SQS:{source_arn}'
         sk = f'{message_id}'
@@ -30,8 +32,22 @@ class SQS:
             return True
         except ClientError as e:
             if e.operation_name == 'PutItem' and e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-                print(f'Found duplicate check for PK=[{pk}], SK=[{sk}]')
-                return False
+                response = self.ddb.get_item(Key={
+                    'PK': pk,
+                    'SK': sk,
+                }, ConsistentRead=True)
+                if response is not None and 'Item' in response and 'TTL' in response['Item']:
+                    ttl_then = response['Item']['TTL']
+                    if ttl_then > ttl_now:
+                        print(f'Found duplicate check for PK=[{pk}], SK=[{sk}]')
+                        return False
+                self.ddb.put_item(Item={
+                    'PK': pk,
+                    'SK': sk,
+                    'TTL': ttl
+                })
+                print(f'Record forced duplicate check for PK=[{pk}], SK=[{sk}]')
+                return True
             raise
 
     def undo_deduplicate_request(self, record):
@@ -101,13 +117,13 @@ class Queue:
 
     def send_if_needed(self, bodies: list, force=False, batch_size=10):
         """Send SQS message batches if needed"""
-        if len(bodies) >= (batch_size*10) or (len(bodies) > 0 and force):
+        if len(bodies) >= (batch_size * 10) or (len(bodies) > 0 and force):
             batches = [
-                {'entries': [bodies[n] for n in range(index, min(index+batch_size, len(bodies)))]}
+                {'entries': [bodies[n] for n in range(index, min(index + batch_size, len(bodies)))]}
                 for index in range(0, len(bodies), batch_size)
             ]
             for index in range(0, len(batches), 10):
-                self.send_request(batches[index:index+10])
+                self.send_request(batches[index:index + 10])
             bodies.clear()
 
     def send_request(self, bodies: List):
@@ -120,7 +136,7 @@ class Queue:
         while 'Failed' in response and len(response['Failed']) > 0:
             for failure in response['Failed']:
                 self._log(f'Failed {failure["Id"]} : '
-                      f'Sender fault {failure["SenderFault"]} : {failure["Code"]} : {failure["Message"]}')
+                          f'Sender fault {failure["SenderFault"]} : {failure["Code"]} : {failure["Message"]}')
             failures = {entry['Id'] for entry in response['Failed']}
             entries = [entry for entry in entries if entry['Id'] in failures]
             response = self.queue.send_messages(Entries=entries)
