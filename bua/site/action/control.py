@@ -58,8 +58,8 @@ class Control:
             sql = """
                         REPLACE INTO BUAControl
                         ( run_type, identifier, start_inclusive, end_exclusive, today, run_date
-                        , identifier_type, rows_counted, rows_written, status, reason, extra, s3_key)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        , identifier_type, rows_counted, rows_written, status, reason, extra, s3_key, cr_date)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                         """
             args = (self.run_type, identifier,
                     start_inclusive, end_exclusive,
@@ -107,6 +107,7 @@ class Control:
                 , reason = %s
                 , extra = %s
                 , s3_key = %s
+                , cr_date = NOW()
                 WHERE run_type = %s
                 AND identifier = %s
                 AND run_date = %s
