@@ -17,13 +17,13 @@ class MicroScalar(Accounts):
     def initiate_microscalar_calculation(
             self, run_type: str, today: str, run_date: str, identifier_type: str,
             start_inclusive: str, end_exclusive: str, end_inclusive: str,
-            account_limit=-1, proc_name=None
+            proc_name=None
     ):
         self.reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(
             run_type, today, run_date, identifier_type,
             start_inclusive, end_exclusive, end_inclusive,
-            all_accounts=False, account_limit=account_limit, proc_name=proc_name
+            all_accounts=False, proc_name=proc_name
         )
 
     def execute_microscalar_calculation(

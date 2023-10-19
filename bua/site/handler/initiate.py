@@ -180,7 +180,6 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         start_inclusive: str = body['start_inclusive']
         end_exclusive: str = body['end_exclusive']
         end_inclusive: str = body['end_inclusive']
-        account_limit: int = body.get('account_limit', -1)
         proc_name: str = body.get('proc_name')
         action = MicroScalar(
             queue=self.mscalar_queue,
@@ -196,7 +195,6 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
             end_inclusive=end_inclusive,
-            account_limit=account_limit,
             proc_name=proc_name
         )
 
