@@ -219,7 +219,7 @@ class NEM12Generator:
             try:
                 records = self._fetch_missing_periods(cur)
 
-                output = self.generator.generate_nem12_file_content(records)
+                output = self.generator.generate_nem12_file_content(records, self.status, self.reason, self.extra)
                 self.status = self.generator.status
                 self.reason = self.generator.reason
                 self.extra = self.generator.extra
@@ -303,7 +303,13 @@ class NEM12ContentGenerator:
         self.reason = None
         self.extra = None
 
-    def generate_nem12_file_content(self, records: List):
+    def generate_nem12_file_content(self, records: List, status=None, reason=None, extra=None):
+        if status is not None:
+            self.status = status
+        if reason is not None:
+            self.reason = reason
+        if extra is not None:
+            self.extra = extra
         decimal.getcontext().prec = 6
         output = io.StringIO()
         writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
