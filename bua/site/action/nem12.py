@@ -35,8 +35,10 @@ class NEM12(Accounts):
             end_exclusive: Optional[str],
             identifier_type: str
     ):
+        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        control.reset_control_records()
         self._prepare_nem12_files_to_process(end_exclusive, identifier_type, run_date, run_type, start_inclusive, today)
-        self._queue_nem12_files_to_process(identifier_type, run_date, run_type, today)
+        self._queue_nem12_files_to_process(control, identifier_type, run_date, run_type, today)
 
     def initiate_reset_nem12(self, run_type: str, today: str, run_date: str, identifier_type: str,
                              start_inclusive: str, end_exclusive: str, end_inclusive: str,
@@ -46,7 +48,7 @@ class NEM12(Accounts):
                                      start_inclusive, end_exclusive, end_inclusive,
                                      all_accounts=False, proc_name=proc_name)
 
-    def _queue_nem12_files_to_process(self, identifier_type, run_date, run_type, today):
+    def _queue_nem12_files_to_process(self, control: Control, identifier_type, run_date, run_type, today):
         with self.conn.cursor() as cur:
             try:
                 stmt = """
@@ -77,9 +79,14 @@ class NEM12(Accounts):
                         }
                         bodies.append(body)
                         total += 1
+                    else:
+                        control.update_control_record(
+                            identifier=nmi, status='SKIP', reason='Start date after end date', commit=False
+                        )
                 self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 self.log(f'{total} sites to generate {run_type} profiled estimates data')
                 self.conn.commit()
+                control.commit()
             except InternalError as ex:
                 traceback.print_exception(ex)
                 raise
@@ -93,8 +100,6 @@ class NEM12(Accounts):
 
     def _prepare_nem12_files_to_process(self, end_exclusive, identifier_type, run_date, run_type, start_inclusive,
                                         today):
-        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
-        control.reset_control_records()
         with self.conn.cursor() as cur:
             try:
                 stmt = "CALL bua_prep_profile_nmis(%s, %s, %s, %s, %s, %s)"
