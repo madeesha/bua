@@ -10,6 +10,9 @@ Parameters:
   HostedZoneId:
     Description: Route53 hosted zone id
     Type: String
+  EKSClusterName:
+    Description: EKS cluster name
+    Type: String
 
 Resources:
 
@@ -28,3 +31,11 @@ Resources:
       Description: "Route53 zone ID"
       Type: "String"
       Value: !Ref HostedZoneId
+
+  EKSClusterNameParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/cluster_name"
+      Description: "EKS Cluster Name"
+      Type: "String"
+      Value: !Ref EKSClusterName

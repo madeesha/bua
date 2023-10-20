@@ -6,5 +6,9 @@
   {
     "ParameterKey": "HostedZoneId",
     "ParameterValue": "Z06477101FOH3N8B2WK6N"
+  },
+  {
+    "ParameterKey": "EKSClusterName",
+    "ParameterValue": "anstead"
   }
 ]

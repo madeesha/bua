@@ -11,7 +11,6 @@
           "suffix": "bua-sql",
           "update_id": "12",
           "rdssecret": "cicd/{{prefix}}/rds/bua",
-          "cluster_name": "anstead",
           "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
         }
       },
@@ -38,7 +37,8 @@
             "action": "get_parameters",
             "args": {
               "names": [
-                "domain"
+                "domain",
+                "cluster_name"
               ]
             },
             "on": {
