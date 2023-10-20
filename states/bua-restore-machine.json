@@ -15,8 +15,7 @@
           "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:{{prefix}}-12-bua-sql-mysql8-0-32",
           "suffix": "bua-sql",
           "update_id": "12",
-          "rdssecret": "cicd/{{prefix}}/rds/bua",
-          "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
+          "rdssecret": "cicd/{{prefix}}/rds/bua"
         }
       },
       "Next": "MergeData"
@@ -44,7 +43,8 @@
               "names": [
                 "domain",
                 "hosted_zone_id",
-                "cluster_name"
+                "cluster_name",
+                "node_group_name"
               ]
             },
             "on": {

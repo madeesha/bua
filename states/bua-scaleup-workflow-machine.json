@@ -10,8 +10,7 @@
           "schema": "Turkey_BLU",
           "suffix": "bua-sql",
           "update_id": "12",
-          "rdssecret": "cicd/{{prefix}}/rds/bua",
-          "node_group_name": "managed-ng-anstead-demand-1-22-v20230914"
+          "rdssecret": "cicd/{{prefix}}/rds/bua"
         }
       },
       "Next": "MergeData"
@@ -38,7 +37,8 @@
             "args": {
               "names": [
                 "domain",
-                "cluster_name"
+                "cluster_name",
+                "node_group_name"
               ]
             },
             "on": {

@@ -13,6 +13,9 @@ Parameters:
   EKSClusterName:
     Description: EKS cluster name
     Type: String
+  EKSNodeGroupName:
+    Description: EKS node group name
+    Type: String
 
 Resources:
 
@@ -39,3 +42,11 @@ Resources:
       Description: "EKS Cluster Name"
       Type: "String"
       Value: !Ref EKSClusterName
+
+  EKSNodeGroupNameParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/node_group_name"
+      Description: "EKS Node Group Name"
+      Type: "String"
+      Value: !Ref EKSNodeGroupName
