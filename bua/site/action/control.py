@@ -119,13 +119,25 @@ class Control:
             )
             row_count = self.cur.execute(sql, args)
             if row_count == 0:
-                msg = f'NO UPDATE OF BUAControl FOR {self.run_type}, {identifier}, {self.run_date}, {start_inclusive}'
+                params = {
+                    'run_type': self.run_type,
+                    'identifier': identifier,
+                    'run_date': self.run_date,
+                    'start_inclusive': start_inclusive
+                }
+                msg = f'NO UPDATE OF BUAControl FOR {params}'
                 print(msg)
             if commit:
                 self.commit()
         except Exception as e2:
             traceback.print_exception(e2)
-            msg = f'NO UPDATE OF BUAControl FOR {self.run_type}, {identifier}, {self.run_date}, {start_inclusive}'
+            params = {
+                'run_type': self.run_type,
+                'identifier': identifier,
+                'run_date': self.run_date,
+                'start_inclusive': start_inclusive
+            }
+            msg = f'NO UPDATE OF BUAControl FOR {params}'
             print(msg)
             if commit:
                 self.rollback()

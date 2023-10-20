@@ -81,7 +81,8 @@ class NEM12(Accounts):
                         total += 1
                     else:
                         control.update_control_record(
-                            identifier=nmi, status='SKIP', reason='Start date after end date', commit=False
+                            identifier=nmi, status='SKIP', reason='Start date after end date', commit=False,
+                            start_inclusive=start_date
                         )
                 self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
                 self.log(f'{total} sites to generate {run_type} profiled estimates data')
