@@ -1,6 +1,9 @@
 from typing import Dict
+from zoneinfo import ZoneInfo
+
 from bua.handler import DBLambdaHandler
 from bua.site.action.nem12 import NEM12
+from datetime import datetime
 
 
 class BUASiteNEM12Handler(DBLambdaHandler):
@@ -34,10 +37,11 @@ class BUASiteNEM12Handler(DBLambdaHandler):
         today = entry['today']
         run_date = entry['run_date']
         identifier_type = entry['identifier_type']
+        now = datetime.now(ZoneInfo('Australia/Sydney'))
         action = NEM12(
             queue=self._segment_queue, conn=self.conn, ctl_conn=self.ctl_conn, log=self.log, debug=debug,
             s3_client=self._s3_client, bucket_name=self._meterdata_bucket_name
         )
         return action.nem12_file_generation(
-            run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type
+            run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type, now
         )

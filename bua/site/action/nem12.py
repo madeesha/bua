@@ -109,17 +109,18 @@ class NEM12(Action):
 
     def nem12_file_generation(
             self, run_type: str, nmi: str, start_inclusive: str, end_exclusive: str,
-            today: str, run_date: str, identifier_type: str
+            today: str, run_date: str, identifier_type: str, now: datetime
     ):
         generator = NEM12Generator(self.log, self.conn, self.ctl_conn, self.s3_client, self.bucket_name, run_type, nmi,
-                                   start_inclusive, end_exclusive, today, run_date, identifier_type)
-        return generator.generate()
+                                   start_inclusive, end_exclusive, today, run_date, identifier_type, now)
+        return generator.generate_file()
 
 
 class NEM12Generator:
     def __init__(
             self, log, conn: DB, ctl_conn: DB, s3_client, bucket_name, run_type: str, nmi: str,
-            start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str
+            start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str,
+            now: datetime
     ):
         self.control = Control(ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
         self.identifier = nmi
@@ -134,15 +135,9 @@ class NEM12Generator:
         self.today = today
         self.identifier_type = identifier_type
 
-        if len(run_date) == 10:
-            run_date = datetime.strptime(self.run_date, '%Y-%m-%d')
-        else:
-            run_date = datetime.strptime(self.run_date, '%Y-%m-%d %H:%M:%S')
-
-        self.file_date_time = run_date.strftime('%Y%m%d%H%M')
-        self.update_date_time = run_date
-        self.update_date_time = self.update_date_time - timedelta(days=36525)
-        self.update_date_time = self.update_date_time.strftime('%Y%m%d%H%M%S')
+        self.file_date_time = now.strftime('%Y%m%d%H%M')
+        years_ago = now - timedelta(days=36525)
+        self.update_date_time = years_ago.strftime('%Y%m%d%H%M%S')
         self.unique_id = f'{self.identifier}{self.file_date_time}'
         self.file_name = f'nem12#{self.unique_id}#bua#bua.csv'
 
@@ -160,7 +155,7 @@ class NEM12Generator:
             identifier=self.identifier
         )
 
-    def generate(self):
+    def generate_file(self):
         with self.conn.cursor() as cur:
             try:
                 records = self._fetch_missing_periods(cur)
@@ -171,7 +166,7 @@ class NEM12Generator:
                 self.extra = self.generator.extra
 
                 if self.status == 'PASS':
-                    self._write_nem12_file(self.file_name, output)
+                    self._write_nem12_file(output)
                 self.log(f'{len(records)} {self.run_type} '
                          f'profiled estimates for '
                          f'{self.identifier}. {self.status} : {self.reason} : {self.extra}')
@@ -219,9 +214,9 @@ class NEM12Generator:
             self.reason = 'No missing reads'
         return records
 
-    def _write_nem12_file(self, file_name, output):
+    def _write_nem12_file(self, output):
         if self.generator.rows_written > 0:
-            self.s3_key = f'nem/bua/{self.run_date}/{file_name}'
+            self.s3_key = f'nem/bua/{self.run_date}/{self.file_name}'
             body = output.getvalue().encode('utf-8')
             md5sum = base64.b64encode(md5(body).digest()).decode('utf-8')
             self.s3_client.put_object(
