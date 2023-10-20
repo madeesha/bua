@@ -89,7 +89,7 @@
         "data.$": "$.data",
         "context": {
           "steps.$": "$.context.steps",
-          "default_steps": "Restore,ScaleUpWorkflow,Warming,Segments,Microscalar,ResetBasicReads,BasicReads,ScaleUpMeterdata,GenerateNEM12,InvoiceRuns,ScaleDown,Export",
+          "default_steps": "Restore,ScaleUpWorkflow,Warming,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,InvoiceRuns,ScaleDown,Export",
           "splitter": ","
         }
       },
@@ -140,6 +140,7 @@
           "bua-scaleup-meterdata": "",
           "bua-nem12": "",
           "bua-reset-basicreads": "",
+          "bua-reset-nem12": "",
           "bua-basicreads": "",
           "bua-invoiceruns": "",
           "bua-scaledown": "",
@@ -217,6 +218,11 @@
           "Variable": "$.context.start",
           "StringEquals": "ScaleUpMeterdata",
           "Next": "ScaleUpMeterdata"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "ResetNEM12",
+          "Next": "ResetNEM12"
         },
         {
           "Variable": "$.context.start",
@@ -351,6 +357,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-scaleup-meterdata",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "ResetNEM12": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$": "$.context.stepfunction.bua-reset-nem12",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {

@@ -52,6 +52,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             'SegmentJurisdictionFix': self._initiate_segment_jurisdiction_fix,
             'Requeue': self._initiate_requeue,
             'NEM12': self._initiate_nem12_files,
+            'ResetNEM12': self._initiate_reset_nem12_files,
             'MicroScalar': self._initiate_microscalar,
             'BasicRead': self._initiate_basic_read,
             'ResetBasicRead': self._initiate_reset_basic_read,
@@ -171,6 +172,28 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             run_date=run_date,
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
+            identifier_type=identifier_type
+        )
+
+    def _initiate_reset_nem12_files(self, run_type, body, debug):
+        today: str = body['today']
+        run_date: str = body['run_date']
+        action = NEM12(
+            queue=self.nem12_queue,
+            conn=self.conn, ctl_conn=self.ctl_conn,
+            log=self.log, debug=debug
+        )
+        identifier_type = body['identifier_type']
+        start_inclusive = body['start_inclusive']
+        end_exclusive = body['end_exclusive']
+        end_inclusive = body['end_inclusive']
+        action.initiate_reset_nem12(
+            run_type=run_type,
+            today=today,
+            run_date=run_date,
+            start_inclusive=start_inclusive,
+            end_exclusive=end_exclusive,
+            end_inclusive=end_inclusive,
             identifier_type=identifier_type
         )
 

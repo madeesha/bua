@@ -7,24 +7,22 @@ from typing import Optional, List, Dict, Set, Any, Callable
 from datetime import datetime, timedelta, date
 import csv
 
-from pymysql import InternalError, InterfaceError
+from pymysql import InternalError, InterfaceError, DatabaseError
 
 from bua.facade.connection import DB
 from bua.facade.sqs import Queue
-from bua.site.action import Action
+from bua.site.action.accounts import Accounts
 from bua.site.action.control import Control
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
-class NEM12(Action):
+class NEM12(Accounts):
 
     def __init__(
-            self, queue: Queue, conn: DB, ctl_conn: DB, log: Callable, debug: bool,
-            batch_size=100, s3_client=None, bucket_name=None
+            self, queue: Queue, conn: DB, ctl_conn: DB, log: Callable, debug: bool, batch_size=100,
+            s3_client=None, bucket_name=None
     ):
-        Action.__init__(self, queue, conn, log, debug)
-        self.ctl_conn = ctl_conn
-        self.batch_size = batch_size
+        Accounts.__init__(self, queue, conn, ctl_conn, log, debug, batch_size)
         self.s3_client = s3_client
         self.bucket_name = bucket_name
 
@@ -39,6 +37,14 @@ class NEM12(Action):
     ):
         self._prepare_nem12_files_to_process(end_exclusive, identifier_type, run_date, run_type, start_inclusive, today)
         self._queue_nem12_files_to_process(identifier_type, run_date, run_type, today)
+
+    def initiate_reset_nem12(self, run_type: str, today: str, run_date: str, identifier_type: str,
+                             start_inclusive: str, end_exclusive: str, end_inclusive: str,
+                             proc_name=None):
+        self.reset_control_records(run_type, today, run_date, identifier_type)
+        self.queue_eligible_accounts(run_type, today, run_date, identifier_type,
+                                     start_inclusive, end_exclusive, end_inclusive,
+                                     all_accounts=False, proc_name=proc_name)
 
     def _queue_nem12_files_to_process(self, identifier_type, run_date, run_type, today):
         with self.conn.cursor() as cur:
@@ -114,6 +120,59 @@ class NEM12(Action):
         generator = NEM12Generator(self.log, self.conn, self.ctl_conn, self.s3_client, self.bucket_name, run_type, nmi,
                                    start_inclusive, end_exclusive, today, run_date, identifier_type, now)
         return generator.generate_file()
+
+    def reset_nem12(
+            self, run_type: str, today: str, run_date: str, identifier_type: str,
+            start_inclusive: str, end_exclusive: str, account_id: int
+    ):
+        control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
+        with self.conn.cursor() as cur:
+            sql = """
+            DELETE FROM AggregatedRead 
+            WHERE account_id = %s 
+            AND cr_date >= %s 
+            AND COALESCE(cr_process, '') != 'BUA_BASIC' 
+            AND invoice_run_id = -1
+            """
+            params = (account_id, run_date)
+            try:
+                self.log(f'Executing {run_type} for account {account_id} on {run_date}')
+                cur.execute(sql, params)
+                self.conn.commit()
+                control.update_control_record(str(account_id), STATUS_DONE)
+                return {
+                    'status': STATUS_DONE
+                }
+            except InternalError as ex:
+                traceback.print_exception(ex)
+                raise
+            except InterfaceError as ex:
+                traceback.print_exception(ex)
+                raise
+            except DatabaseError as ex:
+                traceback.print_exception(ex)
+                self.conn.rollback()
+                control.update_control_record(str(account_id), STATUS_FAIL, reason='DatabaseError', extra=str(ex))
+                return {
+                    'status': STATUS_FAIL,
+                    'cause': str(ex),
+                    'context': {
+                        'sql': sql,
+                        'params': list(params),
+                    }
+                }
+            except Exception as ex:
+                traceback.print_exception(ex)
+                self.conn.rollback()
+                control.update_control_record(str(account_id), STATUS_FAIL, reason='UnhandledError', extra=str(ex))
+                return {
+                    'status': STATUS_FAIL,
+                    'cause': str(ex),
+                    'context': {
+                        'sql': sql,
+                        'params': list(params),
+                    }
+                }
 
 
 class NEM12Generator:

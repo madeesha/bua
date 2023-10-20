@@ -27,7 +27,8 @@ class BUASiteNEM12Handler(DBLambdaHandler):
         self._meterdata_table = ddb_meterdata_table
         self._segment_queue = nem12_queue
         self._handler = {
-            'NEM12': self._handle_nem12
+            'NEM12': self._handle_nem12,
+            'ResetNEM12': self._handle_reset_nem12,
         }
 
     def _handle_nem12(self, run_type: str, entry: Dict, debug: bool) -> Dict:
@@ -45,3 +46,16 @@ class BUASiteNEM12Handler(DBLambdaHandler):
         return action.nem12_file_generation(
             run_type, nmi, start_inclusive, end_exclusive, today, run_date, identifier_type, now
         )
+
+    def _handle_reset_nem12(self, run_type: str, entry: Dict, debug: bool) -> Dict:
+        action = NEM12(
+            queue=self._segment_queue, conn=self.conn, ctl_conn=self.ctl_conn, log=self.log, debug=debug,
+            s3_client=self._s3_client, bucket_name=self._meterdata_bucket_name
+        )
+        today = entry['today']
+        run_date = entry['run_date']
+        identifier_type = entry['identifier_type']
+        start_inclusive = entry['start_inclusive']
+        end_exclusive = entry['end_exclusive']
+        account_id = entry['account_id']
+        return action.reset_nem12(run_type, today, run_date, identifier_type, start_inclusive, end_exclusive, account_id)

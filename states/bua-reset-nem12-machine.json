@@ -1,0 +1,191 @@
+{
+  "Comment": "Reset Interval Reads",
+  "StartAt": "DefaultValues",
+  "States": {
+    "DefaultValues": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "$.data",
+        "defaults": {
+          "schema": "Turkey_BLU",
+          "suffix": "bua-sql",
+          "update_id": "12",
+          "rdssecret": "cicd/{{prefix}}/rds/bua"
+        }
+      },
+      "Next": "MergeData"
+    },
+    "MergeData": {
+      "Type": "Pass",
+      "Parameters": {
+        "data.$": "States.JsonMerge($.defaults, $.data, false)"
+      },
+      "Next": "ResetIntervalReads"
+    },
+    "ResetIntervalReads": {
+      "Type": "Pass",
+      "Parameters": {
+        "type": "step",
+        "name": "Reset Interval Reads",
+        "next": "000_get_parameters",
+        "speed": "slow",
+        "retry_delay": 120,
+        "data.$": "$.data",
+        "steps": {
+          "000_get_parameters": {
+            "action": "get_parameters",
+            "args": {
+              "names": [
+                "domain"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "210_clear_error_queues"
+              }
+            }
+          },
+          "210_clear_error_queues": {
+            "action": "empty_site_errors_queues",
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "211_reset_missing_interval_reads"
+              }
+            }
+          },
+          "211_reset_missing_interval_reads": {
+            "action": "bua_initiate",
+            "args": {
+              "run_type": "ResetNEM12",
+              "identifier_type": "SegmentJurisdictionAvgExclEst"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "212_wait_for_reset_interval_reads"
+              }
+            }
+          },
+          "212_wait_for_reset_interval_reads": {
+            "action": "wait_for_empty_site_queues",
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "213_check_bua_control"
+              },
+              "FAILED": {}
+            }
+          },
+          "213_check_bua_control": {
+            "action": "check_bua_control",
+            "args": {
+              "run_type": "ResetNEM12"
+            },
+            "on": {
+              "COMPLETE": {},
+              "FAILED": {}
+            }
+          }
+        }
+      },
+      "Next": "NextTransition"
+    },
+    "FastController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FastControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 180,
+      "Next": "WhatNext"
+    },
+    "SlowController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlowControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 900,
+      "Next": "WhatNext"
+    },
+    "WhatNext": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.next",
+              "StringEquals": ""
+            },
+            {
+              "Variable": "$.result.status",
+              "StringEquals": "COMPLETE"
+            }
+          ],
+          "Next": "ExecutionDone"
+        },
+        {
+          "Variable": "$.next",
+          "StringEquals": "",
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$.delay",
+          "NumericGreaterThan": 0,
+          "Next": "WaitForNext"
+        }
+      ],
+      "Default": "NextTransition"
+    },
+    "ExecutionDone": {
+      "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "Step not COMPLETE"
+    },
+    "WaitForNext": {
+      "Type": "Wait",
+      "SecondsPath": "$.delay",
+      "Next": "NextTransition"
+    },
+    "NextTransition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.speed",
+          "StringEquals": "slow",
+          "Next": "NextTransitionSlow"
+        }
+      ],
+      "Default": "NextTransitionFast"
+    },
+    "NextTransitionSlow": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "SlowController"
+    },
+    "NextTransitionFast": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "FastController"
+    }
+  }
+}
