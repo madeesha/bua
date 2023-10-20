@@ -180,6 +180,21 @@ class NEM12(Accounts):
                 }
 
 
+class NEM12Status:
+    def __init__(self):
+        self.status: str = 'PASS'
+        self.reason: Optional[str] = None
+        self.extra: Optional[str] = None
+
+    def update(self, status: Optional[str] = None, reason: Optional[str] = None, extra: Optional[str] = None):
+        if status is not None:
+            self.status = status
+        if reason is not None:
+            self.reason = reason[0:255]
+        if extra is not None:
+            self.extra = extra[0:255]
+
+
 class NEM12Generator:
     def __init__(
             self, log, conn: DB, ctl_conn: DB, s3_client, bucket_name, run_type: str, nmi: str,
@@ -207,9 +222,7 @@ class NEM12Generator:
 
         self.rows_counted = 0
 
-        self.status = 'PASS'
-        self.reason = None
-        self.extra = None
+        self.state = NEM12Status()
 
         self.s3_key = None
 
@@ -224,21 +237,18 @@ class NEM12Generator:
             try:
                 records = self._fetch_missing_periods(cur)
 
-                output = self.generator.generate_nem12_file_content(records, self.status, self.reason, self.extra)
-                self.status = self.generator.status
-                self.reason = self.generator.reason
-                self.extra = self.generator.extra
+                output = self.generator.generate_nem12_file_content(records, self.state)
 
-                if self.status == 'PASS':
+                if self.state.status == 'PASS':
                     self._write_nem12_file(output)
                 self.log(f'{len(records)} {self.run_type} '
                          f'profiled estimates for '
-                         f'{self.identifier}. {self.status} : {self.reason} : {self.extra}')
+                         f'{self.identifier}. {self.state.status} : {self.state.reason} : {self.state.extra}')
                 self.conn.commit()
                 self.control.update_control_record(
-                    self.identifier, self.status,
+                    self.identifier, self.state.status,
                     rows_counted=self.rows_counted, rows_written=self.generator.rows_written,
-                    reason=self.reason, extra=self.extra, key=self.s3_key,
+                    reason=self.state.reason, extra=self.state.extra, key=self.s3_key,
                     start_inclusive=self.start_inclusive
                 )
                 return {
@@ -253,13 +263,11 @@ class NEM12Generator:
             except Exception as ex:
                 traceback.print_exception(ex)
                 self.conn.rollback()
-                self.status = "FAIL"
-                self.reason = "Exception raised"
-                self.extra = str(ex)[0:255]
+                self.state.update('FAIL', 'Exception raised', str(ex))
                 self.control.update_control_record(
-                    self.identifier, self.status,
+                    self.identifier, self.state.status,
                     rows_counted=self.rows_counted, rows_written=self.generator.rows_written,
-                    reason=self.reason, extra=self.extra, key=self.s3_key,
+                    reason=self.state.reason, extra=self.state.extra, key=self.s3_key,
                     start_inclusive=self.start_inclusive
                 )
                 return {
@@ -275,7 +283,7 @@ class NEM12Generator:
         records: List[Dict] = list(cur.fetchall())
         self.rows_counted = len(records)
         if self.rows_counted == 0:
-            self.reason = 'No missing reads'
+            self.state.update(reason='No missing reads')
         return records
 
     def _write_nem12_file(self, output):
@@ -304,17 +312,11 @@ class NEM12ContentGenerator:
         self.rows_written = 0
         self.current_record = None
         self.current_read_values = None
-        self.status = 'PASS'
-        self.reason = None
-        self.extra = None
+        self.state = NEM12Status()
 
-    def generate_nem12_file_content(self, records: List, status=None, reason=None, extra=None):
-        if status is not None:
-            self.status = status
-        if reason is not None:
-            self.reason = reason
-        if extra is not None:
-            self.extra = extra
+    def generate_nem12_file_content(self, records: List, state: Optional[NEM12Status] = None):
+        if state is not None:
+            self.state = state
         decimal.getcontext().prec = 6
         output = io.StringIO()
         writer = csv.writer(output, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -351,8 +353,8 @@ class NEM12ContentGenerator:
         if self.current_record is not None:
             self._construct_read_row(writer)
         if self.non_zero_counted == 0:
-            if self.reason is None:
-                self.reason = 'All rows are zero values'
+            if self.state.reason is None:
+                self.state.update(reason='All rows are zero values')
         writer.writerow(['900'])
         return output
 
@@ -364,33 +366,36 @@ class NEM12ContentGenerator:
 
     def _valid_register(self, record: Dict):
         if len(record['register_id']) < 1:
-            self.status = 'FAIL'
-            self.reason = 'Invalid register id defined'
             suffix_id = record['suffix_id']
             serial = record['serial']
             read_date = record['read_date']
-            self.extra = f'No register id defined for {self.identifier} {suffix_id} {serial} on {read_date}'
+            self.state.update(
+                'FAIL', 'Invalid register id defined',
+                f'No register id defined for {self.identifier} {suffix_id} {serial} on {read_date}'
+            )
             return False
         return True
 
     def _valid_suffix(self, record: Dict):
         if not 1 <= len(record['suffix_id']) <= 2:
-            self.status = 'FAIL'
-            self.reason = 'Invalid suffix defined'
             serial = record['serial']
             register_id = record['register_id']
             read_date = record['read_date']
-            self.extra = f'No suffix defined for {self.identifier} {serial} {register_id} on {read_date}'
+            self.state.update(
+                'FAIL', 'Invalid suffix defined',
+                f'No suffix defined for {self.identifier} {serial} {register_id} on {read_date}'
+            )
             return False
         return True
 
     def _valid_uom(self, record):
         if len(record['unit_of_measure']) < 1:
-            self.status = 'FAIL'
-            self.reason = 'Invalid unit of measure defined'
             suffix_id = record['suffix_id']
             read_date = record['read_date']
-            self.extra = f'No unit of measure defined for {self.identifier} {suffix_id} on {read_date}'
+            self.state.update(
+                'FAIL', 'Invalid unit of measure defined',
+                f'No unit of measure defined for {self.identifier} {suffix_id} on {read_date}'
+            )
             return False
         return True
 
@@ -429,7 +434,7 @@ class NEM12ContentGenerator:
     def _construct_read_row(self, writer):
         total_value = sum(self.current_read_values)
         if total_value < 0:
-            self.reason = 'Some rows have negative profile data'
+            self.state.update(reason='Some rows have negative profile data')
         elif total_value > 0:
             self.non_zero_counted += 1
         if total_value >= 0:
