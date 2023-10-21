@@ -301,7 +301,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
         action = Exporter(
             queue=self.prepare_queue,
             conn=self.conn, ctl_conn=self.ctl_conn,
-            log=self.log, debug=debug, batch_size=100,
+            log=self.log, debug=debug, batch_size=10,
             s3=self.s3
         )
         identifier_type = body['identifier_type']
