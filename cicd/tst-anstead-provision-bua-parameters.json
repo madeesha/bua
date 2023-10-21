@@ -4,6 +4,10 @@
     "ParameterValue": "cmil2mssslzz.ap-southeast-2.rds.amazonaws.com"
   },
   {
+    "ParameterKey": "RDSSecret",
+    "ParameterValue": "cicd/tst-anstead/rds/bua"
+  },
+  {
     "ParameterKey": "HostedZoneId",
     "ParameterValue": "Z06477101FOH3N8B2WK6N"
   },

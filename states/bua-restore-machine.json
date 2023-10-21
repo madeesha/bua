@@ -14,8 +14,7 @@
           "schema": "Turkey_BLU",
           "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:{{prefix}}-12-bua-sql-mysql8-0-32",
           "suffix": "bua-sql",
-          "update_id": "12",
-          "rdssecret": "cicd/{{prefix}}/rds/bua"
+          "update_id": "12"
         }
       },
       "Next": "MergeData"
@@ -42,6 +41,7 @@
             "args": {
               "names": [
                 "domain",
+                "rdssecret",
                 "hosted_zone_id",
                 "cluster_name",
                 "node_group_name"

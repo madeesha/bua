@@ -7,6 +7,9 @@ Parameters:
   RDSDomain:
     Description: RDS domain name
     Type: String
+  RDSSecret:
+    Description: RDS Secret Name
+    Type: String
   HostedZoneId:
     Description: Route53 hosted zone id
     Type: String
@@ -26,6 +29,14 @@ Resources:
       Description: "RDS domain name"
       Type: "String"
       Value: !Ref RDSDomain
+
+  RDSSecretParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/rdssecret"
+      Description: "RDS secret name"
+      Type: "String"
+      Value: !Ref RDSSecret
 
   HostedZoneIdParam:
     Type: "AWS::SSM::Parameter"

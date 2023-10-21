@@ -9,8 +9,7 @@
         "defaults": {
           "schema": "Turkey_BLU",
           "suffix": "bua-sql",
-          "update_id": "12",
-          "rdssecret": "cicd/{{prefix}}/rds/bua"
+          "update_id": "12"
         }
       },
       "Next": "MergeData"
@@ -37,6 +36,7 @@
             "args": {
               "names": [
                 "domain",
+                "rdssecret",
                 "cluster_name",
                 "node_group_name"
               ]
