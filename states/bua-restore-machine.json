@@ -45,7 +45,8 @@
                 "hosted_zone_id",
                 "cluster_name",
                 "node_group_name",
-                "rds_dns_alias"
+                "rds_dns_alias",
+                "sqlsecret"
               ]
             },
             "on": {
@@ -321,9 +322,6 @@
           "060_set_user_passwords": {
             "comment": "set the user passwords",
             "action": "execute_sql",
-            "args": {
-              "sqlsecret": "cicd/{{prefix}}/rds/bua/passwords"
-            },
             "on": {
               "COMPLETE": {
                 "next": "070_stats_sample_pages"

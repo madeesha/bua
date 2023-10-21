@@ -8,6 +8,10 @@
     "ParameterValue": "cicd/tst-anstead/rds/bua"
   },
   {
+    "ParameterKey": "SQLSecret",
+    "ParameterValue": "cicd/tst-anstead/rds/bua/passwords"
+  },
+  {
     "ParameterKey": "RDSDNSAlias",
     "ParameterValue": "tst-sql1.anstead.encore.sh"
   },

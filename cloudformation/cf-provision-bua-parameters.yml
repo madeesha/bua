@@ -10,6 +10,9 @@ Parameters:
   RDSSecret:
     Description: RDS Secret Name
     Type: String
+  SQLSecret:
+    Description: SQL Secret Name
+    Type: String
   RDSDNSAlias:
     Description: RDS DNS Alias
     Type: String
@@ -40,6 +43,14 @@ Resources:
       Description: "RDS secret name"
       Type: "String"
       Value: !Ref RDSSecret
+
+  SQLSecretParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/sqlsecret"
+      Description: "SQL secret name"
+      Type: "String"
+      Value: !Ref SQLSecret
 
   RDSDNSAliasParam:
     Type: "AWS::SSM::Parameter"
