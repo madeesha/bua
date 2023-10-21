@@ -87,6 +87,12 @@ execute_scaleup_meterdata:
 		--name $(TODAY)-ScaleUpMeterdata-$(UUID) \
 		--input '{"steps": "ScaleUpMeterdata", "run_date": "2023-10-01", "update_id": "14"}'
 
+execute_restart_meterdata:
+	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
+		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
+		--name $(TODAY)-RestartMeterdata-$(UUID) \
+		--input '{"steps": "RestartMeterdata", "run_date": "2023-10-01", "update_id": "14"}'
+
 execute_reset_nem12:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
 		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
