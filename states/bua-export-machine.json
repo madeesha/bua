@@ -104,7 +104,7 @@
             },
             "on": {
               "COMPLETE": {
-                "delay": 360,
+                "delay": 600,
                 "next": "120_wait_for_prepare_export"
               }
             }
