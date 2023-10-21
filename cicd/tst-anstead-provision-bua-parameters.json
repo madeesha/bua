@@ -8,6 +8,10 @@
     "ParameterValue": "cicd/tst-anstead/rds/bua"
   },
   {
+    "ParameterKey": "RDSDNSAlias",
+    "ParameterValue": "tst-sql1.anstead.encore.sh"
+  },
+  {
     "ParameterKey": "HostedZoneId",
     "ParameterValue": "Z06477101FOH3N8B2WK6N"
   },

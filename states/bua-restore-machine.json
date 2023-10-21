@@ -12,7 +12,7 @@
           "mysql_version": "8.0.32",
           "params_id": "2",
           "schema": "Turkey_BLU",
-          "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:{{prefix}}-12-bua-sql-mysql8-0-32",
+          "snapshot_arn": "you-must-provide",
           "suffix": "bua-sql",
           "update_id": "12"
         }
@@ -44,7 +44,8 @@
                 "rdssecret",
                 "hosted_zone_id",
                 "cluster_name",
-                "node_group_name"
+                "node_group_name",
+                "rds_dns_alias"
               ]
             },
             "on": {
@@ -370,7 +371,7 @@
             "args": {
               "route53_records": [
                 {
-                  "name": "tst-sql1.anstead.encore.sh",
+                  "name": "{{rds_dns_alias}}",
                   "type": "CNAME"
                 }
               ]

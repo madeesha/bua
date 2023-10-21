@@ -29,6 +29,7 @@ from bua.facade.route53 import Route53
 from bua.facade.sm import SecretManager
 from bua.facade.sqs import SQS
 from bua.pipeline.handler.request import HandlerRequest
+from bua.pipeline.utils.substitutions import Substitutions
 
 
 class BUAControllerHandler:
@@ -218,7 +219,7 @@ class BUAControllerHandler:
         data = self._get_data(event)
         self._process_args(data, step)
         self._calculate_run_dates(data)
-        self._substitute_values(data)
+        Substitutions(self.config, data).substitute_values(data)
 
         instance = self._determine_instance(data)
         log_item = self._log_processing_start(instance, name, this)
@@ -351,16 +352,6 @@ class BUAControllerHandler:
         if 'args' in step:
             for key, value in step['args'].items():
                 data[key] = value
-
-    def _substitute_values(self, data: Dict):
-        for key, value in data.items():
-            if isinstance(value, str) and '{{prefix}}' in value:
-                data[key] = value.replace('{{prefix}}', self.config['prefix'])
-            if isinstance(value, str) and '{{run_date}}' in value:
-                data[key] = value.replace('{{run_date}}', data['run_date'])
-            if isinstance(value, str) and '{{run_date|short}}' in value:
-                run_date = data['run_date'][0:10].replace('-', '')
-                data[key] = value.replace('{{run_date|short}}', run_date)
 
     @staticmethod
     def _get_data(event: Dict) -> Dict:
