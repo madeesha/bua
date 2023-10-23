@@ -36,7 +36,8 @@
             "args": {
               "names": [
                 "domain",
-                "rdssecret"
+                "rdssecret",
+                "adh_bucket_name"
               ]
             },
             "on": {
@@ -76,7 +77,7 @@
             "action": "remove_s3_objects",
             "speed": "slow",
             "args": {
-              "bucket_name": "{{prefix}}-s3-rw-integration",
+              "bucket_name": "{{adh_bucket_name}}",
               "bucket_prefix": "ADH/OUTBOUND/BUA/"
             },
             "on": {
@@ -159,7 +160,7 @@
             "args": {
               "source_bucket": "{{prefix}}-s3-bua",
               "source_prefix": "export/csv/{{run_date|short}}/",
-              "target_bucket": "{{prefix}}-s3-rw-integration",
+              "target_bucket": "{{adh_bucket_name}}",
               "target_prefix": "ADH/OUTBOUND/BUA/",
               "sse": "aws:kms",
               "kms_key_id": "alias/{{prefix}}-bua-shared-key"

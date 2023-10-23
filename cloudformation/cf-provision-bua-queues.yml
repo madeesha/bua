@@ -15,7 +15,6 @@ Parameters:
   NotificationTopicArn:
     Description: EARL topic that notifies when a snapshot is available to restore
     Type: String
-    Default: ""
 
 Conditions:
   SubscribeToTopic: !Not

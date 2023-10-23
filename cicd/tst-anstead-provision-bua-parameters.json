@@ -26,5 +26,9 @@
   {
     "ParameterKey": "EKSNodeGroupName",
     "ParameterValue": "managed-ng-anstead-demand-1-22-v20230914"
+  },
+  {
+    "ParameterKey": "ADHBucketName",
+    "ParameterValue": "tst-anstead-s3-rw-integration"
   }
 ]

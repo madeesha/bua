@@ -1,0 +1,17 @@
+[
+  {
+    "ParameterKey": "VPCSecurityGroups",
+    "ParameterValue": "sg-0ada7300206a53d02",
+    "Comment": "eks-matten-worker-sg"
+  },
+  {
+    "ParameterKey": "VPCSubnetIds",
+    "ParameterValue": "subnet-0384466d36a2c673e, subnet-088a32b536345907d, subnet-023df7f65b4541961",
+    "Comment": "prd-matten-ops-nat-a, prd-matten-ops-nat-b, prd-matten-ops-nat-c"
+  },
+  {
+    "ParameterKey": "KMSKeyId",
+    "ParameterValue": "17e5d2a6-9894-4db9-a9e6-aeb5da1d4367",
+    "Comment" : "corecmk"
+  }
+]

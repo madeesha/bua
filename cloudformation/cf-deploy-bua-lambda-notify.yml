@@ -34,11 +34,9 @@ Parameters:
   UpdateId:
     Description: Update ID to use for RDS instance
     Type: String
-    Default: "14"
   PipelineSteps:
     Description: The pipeline steps to execute when notified
     Type: String
-    Default: "DoNothing"
 
 Resources:
 

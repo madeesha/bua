@@ -1,0 +1,34 @@
+[
+  {
+    "ParameterKey": "RDSDomain",
+    "ParameterValue": "ckhrilltzfkv.ap-southeast-2.rds.amazonaws.com"
+  },
+  {
+    "ParameterKey": "RDSSecret",
+    "ParameterValue": "cicd/prd-matten/rds/bua"
+  },
+  {
+    "ParameterKey": "SQLSecret",
+    "ParameterValue": "cicd/prd-matten/rds/bua/passwords"
+  },
+  {
+    "ParameterKey": "RDSDNSAlias",
+    "ParameterValue": "prd-sql1.matten.encore.sh"
+  },
+  {
+    "ParameterKey": "HostedZoneId",
+    "ParameterValue": "Z00081093EURL25DEYLIH"
+  },
+  {
+    "ParameterKey": "EKSClusterName",
+    "ParameterValue": "matten"
+  },
+  {
+    "ParameterKey": "EKSNodeGroupName",
+    "ParameterValue": "managed-ng-demand"
+  },
+  {
+    "ParameterKey": "ADHBucketName",
+    "ParameterValue": "prd-matten-s3-bua"
+  }
+]
