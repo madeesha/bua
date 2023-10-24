@@ -13,6 +13,7 @@ default:
 stages:
   - "build"
   - "deploy:test"
+  - "deploy:prod"
 
 build:
   stage: "build"
@@ -44,5 +45,22 @@ anstead:deploy:
     CI_PARENT_PIPELINE_ID: $CI_PIPELINE_ID
     KMS_KEY_ALIAS: corecmk
     RUNNER_TAG: anstead
+  when: manual
+  needs:
+    - 'build'
+
+matten:deploy:
+  stage: "deploy:prod"
+  trigger:
+    include: .gitlab-deploy.yml
+    strategy: depend
+  variables:
+    CI_ENVIRONMENT_NAME: prd-matten
+    CI_PARENT_PIPELINE_ID: $CI_PIPELINE_ID
+    KMS_KEY_ALIAS: corecmk
+    RUNNER_TAG: matten
+  when: manual
+  only:
+    - main
   needs:
     - 'build'

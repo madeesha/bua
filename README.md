@@ -104,6 +104,19 @@ ANSTEAD-Export-StepFunction --> ANSTEAD-Terminate-StepFunction;
 
 ## Execution and Monitoring
 
+### BEWARE, WARNING
+
+**IT IS NOT A GOOD IDEA TO RUN THE PROFILING STEP FUNCTION TWICE FOR THE SAME RUN DATE**
+
+The reason is it takes a while to delete the old records and the lambda often times out trying.
+If you need to then manually delete the old records first and then run it.
+
+**IT IS IMPORTANT THAT THE SAME RUN DATE IS USED FOR ALL STEP FUNCTIONS**
+
+If you do not then chances are the correct data will not be found by subsequent step functions.
+If you need to re-run steps after an automated run fails, 
+then ensure you use the same run date for the manual steps as was used for the automated run.
+
 ### bua-restore
 
 *bua-restore* is used to create an RDS instance from a production snapshot.

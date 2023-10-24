@@ -25,6 +25,9 @@ Parameters:
   EKSNodeGroupName:
     Description: EKS node group name
     Type: String
+  ADHBucketName:
+    Description: Bucket to put files for ADH in
+    Type: String
 
 Resources:
 
@@ -83,3 +86,11 @@ Resources:
       Description: "EKS Node Group Name"
       Type: "String"
       Value: !Ref EKSNodeGroupName
+
+  ADHBucketNameParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/adh_bucket_name"
+      Description: "ADH Bucket Name"
+      Type: "String"
+      Value: !Ref ADHBucketName

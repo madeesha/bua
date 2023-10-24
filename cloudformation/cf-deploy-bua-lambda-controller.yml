@@ -230,6 +230,7 @@ Resources:
                   - 's3:ListObject*'
                 Resource:
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/export/*" ] ]
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/ADH/OUTBOUND/BUA/*" ] ]
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-rw-integration/ADH/OUTBOUND/BUA/*" ] ]
               - Sid: AllowS3AccessForCopyTablesSource
                 Effect: Allow

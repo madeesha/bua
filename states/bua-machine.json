@@ -192,6 +192,11 @@
       "Choices": [
         {
           "Variable": "$.context.start",
+          "StringEquals": "DoNothing",
+          "Next": "ExecutionDone"
+        },
+        {
+          "Variable": "$.context.start",
           "StringEquals": "Restore",
           "Next": "Restore"
         },

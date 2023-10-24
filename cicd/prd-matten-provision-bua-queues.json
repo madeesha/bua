@@ -1,0 +1,6 @@
+[
+  {
+    "ParameterKey": "NotificationTopicArn",
+    "ParameterValue": "arn:aws:sns:ap-southeast-2:760694178318:Prod-monthly-data-copy-Workflow-stack-BillingRunProdSNSTopicFD138868-qIC8QzQ2TgyD"
+  }
+]
