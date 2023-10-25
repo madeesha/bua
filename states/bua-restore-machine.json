@@ -10,7 +10,6 @@
           "instance_class": "DBInstanceClassR6i",
           "instance_type": "8xlarge",
           "mysql_version": "8.0.32",
-          "params_id": "2",
           "schema": "Turkey_BLU",
           "snapshot_arn": "you-must-provide",
           "suffix": "bua-sql",
@@ -46,7 +45,8 @@
                 "cluster_name",
                 "node_group_name",
                 "rds_dns_alias",
-                "sqlsecret"
+                "sqlsecret",
+                "params_id"
               ]
             },
             "on": {
