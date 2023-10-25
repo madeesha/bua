@@ -21,29 +21,7 @@ test: venv
 	venv/bin/coverage run --branch -m pytest --durations=0 tests
 	venv/bin/coverage report -m
 
-test-package: venv
-	rm -fr ./target/packages
-	mkdir -p ./target/packages
-	venv/bin/pip3 install --target ./target/packages --ignore-installed -r runtime-requirements.txt
-	find ./target/packages -depth -type d -name tests -exec rm -fr {} \;
-	find ./target/packages -depth -type d -name __pycache__ -exec rm -fr {} \;
-	zip -r ./target/layer.zip ./target/packages
-	ls -lh ./target/layer.zip
-	du -m ./target/packages | sort -n | tail -10
-
 # Trigger Restore Pipeline
-
-execute_defaults:
-	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
-		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
-		--name $(TODAY)-$(UUID) \
-		--input '{"steps": "", "run_date": "2023-10-01", "update_id": "14"}'
-
-execute_restore:
-	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
-		--state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
-		--name $(TODAY)-Restore-$(UUID) \
-		--input '{"steps": "Restore", "run_date": "2023-10-01", "update_id": "14", "snapshot_arn": "arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-13-2023-10-01-prod-data-2023-10-12-snapshot"}'
 
 execute_scaleup_workflow:
 	@aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
@@ -125,51 +103,8 @@ execute_export:
 
 # Manual Upgrade DB Steps
 
-18-sync-passwords:
-	bash bin/sync-passwords
-
-19-restore-triggers:
-	bash bin/restore-triggers
-
 20-restore-bua-scripts:
 	bash bin/restore-bua-scripts
 
 21-restore-bua-procedures:
 	bash bin/restore-bua-procedures
-
-21b-restore-triggers:
-	bash bin/restore-triggers
-
-# kubectl edit -n kube-system configmap/aws-auth
-#- groups:
-#  - system:masters
-#  rolearn: arn:aws:iam::561082505378:role/tst_anstead/lambda/tst_anstead_BUA_BUAControllerLambdaExecRole
-#  username: Admin
-
-# Old steps
-
-json: venv
-	cat bua/pipeline/actions/bua_restore.yml | venv/bin/python yaml2json.py > sandpit/bua_restore.json
-
-apply-eks: venv
-	kubectl apply -f eks/role.yml
-	kubectl apply -f eks/rolebinding.yml
-
-edit-config-map: venv
-	kubectl edit configmap -n kube-system aws-auth
-
-get-config-map: venv
-	kubectl -n kube-system get configmap/aws-auth -o yaml > eks/aws-auth.yml
-
-apply-config-map: venv
-	kubectl apply -f eks/aws-auth.yml
-
-watch-nodes: venv
-	kubectl get nodes --watch
-
-read-namespaced-deployments: venv
-	kubectl describe deployment -n core workflow -v=6
-
-switch-dns-cli:
-	aws --profile anstead route53 change-resource-record-sets --hosted-zone-id Z06477101FOH3N8B2WK6N \
-		--change-batch file://route53.json

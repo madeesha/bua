@@ -1,5 +1,0 @@
-#!/bin/bash
-cd ${HOME}/git/uss/turkey
-export MYSQL_PWD="${DB_PASS}"
-echo "TRUNCATE TABLE Turkey_BLU.schema_version_triggers" | mysql --host="${DB_HOST}" --port="${DB_PORT}" --user="${DB_USER}" Turkey_BLU
-./flyway -user="${DB_USER}" -password="${DB_PASS}" -url="jdbc:mysql://${DB_HOST}:${DB_PORT}/Turkey_BLU?useCursorFetch=true&useCompression=true&connectTimeout=10000" -configFile="conf/flyway-triggers.conf" migrate
