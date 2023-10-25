@@ -4,6 +4,9 @@ Parameters:
   ResourcePrefix:
     Description: Prefix to assign to resources
     Type: String
+  RDSParamsID:
+    Description: RDS params ID
+    Type: String
   RDSDomain:
     Description: RDS domain name
     Type: String
@@ -30,6 +33,14 @@ Parameters:
     Type: String
 
 Resources:
+
+  RDSParamsIDParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/params_id"
+      Description: "RDS ParamsID"
+      Type: "String"
+      Value: !Ref RDSParamsID
 
   RDSDomainParam:
     Type: "AWS::SSM::Parameter"

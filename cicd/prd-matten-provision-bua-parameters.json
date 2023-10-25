@@ -1,5 +1,9 @@
 [
   {
+    "ParameterKey": "RDSParamsID",
+    "ParameterValue": "1"
+  },
+  {
     "ParameterKey": "RDSDomain",
     "ParameterValue": "ckhrilltzfkv.ap-southeast-2.rds.amazonaws.com"
   },
