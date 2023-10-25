@@ -310,7 +310,8 @@
                 "TRUNCATE TABLE WorkflowInstance",
                 "SET FOREIGN_KEY_CHECKS=0",
                 "TRUNCATE TABLE EventLog",
-                "SET FOREIGN_KEY_CHECKS=1"
+                "SET FOREIGN_KEY_CHECKS=1",
+                "TRUNCATE TABLE InvoiceAttribute"
               ]
             },
             "on": {
