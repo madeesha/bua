@@ -46,7 +46,10 @@ config = {
     'next_queue_url': os.environ['nextQueueURL'],
     'failure_queue_url': os.environ['failureQueueURL'],
     'initiate_queue_url': os.environ['initiateQueueURL'],
-    'bucket_name': os.environ['bucketName']
+    'bucket_name': os.environ['bucketName'],
+    'mysql80_option_group_name': os.environ['mysql80optionGroupName'],
+    'mysql57_option_group_name': os.environ['mysql57optionGroupName'],
+    'core_kms_key_id': os.environ['coreKmsKeyId'],
 }
 
 handler = BUAControllerHandler(

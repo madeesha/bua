@@ -82,7 +82,7 @@
           },
           "010_restore_database": {
             "comment": "MySQL 8.0 restore",
-            "retries": 1,
+            "retries": 2,
             "action": "restore_database",
             "args": {
               "instance_class": "DBInstanceClassR6i",
@@ -94,12 +94,15 @@
               },
               "FAILED": {
                 "next": "012_destroy_database"
+              },
+              "NEEDCOPY": {
+                "next": "013_copy_snapshot"
               }
             }
           },
           "011_restore_database": {
             "comment": "MySQL 5.7 restore",
-            "retries": 1,
+            "retries": 2,
             "action": "restore_database",
             "args": {
               "instance_class": "DBInstanceClassR5",
@@ -111,12 +114,16 @@
               },
               "FAILED": {
                 "next": "012_destroy_database"
+              },
+              "NEEDCOPY": {
+                "next": "013_copy_snapshot"
               }
             }
           },
           "010_wait_for_restore_database": {
             "comment": "MySQL 8.0 restore",
             "action": "check_restore_database",
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "next": "030_reset_rds_password"
@@ -126,6 +133,7 @@
           "011_wait_for_restore_database": {
             "comment": "MySQL 5.7 restore",
             "action": "check_restore_database",
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "next": "031_reset_rds_password"
@@ -142,6 +150,24 @@
           },
           "012_wait_for_destroy_database": {
             "action": "check_destroy_database",
+            "retry_delay": 300,
+            "on": {
+              "COMPLETE": {
+                "next": "000_restore_database"
+              }
+            }
+          },
+          "013_copy_snapshot": {
+            "action": "copy_snapshot",
+            "on": {
+              "COMPLETE": {
+                "next": "013_wait_for_copy_snapshot"
+              }
+            }
+          },
+          "013_wait_for_copy_snapshot": {
+            "action": "check_copy_snapshot",
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "next": "000_restore_database"
@@ -226,6 +252,7 @@
           "034_wait_for_upgrade_db_complete": {
             "comment": "MySQL 5.7 upgrade database",
             "action": "check_change_set_complete",
+            "retry_delay": 300,
             "args": {
               "change_set_name": "upgrade-database-8-0-32",
               "mysql_version": "8.0.32"
@@ -287,6 +314,7 @@
           "037_wait_for_scale_db_complete": {
             "comment": "MySQL 5.7 upgrade database",
             "action": "check_change_set_complete",
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "delay": 120,
