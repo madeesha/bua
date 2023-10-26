@@ -80,12 +80,15 @@ class Restore:
             msg = f'{snapshot_arn} : Already a local snapshot'
             return "COMPLETE", msg
         snapshot_name = snapshot_arn.split(':')[-1]
-        snapshot_arn = self.rds.copy_snapshot(
+        new_snapshot_arn = self.rds.copy_snapshot(
             snapshot_arn=snapshot_arn, snapshot_name=snapshot_name,
             kms_key_id=kms_key_id, option_group_name=option_group_name
         )
-        data['snapshot_arn'] = snapshot_arn
-        msg = f'{snapshot_arn} : Copy in progress'
+        if new_snapshot_arn is None:
+            msg = f'{snapshot_arn} : Not found to copy'
+            return "FAILED", msg
+        data['snapshot_arn'] = new_snapshot_arn
+        msg = f'{new_snapshot_arn} : Copy in progress'
         return "COMPLETE", msg
 
     def check_copy_snapshot(self, request: HandlerRequest):
