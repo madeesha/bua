@@ -4,21 +4,22 @@ set -feuo pipefail
 
 print_syntax() {
   echo ""
-  echo "execute-bua-step Restore <run-date> <update-id> <snapshot-arn>"
-  echo "execute-bua-step ScaleUpWorkflow <run-date> <update-id>"
-  echo "execute-bua-step Warming <run-date> <update-id>"
-  echo "execute-bua-step Segments <run-date> <update-id>"
-  echo "execute-bua-step Microscalar <run-date> <update-id>"
-  echo "execute-bua-step ResetBasicReads <run-date> <update-id>"
-  echo "execute-bua-step BasicReads <run-date> <update-id>"
-  echo "execute-bua-step ScaleUpMeterdata <run-date> <update-id>"
-  echo "execute-bua-step RestartMeterdata <run-date> <update-id>"
-  echo "execute-bua-step ResetNEM12 <run-date> <update-id>"
-  echo "execute-bua-step GenerateNEM12 <run-date> <update-id>"
-  echo "execute-bua-step InvoiceRuns <run-date> <update-id>"
-  echo "execute-bua-step ScaleDown <run-date> <update-id>"
-  echo "execute-bua-step Export <run-date> <update-id>"
-  echo "execute-bua-step Weekly <run-date> <update-id>"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> --snapshot-arn <snapshot-arn> Restore"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> ScaleUpWorkflow"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> Warming"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> UtilityProfiles"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> Segments"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> Microscalar"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> ResetBasicReads"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> BasicReads"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> ScaleUpMeterdata"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> RestartMeterdata"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> ResetNEM12"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> GenerateNEM12"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> InvoiceRuns"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> ScaleDown"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> Export"
+  echo "execute-bua-step --run-date <run-date> --update-id <update-id> Weekly"
   echo ""
   echo "run-date format YYYY-MM-DD"
   echo ""
@@ -31,36 +32,42 @@ check_inputs() {
   echo "Execute a BUA step function"
   echo "==========================="
   echo ""
-  echo "Checking arguments"
+  echo "Checking arguments $@"
   echo ""
-  if [[ $# -lt 3 ]] ; then
-    echo "INVALID ARGUMENTS"
-    echo ""
+  if [[ $# -eq 0 ]] ; then
     print_syntax
   fi
-  step="${1}"
-  if [[ "${step}" == "Restore" ]] ; then
-    if [[ $# -ne 4 ]] ; then
-      echo "INVALID NUMBER OF ARGUMENTS FOR Restore"
-      echo ""
-      print_syntax
-    fi
-  fi
-  ok=0
-  for cmd in Restore ScaleUpWorkflow Warming Segments Microscalar ResetBasicReads BasicReads ScaleUpMeterdata RestartMeterdata ResetNEM12 GenerateNEM12 InvoiceRuns ScaleDown Export Weekly
-  do
-    if [[ "${cmd}" == "${step}" ]] ; then
-      ok=1
-    fi
+  run_date=""
+  update_id=""
+  snapshot_arn=""
+  while [[ $# -ge 2 ]] ; do
+    case "${1#--}" in
+      run-date)
+        run_date="${2}"
+        ;;
+      update-id)
+        update_id="${2}"
+        ;;
+      snapshot-arn)
+        snapshot_arn="${2}"
+        ;;
+      *)
+        print_syntax
+        ;;
+    esac
+    shift
+    shift
   done
-  if [[ "${ok}" -eq 1 ]] ; then
-    echo "Valid step ${step}"
-  else
-    echo "INVALID STEP NAME ${step}"
+  if [[ -z "${run_date}" ]] ; then
+    echo "INVALID ARGUMENTS, MISSING run-date"
     echo ""
     print_syntax
   fi
-  run_date="${2}"
+  if [[ -z "${update_id}" ]] ; then
+    echo "INVALID ARGUMENTS, MISSING update-id"
+    echo ""
+    print_syntax
+  fi
   if [[ "${run_date}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] ; then
     echo "Valid run date ${run_date}"
   else
@@ -68,7 +75,6 @@ check_inputs() {
     echo ""
     print_syntax
   fi
-  update_id="${3}"
   if [[ "${update_id}" =~ ^[0-9]{2}$ ]] ; then
     echo "Valid update id ${update_id}"
   else
@@ -76,29 +82,74 @@ check_inputs() {
     echo ""
     print_syntax
   fi
+  for step in "$@" ; do
+    if [[ "${step}" == "Restore" ]] ; then
+      if [[ -z "${snapshot_arn}" ]] ; then
+        echo "INVALID ARGUMENTS FOR Restore, MISSING shapshot-arn"
+        echo ""
+        print_syntax
+      fi
+    fi
+    ok=0
+    for cmd in Restore ScaleUpWorkflow Warming UtilityProfiles Segments Microscalar ResetBasicReads BasicReads ScaleUpMeterdata RestartMeterdata ResetNEM12 GenerateNEM12 InvoiceRuns ScaleDown Export Weekly
+    do
+      if [[ "${cmd}" == "${step}" ]] ; then
+        ok=1
+        break
+      fi
+    done
+    if [[ "${ok}" -eq 1 ]] ; then
+      echo "Valid step ${step}"
+    else
+      echo "INVALID STEP NAME ${step}"
+      echo ""
+      print_syntax
+    fi
+  done
 }
 
 check_inputs "$@"
 
-step="${1}"
-run_date="${2}"
-update_id="${3}"
+run_date=""
+update_id=""
+snapshot_arn=""
+while [[ $# -ge 2 ]] ; do
+  case "${1#--}" in
+    run-date)
+      run_date="${2}"
+      ;;
+    update-id)
+      update_id="${2}"
+      ;;
+    snapshot-arn)
+      snapshot_arn="${2}"
+      ;;
+    *)
+      print_syntax
+      ;;
+  esac
+  shift
+  shift
+done
 
 today=$(date +'%Y-%m-%d')
 uuid=$(uuid)
 
-if [[ "${step}" == "Weekly" ]] ; then
-  step="Segments,Microscalar,ResetBasicReads,BasicReads,ScaleUpMeterdata,ResetNEM12,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export"
-fi
+for step in "$@" ; do
 
-if [[ "${step}" == "Restore" ]] ; then
-  snapshot_arn="${4}"
-  input=$(jq -n --arg rdt "${run_date}" --arg stp "${step}" --arg upd "${update_id}" --arg arn "${snapshot_arn}" '{"steps": $stp, "run_date": $rdt, "update_id": $upd|fromjson, "snapshot_arn": $arn}')
-else
-  input=$(jq -n --arg rdt "${run_date}" --arg stp "${step}" --arg upd "${update_id}" '{"steps": $stp, "run_date": $rdt, "update_id": $upd|fromjson}')
-fi
+  if [[ "${step}" == "Weekly" ]] ; then
+    step="Segments,Microscalar,ResetBasicReads,BasicReads,ScaleUpMeterdata,ResetNEM12,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export"
+  fi
 
-aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
-    --state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
-    --name "${today}-${step}-${uuid}" \
-    --input "${input}"
+  if [[ "${step}" == "Restore" ]] ; then
+    input=$(jq -n --arg rdt "${run_date}" --arg stp "${step}" --arg upd "${update_id}" --arg arn "${snapshot_arn}" '{"steps": $stp, "run_date": $rdt, "update_id": $upd|fromjson, "snapshot_arn": $arn}')
+  else
+    input=$(jq -n --arg rdt "${run_date}" --arg stp "${step}" --arg upd "${update_id}" '{"steps": $stp, "run_date": $rdt, "update_id": $upd|fromjson}')
+  fi
+
+  aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
+      --state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
+      --name "${today}-${step}-${uuid}" \
+      --input "${input}"
+
+done
