@@ -144,6 +144,7 @@ Resources:
                   - "kms:DescribeKey"
                 Resource:
                   - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+                  - !Join [ "", [ "arn:aws:kms:", !Ref "AWS::Region", ":", !FindInMap [ "Accounts", "EARL", "AccountId" ] , ":key/*" ] ]
               - Sid: AllowManagingLogs
                 Effect: "Allow"
                 Action:
