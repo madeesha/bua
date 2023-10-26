@@ -37,6 +37,7 @@ provision:
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-basicreads-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-invoiceruns-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-machine.json
+      python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-utility-profiles-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-segments-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-restore-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-microscalar-machine.json

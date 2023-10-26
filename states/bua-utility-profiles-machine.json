@@ -1,5 +1,5 @@
 {
-  "Comment": "Generate Segments",
+  "Comment": "Generate Utility Profiles",
   "StartAt": "DefaultValues",
   "States": {
     "DefaultValues": {
@@ -19,13 +19,13 @@
       "Parameters": {
         "data.$": "States.JsonMerge($.defaults, $.data, false)"
       },
-      "Next": "GenerateSegments"
+      "Next": "UtilityProfiles"
     },
-    "GenerateSegments": {
+    "UtilityProfiles": {
       "Type": "Pass",
       "Parameters": {
         "type": "step",
-        "name": "BUA Segments",
+        "name": "BUA Utility Profiles",
         "next": "000_get_parameters",
         "speed": "fast",
         "retry_delay": 120,
@@ -41,112 +41,71 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "115_clear_error_queues"
+                "next": "100_clear_error_queues"
               }
             }
           },
-          "115_clear_error_queues": {
+          "100_clear_error_queues": {
             "action": "empty_site_errors_queues",
             "on": {
               "COMPLETE": {
                 "delay": 60,
-                "next": "120_jurisdiction_segments"
+                "next": "105_utility_profiles"
               }
             }
           },
-          "120_jurisdiction_segments": {
+          "105_utility_profiles": {
             "action": "bua_initiate",
             "args": {
-              "run_type": "SegmentJurisdiction",
-              "identifier_type": "SegmentJurisdictionAvgExclEst"
+              "run_type": "Utility"
             },
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "125_wait_for_jurisdiction_segments"
+                "next": "110_wait_for_utility_profiles"
               }
             }
           },
-          "125_wait_for_jurisdiction_segments": {
+          "110_wait_for_utility_profiles": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "130_clear_error_queues"
+                "next": "160_clear_error_queues"
               }
             }
           },
-          "130_clear_error_queues": {
+          "160_clear_error_queues": {
             "action": "empty_site_errors_queues",
             "on": {
               "COMPLETE": {
                 "delay": 60,
-                "next": "135_segment_jurisdiction_check"
+                "next": "165_profile_validation"
               }
             }
           },
-          "135_segment_jurisdiction_check": {
+          "165_profile_validation": {
             "action": "bua_initiate",
             "args": {
-              "run_type": "SegmentJurisdictionCheck",
-              "identifier_type": "SegmentJurisdictionAvgExclEst"
+              "run_type": "Validate"
             },
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "140_wait_for_segment_jurisdiction_check"
+                "next": "170_wait_for_profile_validation"
               }
             }
           },
-          "140_wait_for_segment_jurisdiction_check": {
+          "170_wait_for_profile_validation": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
             "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "145_clear_error_queues"
-              }
+              "COMPLETE": {}
             }
           },
-          "145_clear_error_queues": {
-            "action": "empty_site_errors_queues",
-            "on": {
-              "COMPLETE": {
-                "delay": 60,
-                "next": "150_segment_jurisdiction_fix"
-              }
-            }
-          },
-          "150_segment_jurisdiction_fix": {
-            "action": "bua_initiate",
-            "args": {
-              "run_type": "SegmentJurisdictionFix",
-              "identifier_type": "SegmentJurisdictionAvgExclEst"
-            },
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "155_wait_for_segment_jurisdiction_fix"
-              }
-            }
-          },
-          "155_wait_for_segment_jurisdiction_fix": {
-            "action": "wait_for_empty_site_queues",
-            "retry_delay": 120,
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "180_create_macro_profile_scalar"
-              }
-            }
-          },
-          "180_create_macro_profile_scalar": {
-            "action": "bua_create_macro_profile",
-            "args": {
-              "identifier_type": "SegmentJurisdictionAvgExclEst",
-              "stream_types": ["CONTROL", "PRIMARY", "SOLAR", "UNKNOWN", "GAS"]
-            },
+          "175_resolve_variances": {
+            "comment": "bua_resolve_variances",
             "on": {
               "COMPLETE": {}
             }

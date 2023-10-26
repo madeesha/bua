@@ -89,7 +89,7 @@
         "data.$": "$.data",
         "context": {
           "steps.$": "$.context.steps",
-          "default_steps": "Restore,ScaleUpWorkflow,Warming,ScaleDown,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export",
+          "default_steps": "Restore,ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export",
           "splitter": ","
         }
       },
@@ -135,6 +135,7 @@
         "context.$": "$.context",
         "stepfunction": {
           "bua-restore": "",
+          "bua-utility-profiles": "",
           "bua-segments": "",
           "bua-microscalar": "",
           "bua-scaleup-meterdata": "",
@@ -209,6 +210,11 @@
           "Variable": "$.context.start",
           "StringEquals": "Warming",
           "Next": "Warming"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "UtilityProfiles",
+          "Next": "UtilityProfiles"
         },
         {
           "Variable": "$.context.start",
@@ -314,6 +320,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-warming",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "UtilityProfiles": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-utility-profiles",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
