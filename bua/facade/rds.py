@@ -13,8 +13,7 @@ class RDS:
 
     def copy_snapshot(self, snapshot_arn: str, snapshot_name: str, kms_key_id: str, option_group_name: str) \
             -> Optional[str]:
-        snapshot_id = f'rds:{snapshot_name}'
-        snapshot = self._describe_db_snapshot(snapshot_id=snapshot_id)
+        snapshot = self._describe_db_snapshot(snapshot_id=snapshot_name)
         if 'DBSnapshotArn' in snapshot:
             return snapshot['DBSnapshotArn']
         try:
@@ -36,8 +35,7 @@ class RDS:
                 raise
 
     def check_snapshot_status(self, snapshot_name: str) -> str:
-        snapshot_id = f'rds:{snapshot_name}'
-        snapshot = self._describe_db_snapshot(snapshot_id=snapshot_id)
+        snapshot = self._describe_db_snapshot(snapshot_id=snapshot_name)
         return snapshot['Status']
 
     def _describe_db_snapshot(self, snapshot_id: str) -> Dict:
