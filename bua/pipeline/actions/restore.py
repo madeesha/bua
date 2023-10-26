@@ -72,8 +72,6 @@ class Restore:
         mysql_version: str = data['mysql_version']
         if mysql_version.startswith('8.0'):
             option_group_name = self.config['mysql80_option_group_name']
-        elif mysql_version.startswith('5.7'):
-            option_group_name = self.config['mysql57_option_group_name']
         else:
             msg = f'{snapshot_arn} : Unsupported mysql version {mysql_version}'
             return "FAILED", msg

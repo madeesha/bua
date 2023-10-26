@@ -172,7 +172,6 @@ class TestCase:
             'failure_queue_url': failure_queue_url,
             'initiate_queue_url': initiate_queue_url,
             'mysql80_option_group_name': '',
-            'mysql57_option_group_name': '',
             'core_kms_key_id': '',
             'aws_account': '123',
         }

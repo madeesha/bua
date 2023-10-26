@@ -16,7 +16,6 @@ class TestCase:
         'initiateQueueURL': '',
         'bucketName': '',
         'mysql80optionGroupName': '',
-        'mysql57optionGroupName': '',
         'coreKmsKeyId': '',
     }
 
