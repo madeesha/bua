@@ -96,7 +96,7 @@ class Restore:
         snapshot_arn = data['snapshot_arn']
         snapshot_name = snapshot_arn.split(':')[-1]
         status = self.rds.check_snapshot_status(snapshot_name=snapshot_name)
-        if status == 'Available':
+        if status.lower() == 'available':
             msg = f'{snapshot_arn} : Status {status}'
             return "COMPLETE", msg
         msg = f'{snapshot_arn} : Status {status}'
