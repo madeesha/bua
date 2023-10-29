@@ -288,17 +288,6 @@ Resources:
         - Key: resource-class
           Value: data
           
-  RdsDBInstanceAuditLogAlerts:
-    Type: AWS::CloudFormation::Stack
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Condition: "isProduction"
-    Properties:
-      TemplateURL: "https://gbl-core-cfn-templates.s3-ap-southeast-2.amazonaws.com/cfn/rds/mysql_audit_alarms.yml"
-      Parameters:
-        TeamsChannelEmail: !Ref TeamsChannelEmail
-        RDSInstanceName: !Ref RdsDBInstance        
-
 Outputs:
   RdsDBInstance:
     Description: A reference to the created CORE RDS Instance
