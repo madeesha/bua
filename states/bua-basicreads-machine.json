@@ -7,7 +7,6 @@
       "Parameters": {
         "data.$": "$.data",
         "defaults": {
-          "update_id": "12",
           "suffix": "bua-sql",
           "schema": "Turkey_BLU"
         }
@@ -36,7 +35,8 @@
             "args": {
               "names": [
                 "domain",
-                "rdssecret"
+                "rdssecret",
+                "update_id"
               ]
             },
             "on": {
