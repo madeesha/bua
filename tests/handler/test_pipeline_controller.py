@@ -20,7 +20,7 @@ class TestCase:
     }
 
     def test_invoke_handler(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         from bua.handler.pipeline_controller import lambda_handler
         event = {
@@ -31,7 +31,7 @@ class TestCase:
         lambda_handler(event, context)
 
     def test_get_config(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         from bua.handler.pipeline_controller import lambda_handler
         event = {
@@ -41,7 +41,7 @@ class TestCase:
         lambda_handler(event, context)
 
     def test_create_upgrade_version_change_set(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         monkey_patch.patch.cloudformation().describe_stacks_responses(
             {
@@ -82,7 +82,7 @@ class TestCase:
         lambda_handler(event, context)
 
     def test_bua_create_macro_profile(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         from bua.handler.pipeline_controller import lambda_handler
         event = {
