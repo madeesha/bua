@@ -14,3 +14,6 @@ class SSM:
         if 'Parameters' in response:
             return {param['Name']: param['Value'] for param in response['Parameters']}
         return dict()
+
+    def put_parameter(self, name: str, value: str):
+        self.ssm_client.put_parameter(Name=name, Value=value, Type='String', Overwrite=True, DataType='text')

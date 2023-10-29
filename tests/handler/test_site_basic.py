@@ -15,7 +15,7 @@ class TestCase:
     }
 
     def test_invoke_handler(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         from bua.handler.site_basic import lambda_handler
         event = {}
@@ -24,7 +24,7 @@ class TestCase:
 
     def test_invoke_handler_failure(self):
         with pytest.raises(RuntimeError) as ex:
-            import tests.handler.monkey_patch as monkey_patch
+            import tests.monkey.patch as monkey_patch
             monkey_patch.patch.patch(environ=self._environ)
             from bua.handler.site_basic import lambda_handler
             event = {
@@ -39,7 +39,7 @@ class TestCase:
         assert str(ex.value).startswith('Failed to handle request')
 
     def test_invoke_handler_reconnect_failure(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         with pytest.raises(RuntimeError) as ex:
             from bua.handler.site_basic import lambda_handler, handler
@@ -58,7 +58,7 @@ class TestCase:
         monkey_patch.patch.assert_log('Failed to reconnect to the database after a failure')
 
     def test_basic_read(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         monkey_patch.patch.connect().cursor().add_result_set([dict()])
         from bua.handler.site_basic import lambda_handler
@@ -73,7 +73,7 @@ class TestCase:
         lambda_handler(event, context)
 
     def test_reset_basic_read(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         monkey_patch.patch.connect().cursor().add_result_set([dict()])
         from bua.handler.site_basic import lambda_handler

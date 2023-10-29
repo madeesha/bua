@@ -8,13 +8,16 @@ class TestCase:
         'buaTableName': '',
         'failureQueueURL': '',
         'stateMachineArn': '',
-        'updateId': '',
+        'resourcePrefix': 'dev',
         'pipelineSteps': '',
     }
 
     def test_invoke_handler(self):
-        import tests.handler.monkey_patch as monkey_patch
+        import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
+        monkey_patch.patch.client('ssm').parameters = {
+            '/dev/bua/update_id': '100'
+        }
         from bua.handler.pipeline_notify import lambda_handler
         event = {
             'Records': [

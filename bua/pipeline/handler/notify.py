@@ -4,25 +4,29 @@ from typing import Union, Dict
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from bua.facade.ssm import SSM
 from bua.handler import LambdaHandler
 
 
 class BUANotifyHandler(LambdaHandler):
 
-    def __init__(self, *, config, sqs_client, ddb_bua_table, failure_queue, sfn_client, debug=False):
+    def __init__(self, *, config, sqs_client, ddb_bua_table, failure_queue, sfn_client, ssm_client, debug=False):
         LambdaHandler.__init__(
             self, sqs_client=sqs_client, ddb_table=ddb_bua_table, debug=debug, failure_queue=failure_queue
         )
         self.config = config
         self.sfn_client = sfn_client
+        self.ssm = SSM(ssm_client=ssm_client)
         self._default_handler = self._handle_event
 
     def _handle_event(self, body: Union[Dict, str]):
         run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
+
+        self._increment_update_id()
+
         event = {
             'steps': self.config['pipeline_steps'],
             'snapshot_arn': body,
-            'update_id': self.config['update_id'],
             'run_date': run_date,
         }
         unique_id = uuid.uuid4().hex
@@ -37,3 +41,10 @@ class BUANotifyHandler(LambdaHandler):
             name=step_execution_name,
             input=json.dumps(event)
         )
+
+    def _increment_update_id(self):
+        prefix = self.config['prefix']
+        name = f"/{prefix}/bua/update_id"
+        update_id = int(self.ssm.get_parameters([name])[name])
+        update_id += 1
+        self.ssm.put_parameter(name, str(update_id))

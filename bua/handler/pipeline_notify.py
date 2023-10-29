@@ -15,15 +15,19 @@ ddb_bua_table = ddb_resource.Table(os.environ['buaTableName'])
 sfn_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
 sfn_client = boto3.client('stepfunctions', config=sfn_config)
 
+ssm_config = botocore.config.Config(connect_timeout=10, read_timeout=30)
+ssm_client = boto3.client('ssm', config=ssm_config)
+
 config = {
+    'prefix': os.environ['resourcePrefix'],
     'state_machine_arn': os.environ['stateMachineArn'],
-    'update_id': os.environ['updateId'],
     'pipeline_steps': os.environ['pipelineSteps'],
 }
 
 handler = BUANotifyHandler(
     config=config,
-    sqs_client=sqs_client, ddb_bua_table=ddb_bua_table, failure_queue=failure_queue, sfn_client=sfn_client
+    sqs_client=sqs_client, ddb_bua_table=ddb_bua_table, failure_queue=failure_queue, sfn_client=sfn_client,
+    ssm_client=ssm_client
 )
 
 
