@@ -23,9 +23,6 @@ Parameters:
     - 16xlarge
     - 24xlarge
     - 32xlarge
-  TeamsChannelEmail:
-    Type: String
-    Default: "e9e19092.alintaenergy.com.au@au.teams.ms"  
   ReadReplicaOf:
     Type: String
     Default: ''
@@ -110,9 +107,6 @@ Mappings:
       DBInstanceClassR6i: db.r6i.32xlarge
 
 Conditions:
-  isProduction: !Equals
-    - !Ref EnvironmentName
-    - 'prd'
   IsOrWasReplica: !Equals
     - !Ref WasReplica
     - 'Yes'
