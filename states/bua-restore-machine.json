@@ -63,26 +63,18 @@
                   "variable": "mysql_version",
                   "string_equals": "8.0.32",
                   "result": "MYSQL80"
-                },
-                {
-                  "variable": "mysql_version",
-                  "string_equals": "5.7.41",
-                  "result": "MYSQL57"
                 }
               ]
             },
             "on": {
               "MYSQL80": {
                 "next": "010_restore_database"
-              },
-              "MYSQL57": {
-                "next": "011_restore_database"
               }
             }
           },
           "010_restore_database": {
             "comment": "MySQL 8.0 restore",
-            "retries": 1,
+            "retries": 2,
             "action": "restore_database",
             "args": {
               "instance_class": "DBInstanceClassR6i",
@@ -94,41 +86,19 @@
               },
               "FAILED": {
                 "next": "012_destroy_database"
-              }
-            }
-          },
-          "011_restore_database": {
-            "comment": "MySQL 5.7 restore",
-            "retries": 1,
-            "action": "restore_database",
-            "args": {
-              "instance_class": "DBInstanceClassR5",
-              "instance_type": "large"
-            },
-            "on": {
-              "COMPLETE": {
-                "next": "011_wait_for_restore_database"
               },
-              "FAILED": {
-                "next": "012_destroy_database"
+              "NEEDCOPY": {
+                "next": "013_copy_snapshot"
               }
             }
           },
           "010_wait_for_restore_database": {
             "comment": "MySQL 8.0 restore",
             "action": "check_restore_database",
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "next": "030_reset_rds_password"
-              }
-            }
-          },
-          "011_wait_for_restore_database": {
-            "comment": "MySQL 5.7 restore",
-            "action": "check_restore_database",
-            "on": {
-              "COMPLETE": {
-                "next": "031_reset_rds_password"
               }
             }
           },
@@ -142,6 +112,24 @@
           },
           "012_wait_for_destroy_database": {
             "action": "check_destroy_database",
+            "retry_delay": 300,
+            "on": {
+              "COMPLETE": {
+                "next": "000_restore_database"
+              }
+            }
+          },
+          "013_copy_snapshot": {
+            "action": "copy_snapshot",
+            "on": {
+              "COMPLETE": {
+                "next": "013_wait_for_copy_snapshot"
+              }
+            }
+          },
+          "013_wait_for_copy_snapshot": {
+            "action": "check_copy_snapshot",
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "next": "000_restore_database"
@@ -151,142 +139,6 @@
           "030_reset_rds_password": {
             "comment": "MySQL 8.0 reset password",
             "action": "reset_password",
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "040_disable_workflow_schedules"
-              }
-            }
-          },
-          "031_reset_rds_password": {
-            "comment": "MySQL 5.7 reset password",
-            "action": "reset_password",
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "032_export_procedures"
-              }
-            }
-          },
-          "032_export_procedures": {
-            "comment": "MySQL 5.7 export procedures",
-            "action": "export_procedures",
-            "args": {
-              "procedures": [
-                "mi_mfin_triage_v2"
-              ]
-            },
-            "on": {
-              "COMPLETE": {
-                "next": "033_upgrade_database"
-              }
-            }
-          },
-          "033_upgrade_database": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "create_upgrade_version_change_set",
-            "args": {
-              "change_set_name": "upgrade-database-8-0-32",
-              "mysql_version": "8.0.32"
-            },
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "033_wait_for_upgrade_db_ready"
-              }
-            }
-          },
-          "033_wait_for_upgrade_db_ready": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "check_change_set_ready",
-            "args": {
-              "change_set_name": "upgrade-database-8-0-32",
-              "mysql_version": "8.0.32"
-            },
-            "on": {
-              "COMPLETE": {
-                "next": "034_execute_upgrade_database"
-              }
-            }
-          },
-          "034_execute_upgrade_database": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "execute_change_set",
-            "args": {
-              "change_set_name": "upgrade-database-8-0-32",
-              "mysql_version": "8.0.32"
-            },
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "034_wait_for_upgrade_db_complete"
-              }
-            }
-          },
-          "034_wait_for_upgrade_db_complete": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "check_change_set_complete",
-            "args": {
-              "change_set_name": "upgrade-database-8-0-32",
-              "mysql_version": "8.0.32"
-            },
-            "on": {
-              "COMPLETE": {
-                "next": "035_import_procedures"
-              }
-            }
-          },
-          "035_import_procedures": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "import_procedures",
-            "args": {
-              "procedures": [
-                "mi_mfin_triage_v2"
-              ]
-            },
-            "on": {
-              "COMPLETE": {
-                "next": "036_scale_database"
-              }
-            }
-          },
-          "036_scale_database": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "create_scale_change_set",
-            "args": {
-              "change_set_name": "scale-database-8xlarge",
-              "instance_class": "DBInstanceClassR6i",
-              "instance_type": "8xlarge"
-            },
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "036_wait_for_scale_db_ready"
-              }
-            }
-          },
-          "036_wait_for_scale_db_ready": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "check_change_set_ready",
-            "on": {
-              "COMPLETE": {
-                "next": "037_execute_scale_database"
-              }
-            }
-          },
-          "037_execute_scale_database": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "execute_change_set",
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "037_wait_for_scale_db_complete"
-              }
-            }
-          },
-          "037_wait_for_scale_db_complete": {
-            "comment": "MySQL 5.7 upgrade database",
-            "action": "check_change_set_complete",
             "on": {
               "COMPLETE": {
                 "delay": 120,

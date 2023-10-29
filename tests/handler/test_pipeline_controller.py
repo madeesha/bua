@@ -15,6 +15,8 @@ class TestCase:
         'failureQueueURL': '',
         'initiateQueueURL': '',
         'bucketName': '',
+        'mysql80optionGroupName': '',
+        'coreKmsKeyId': '',
     }
 
     def test_invoke_handler(self):

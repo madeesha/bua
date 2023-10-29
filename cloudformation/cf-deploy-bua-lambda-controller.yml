@@ -33,6 +33,11 @@ Parameters:
     Type: String
     Default: 365
 
+Mappings:
+  Accounts:
+    EARL:
+      AccountId: 760694178318
+
 Resources:
 
   BUAControllerLambdaExecRole:
@@ -119,12 +124,14 @@ Resources:
                   - "rds:RemoveTags*"
                   - "rds:Restore*"
                   - "rds:Reboot*"
+                  - "rds:Copy*"
                 Resource:
                   - !Sub "arn:aws:rds:*:${AWS::AccountId}:db:${ResourcePrefix}-*"
                   - !Sub "arn:aws:rds:*:${AWS::AccountId}:og:*"
                   - !Sub "arn:aws:rds:*:${AWS::AccountId}:pg:*"
                   - !Sub "arn:aws:rds:*:${AWS::AccountId}:subgrp:${ResourcePrefix}-rds-*"
                   - !Sub "arn:aws:rds:*:${AWS::AccountId}:snapshot:*"
+                  - !Join [ "", [ "arn:aws:rds:", !Ref "AWS::Region", ":", !FindInMap [ "Accounts", "EARL", "AccountId" ] , ":snapshot:*" ] ]
               - Sid: AllowRestoreFromEncryptedSnapshot
                 Effect: "Allow"
                 Action:
@@ -137,6 +144,7 @@ Resources:
                   - "kms:DescribeKey"
                 Resource:
                   - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+                  - !Join [ "", [ "arn:aws:kms:", !Ref "AWS::Region", ":", !FindInMap [ "Accounts", "EARL", "AccountId" ] , ":key/*" ] ]
               - Sid: AllowManagingLogs
                 Effect: "Allow"
                 Action:
@@ -280,6 +288,8 @@ Resources:
           initiateQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-queue" ] ]
           awsRegion: !Ref "AWS::Region"
           awsAccount: !Ref "AWS::AccountId"
+          mysql80optionGroupName: !ImportValue 'core-rds-mysql80-option-group-name'
+          coreKmsKeyId: !ImportValue CORECMK
       Code:
         ZipFile: |
           from bua.handler.pipeline_controller import lambda_handler

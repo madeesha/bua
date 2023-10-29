@@ -170,7 +170,10 @@ class TestCase:
             },
             'next_queue_url': 'next_queue',
             'failure_queue_url': failure_queue_url,
-            'initiate_queue_url': initiate_queue_url
+            'initiate_queue_url': initiate_queue_url,
+            'mysql80_option_group_name': '',
+            'core_kms_key_id': '',
+            'aws_account': '123',
         }
 
     @fixture(autouse=True)
@@ -188,7 +191,7 @@ class TestCase:
             'type': 'step',
             'data': {
                 'params_id': 11,
-                'snapshot_arn': 'arn:123',
+                'snapshot_arn': 'arn:aws:rds:ap-southeast-2:123:snapshot:mydb-snapshot',
                 'instance_type': '8xlarge',
                 'mysql_version': '8.0.32',
                 'instance_class': 'DBInstanceClassR6i'
@@ -227,7 +230,7 @@ class TestCase:
             'this': 'restore_database',
             'data': {
                 'params_id': 11,
-                'snapshot_arn': 'arn:123',
+                'snapshot_arn': 'arn:aws:rds:ap-southeast-2:123:snapshot:mydb-snapshot',
                 'instance_type': '8xlarge',
                 'mysql_version': '8.0.32',
                 'instance_class': 'DBInstanceClassR6i'
@@ -244,6 +247,32 @@ class TestCase:
         }
         handler.handle_request(body)
         sqs.assert_no_failures()
+        assert body['result']['status'] == 'COMPLETE'
+
+    def test_restore_database_another_account_snapshot(self, handler, sqs, update_id, suffix):
+        body = {
+            'name': 'Restore Database',
+            'this': 'restore_database',
+            'data': {
+                'params_id': 11,
+                'snapshot_arn': 'arn:aws:rds:ap-southeast-2:456:snapshot:mydb-snapshot',
+                'instance_type': '8xlarge',
+                'mysql_version': '8.0.32',
+                'instance_class': 'DBInstanceClassR6i'
+            },
+            'steps': {
+                'restore_database': {
+                    'action': 'restore_database',
+                    'args': {
+                        'update_id': update_id,
+                        'suffix': suffix
+                    }
+                }
+            }
+        }
+        handler.handle_request(body)
+        sqs.assert_no_failures()
+        assert body['result']['status'] == 'NEEDCOPY'
 
     def test_check_restore_database(self, handler, sqs, update_id, suffix):
         body = {
@@ -255,6 +284,64 @@ class TestCase:
                     'args': {
                         'update_id': update_id,
                         'suffix': suffix
+                    }
+                }
+            }
+        }
+        handler.handle_request(body)
+        sqs.assert_no_failures()
+
+    def test_copy_snapshot_same_account(self, handler, sqs, update_id, suffix):
+        body = {
+            'name': 'Restore Database',
+            'this': 'restore_database',
+            'data': {
+                'params_id': 11,
+                'snapshot_arn': 'arn:aws:rds:ap-southeast-2:123:snapshot:mydb-snapshot',
+                'instance_type': '8xlarge',
+                'mysql_version': '8.0.32',
+                'instance_class': 'DBInstanceClassR6i'
+            },
+            'steps': {
+                'restore_database': {
+                    'action': 'copy_snapshot',
+                }
+            }
+        }
+        handler.handle_request(body)
+        sqs.assert_no_failures()
+        assert body['result']['status'] == 'COMPLETE'
+
+    def test_copy_snapshot_different_account(self, handler, sqs, update_id, suffix):
+        body = {
+            'name': 'Restore Database',
+            'this': 'restore_database',
+            'data': {
+                'params_id': 11,
+                'snapshot_arn': 'arn:aws:rds:ap-southeast-2:456:snapshot:mydb-snapshot',
+                'instance_type': '8xlarge',
+                'mysql_version': '8.0.32',
+                'instance_class': 'DBInstanceClassR6i'
+            },
+            'steps': {
+                'restore_database': {
+                    'action': 'copy_snapshot',
+                }
+            }
+        }
+        handler.handle_request(body)
+        sqs.assert_no_failures()
+        assert body['result']['status'] == 'COMPLETE'
+
+    def test_check_copy_snapshot(self, handler, sqs, update_id, suffix):
+        body = {
+            'name': 'Restore Database',
+            'this': 'check_restore_database',
+            'steps': {
+                'check_restore_database': {
+                    'action': 'check_copy_snapshot',
+                    'args': {
+                        'snapshot_arn': 'arn:aws:rds:ap-southeast-2:123:snapshot:mydb-snapshot'
                     }
                 }
             }

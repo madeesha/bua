@@ -48,7 +48,7 @@ class BUAControllerHandler:
         sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager, mysql=mysql)
         rds_handler = RDS(rds_client=rds_client)
         reset_handler = Reset(config=config, rds=rds_handler, secret_manager=secret_manager)
-        restore_handler = Restore(config=config, cf_client=cf_client)
+        restore_handler = Restore(config=config, cf_client=cf_client, rds=rds_handler)
         destroy_handler = Destroy(config=config, cf_client=cf_client)
         change_set_handler = ChangeSet(config=config, cf_client=cf_client)
         kubectl_handler = KubeCtl(
@@ -68,6 +68,8 @@ class BUAControllerHandler:
             'get_stepfunction_arns': self.get_stepfunction_arns,
             'restore_database': restore_handler.restore_database,
             'check_restore_database': restore_handler.check_restore_database,
+            'copy_snapshot': restore_handler.copy_snapshot,
+            'check_copy_snapshot': restore_handler.check_copy_snapshot,
             'destroy_database': destroy_handler.destroy_database,
             'check_destroy_database': destroy_handler.check_destroy_database,
             'reset_password': reset_handler.reset_password,
