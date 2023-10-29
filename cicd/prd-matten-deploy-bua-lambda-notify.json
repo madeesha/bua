@@ -1,7 +1,7 @@
 [
   {
     "ParameterKey": "PipelineSteps",
-    "ParameterValue": "Restore"
+    "ParameterValue": ""
   },
   {
     "ParameterKey": "UpdateId",
