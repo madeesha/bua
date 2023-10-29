@@ -13,6 +13,9 @@ Parameters:
   RDSSecret:
     Description: RDS Secret Name
     Type: String
+  RDSUpdateID:
+    Description: RDS Update ID
+    Type: String
   SQLSecret:
     Description: SQL Secret Name
     Type: String
@@ -41,6 +44,14 @@ Resources:
       Description: "RDS ParamsID"
       Type: "String"
       Value: !Ref RDSParamsID
+
+  RDSUpdateIDParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/update_id"
+      Description: "RDS UpdateID"
+      Type: "String"
+      Value: !Ref RDSUpdateID
 
   RDSDomainParam:
     Type: "AWS::SSM::Parameter"

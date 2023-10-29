@@ -8,8 +8,7 @@
         "data.$": "$.data",
         "defaults": {
           "schema": "Turkey_BLU",
-          "suffix": "bua-sql",
-          "update_id": "12"
+          "suffix": "bua-sql"
         }
       },
       "Next": "MergeData"
@@ -37,6 +36,7 @@
               "names": [
                 "domain",
                 "rdssecret",
+                "update_id",
                 "adh_bucket_name"
               ]
             },
