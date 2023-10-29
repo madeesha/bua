@@ -85,8 +85,24 @@
           "180_wait_for_execute_micro_scalar": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 300,
+            "args": {
+              "max_errors": 100000
+            },
             "on": {
-              "COMPLETE": {}
+              "COMPLETE": {
+                "next": "190_check_bua_control"
+              }
+            }
+          },
+          "190_check_bua_control": {
+            "action": "check_bua_control",
+            "args": {
+              "run_type": "Microscalar",
+              "max_errors": 100000
+            },
+            "on": {
+              "COMPLETE": {},
+              "FAILED": {}
             }
           }
         }

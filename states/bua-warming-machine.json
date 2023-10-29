@@ -61,6 +61,7 @@
             "action": "wait_for_workflows",
             "retry_delay": 300,
             "args": {
+              "max_errors": 1000,
               "workflow_names": [
                 "WARM_TABLE",
                 "WARM_PARTITION"
@@ -90,6 +91,7 @@
             "action": "wait_for_workflows",
             "retry_delay": 300,
             "args": {
+              "max_errors": 1000,
               "workflow_names": [
                 "WARM_INDEX"
               ]

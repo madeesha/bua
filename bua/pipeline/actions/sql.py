@@ -263,11 +263,13 @@ class SQL:
         data = request.data
         run_type = data['run_type']
         run_date = data['run_date']
-        acceptable_error_rate = int(data.get('acceptable_error_rate', 0))
+        args = request.step.get('args', dict())
+        acceptable_error_rate = int(args.get('acceptable_error_rate', 0))
+        max_errors = int(args.get('max_errors', 0))
         try:
             con = self._connect(data)
             with con:
-                cur = con.cursor()
+                cur: pymysql.cursors.SSDictCursor = con.cursor()
                 with cur:
                     sql = "SELECT status, COUNT(*) AS total " \
                           "FROM BUAControl " \
@@ -280,7 +282,7 @@ class SQL:
                         total_errors = results.get('FAIL', 0)
                         total_done = results.get('DONE', 0)
                         total_instances = total_done + total_errors
-                        acceptable_errors = total_instances * acceptable_error_rate / 100
+                        acceptable_errors = max(total_instances * acceptable_error_rate / 100, max_errors)
                         if total_errors > acceptable_errors:
                             return "FAILED", f'{results["FAIL"]} {run_type} in FAIL status for {run_date}'
             return "COMPLETE", f'No {run_type} in FAIL status for {run_date}'
@@ -291,9 +293,11 @@ class SQL:
 
     def wait_for_workflows(self, request: HandlerRequest):
         data = request.data
-        workflow_names = data['workflow_names']
-        workflow_instance_id = int(data.get('workflow_instance_id', 0))
-        acceptable_error_rate = int(data.get('acceptable_error_rate', 0))
+        args = request.step.get('args', dict())
+        workflow_names = args['workflow_names']
+        workflow_instance_id = int(args.get('workflow_instance_id', 0))
+        acceptable_error_rate = int(args.get('acceptable_error_rate', 0))
+        max_errors = int(args.get('max_errors', 0))
         try:
             con = self._connect(data)
             with con:
@@ -321,7 +325,7 @@ class SQL:
                             total_errors = results.get('ERROR', 0)
                             total_done = results.get('DONE', 0)
                             total_instances = total_done + total_errors
-                            acceptable_errors = total_instances * acceptable_error_rate / 100
+                            acceptable_errors = max(total_instances * acceptable_error_rate / 100, max_errors)
                             if total_errors > acceptable_errors:
                                 return "FAILED", f'{results["ERROR"]} {workflow_name} workflows in ERROR status'
                         if 'HOLD' in results:
@@ -364,7 +368,8 @@ class SQL:
 
     def wait_for_workflow_schedules(self, request: HandlerRequest):
         data = request.data
-        workflow_names = data['workflow_names']
+        args = request.step.get('args', dict())
+        workflow_names = args['workflow_names']
         try:
             con = self._connect(data)
             with con:
