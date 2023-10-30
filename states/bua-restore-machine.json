@@ -36,110 +36,89 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "000_restore_database"
+                "next": "100_restore_database"
               }
             }
           },
-          "000_restore_database": {
-            "action": "choice",
-            "args": {
-              "choices": [
-                {
-                  "variable": "mysql_version",
-                  "string_equals": "8.0.32",
-                  "result": "MYSQL80"
-                }
-              ]
-            },
-            "on": {
-              "MYSQL80": {
-                "next": "010_restore_database"
-              }
-            }
-          },
-          "010_restore_database": {
+          "100_restore_database": {
             "comment": "MySQL 8.0 restore",
             "retries": 2,
             "action": "restore_database",
-            "args": {
-              "instance_class": "DBInstanceClassR6i",
-              "instance_type": "8xlarge"
-            },
             "on": {
               "COMPLETE": {
-                "next": "010_wait_for_restore_database"
+                "next": "150_wait_for_restore_database"
               },
               "FAILED": {
-                "next": "012_destroy_database"
+                "next": "130_destroy_database"
               },
               "NEEDCOPY": {
-                "next": "013_copy_snapshot"
+                "next": "110_copy_snapshot"
               }
             }
           },
-          "010_wait_for_restore_database": {
+          "110_copy_snapshot": {
+            "action": "copy_snapshot",
+            "on": {
+              "COMPLETE": {
+                "next": "120_wait_for_copy_snapshot"
+              }
+            }
+          },
+          "120_wait_for_copy_snapshot": {
+            "action": "check_copy_snapshot",
+            "retry_delay": 300,
+            "on": {
+              "COMPLETE": {
+                "next": "100_restore_database"
+              }
+            }
+          },
+          "130_destroy_database": {
+            "action": "destroy_database",
+            "on": {
+              "COMPLETE": {
+                "next": "140_wait_for_destroy_database"
+              }
+            }
+          },
+          "140_wait_for_destroy_database": {
+            "action": "check_destroy_database",
+            "retry_delay": 300,
+            "on": {
+              "COMPLETE": {
+                "next": "100_restore_database"
+              }
+            }
+          },
+          "150_wait_for_restore_database": {
             "comment": "MySQL 8.0 restore",
             "action": "check_restore_database",
             "retry_delay": 300,
             "on": {
               "COMPLETE": {
-                "next": "030_reset_rds_password"
+                "next": "160_reset_rds_password"
               }
             }
           },
-          "012_destroy_database": {
-            "action": "destroy_database",
-            "on": {
-              "COMPLETE": {
-                "next": "012_wait_for_destroy_database"
-              }
-            }
-          },
-          "012_wait_for_destroy_database": {
-            "action": "check_destroy_database",
-            "retry_delay": 300,
-            "on": {
-              "COMPLETE": {
-                "next": "000_restore_database"
-              }
-            }
-          },
-          "013_copy_snapshot": {
-            "action": "copy_snapshot",
-            "on": {
-              "COMPLETE": {
-                "next": "013_wait_for_copy_snapshot"
-              }
-            }
-          },
-          "013_wait_for_copy_snapshot": {
-            "action": "check_copy_snapshot",
-            "retry_delay": 300,
-            "on": {
-              "COMPLETE": {
-                "next": "000_restore_database"
-              }
-            }
-          },
-          "030_reset_rds_password": {
+          "160_reset_rds_password": {
             "comment": "MySQL 8.0 reset password",
             "action": "reset_password",
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "040_disable_workflow_schedules"
+                "next": "170_disable_workflow_schedules"
               }
             }
           },
-          "040_disable_workflow_schedules": {
+          "170_disable_workflow_schedules": {
             "action": "disable_workflow_schedules",
             "on": {
               "COMPLETE": {
-                "next": "050_truncate_working_tables"
+                "next": "180_truncate_working_tables"
               }
             }
           },
-          "050_truncate_working_tables": {
+          "180_truncate_working_tables": {
             "action": "execute_sql",
             "speed": "slow",
             "args": {
@@ -153,20 +132,20 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "060_set_user_passwords"
+                "next": "190_set_user_passwords"
               }
             }
           },
-          "060_set_user_passwords": {
+          "190_set_user_passwords": {
             "comment": "set the user passwords",
             "action": "execute_sql",
             "on": {
               "COMPLETE": {
-                "next": "070_stats_sample_pages"
+                "next": "200_stats_sample_pages"
               }
             }
           },
-          "070_stats_sample_pages": {
+          "200_stats_sample_pages": {
             "action": "stats_sample_pages",
             "speed": "slow",
             "args": {
@@ -179,11 +158,11 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "080_scale_down_deployments"
+                "next": "210_scale_down_deployments"
               }
             }
           },
-          "080_scale_down_deployments": {
+          "210_scale_down_deployments": {
             "comment": "kubectl -n core scale --replicas=0 deployment --all",
             "action": "scale_replicas",
             "args": {
@@ -197,11 +176,11 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "090_switch_dns"
+                "next": "220_switch_dns"
               }
             }
           },
-          "090_switch_dns": {
+          "220_switch_dns": {
             "comment": "need to update route53 entries with the rds server endpoint",
             "action": "set_rds_dns_entry",
             "args": {
@@ -215,11 +194,11 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "100_set_bua_account_id"
+                "next": "230_set_bua_account_id"
               }
             }
           },
-          "100_set_bua_account_id": {
+          "230_set_bua_account_id": {
             "action": "set_bua_account_id",
             "on": {
               "COMPLETE": {}
