@@ -99,6 +99,7 @@ Resources:
                   - 'ssm:PutParameter'
                 Resource:
                   - !Join [ "", [ "arn:aws:ssm:" , !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/" , !Ref ResourcePrefix , "/bua/update_id"] ]
+                  - !Join [ "", [ "arn:aws:ssm:" , !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":parameter/" , !Ref ResourcePrefix , "/bua/snapshot_arn"] ]
 
   BUANotifyLambdaLogGroup:
     Type: AWS::Logs::LogGroup

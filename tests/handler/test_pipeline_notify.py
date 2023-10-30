@@ -16,7 +16,8 @@ class TestCase:
         import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
         monkey_patch.patch.client('ssm').parameters = {
-            '/dev/bua/update_id': '100'
+            '/dev/bua/update_id': '100',
+            '/dev/bua/snapshot_arn': '',
         }
         from bua.handler.pipeline_notify import lambda_handler
         event = {
@@ -25,7 +26,7 @@ class TestCase:
                     'eventSource': 'aws:sqs',
                     'eventSourceARN': 'arn:123',
                     'messageId': '123',
-                    'body': 'a:b:c:d',
+                    'body': 'arn:aws:rds:ap-southeast-2:1234567890:snapshot:12345',
                 }
             ]
         }

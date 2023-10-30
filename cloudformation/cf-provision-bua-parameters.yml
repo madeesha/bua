@@ -37,6 +37,14 @@ Parameters:
 
 Resources:
 
+  RDSSnapshotARNParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/snapshot_arn"
+      Description: "RDS Snapshot ARN"
+      Type: "String"
+      Value: ""
+
   RDSParamsIDParam:
     Type: "AWS::SSM::Parameter"
     Properties:
