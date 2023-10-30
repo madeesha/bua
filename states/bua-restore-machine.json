@@ -139,6 +139,9 @@
           "190_set_user_passwords": {
             "comment": "set the user passwords",
             "action": "execute_sql",
+            "args": {
+              "sql_secret_name": "{{sqlsecret}}"
+            },
             "on": {
               "COMPLETE": {
                 "next": "200_stats_sample_pages"

@@ -64,9 +64,14 @@ class SQL:
 
     def execute_sql(self, request: HandlerRequest):
         data = request.data
-        sql = data.get('sql')
+        args = request.step.get('args', {})
+        sql = args.get('sql')
         if sql is None:
-            sql = self.sm.fetch_secret(data['sqlsecret'])['sql']
+            sql_secret_name = args.get('sql_secret_name')
+            if sql_secret_name is not None:
+                secret_value = self.sm.fetch_secret(sql_secret_name)
+                if 'sql' in secret_value:
+                    sql = secret_value['sql']
         if sql is None:
             return "FAILED", f"No SQL statements to execute"
         try:

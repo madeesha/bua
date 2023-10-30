@@ -220,8 +220,11 @@ class BUAControllerHandler:
         event['delay'] = 0
 
         data = self._get_data(event)
-        self._process_args(data, step)
         self._calculate_run_dates(data)
+        args = step.get('args')
+        if args is not None:
+            Substitutions(self.config, data).substitute_values(args)
+            self._process_args(data, step)
         Substitutions(self.config, data).substitute_values(data)
 
         instance = self._determine_instance(data)

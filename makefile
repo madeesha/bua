@@ -48,5 +48,8 @@ anstead-trigger-restore:
 anstead-restore-bua-scripts:
 	bash bin/restore-bua-scripts
 
+anstead-baseline-snapshot:
+	AWS_PROFILE=anstead AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier tst-anstead-15-bua-sql-2023-10-31-baseline --db-instance-identifier tst-anstead-15-bua-sql
+
 anstead-weekly-run:
 	bin/execute-bua-step Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export'
