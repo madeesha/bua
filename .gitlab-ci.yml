@@ -60,5 +60,7 @@ matten:deploy:
     KMS_KEY_ALIAS: corecmk
     RUNNER_TAG: matten
   when: manual
+  only:
+    - main
   needs:
     - 'build'

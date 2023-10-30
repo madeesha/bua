@@ -39,8 +39,10 @@ class BUANotifyHandler(LambdaHandler):
 
         self._increment_update_id()
 
+        pipeline_steps = self._get_pipeline_steps()
+
         event = {
-            'steps': self.config['pipeline_steps']
+            'steps': pipeline_steps
         }
 
         unique_id = uuid.uuid4().hex
@@ -82,6 +84,14 @@ class BUANotifyHandler(LambdaHandler):
             self.ssm.put_parameter(name, new_snapshot_arn)
             return new_snapshot_arn
         return None
+
+    def _get_pipeline_steps(self):
+        prefix = self.config['prefix']
+        name = f"/{prefix}/bua/notify_steps"
+        notify_steps = self.ssm.get_parameters([name])[name]
+        if notify_steps == 'not-set':
+            return ""
+        return notify_steps
 
     def _valid_arn(self, snapshot_arn: str):
         source_account_id = self.config['source_account_id']

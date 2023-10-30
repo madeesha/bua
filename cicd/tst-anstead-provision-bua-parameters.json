@@ -38,5 +38,9 @@
   {
     "ParameterKey": "ADHBucketName",
     "ParameterValue": "tst-anstead-s3-rw-integration"
+  },
+  {
+    "ParameterKey": "NotifySteps",
+    "ParameterValue": "Restore"
   }
 ]

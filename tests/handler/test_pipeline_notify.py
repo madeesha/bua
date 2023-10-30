@@ -21,6 +21,7 @@ class TestCase:
         monkey_patch.patch.client('ssm').parameters = {
             '/dev/bua/update_id': '100',
             '/dev/bua/snapshot_arn': '',
+            '/dev/bua/notify_steps': 'not-set'
         }
         from bua.handler.pipeline_notify import lambda_handler
         snapshot_arn = 'arn:aws:rds:southeast-2:1234567890:snapshot:12345'
@@ -48,6 +49,7 @@ class TestCase:
         monkey_patch.patch.client('ssm').parameters = {
             '/dev/bua/update_id': '100',
             '/dev/bua/snapshot_arn': '',
+            '/dev/bua/notify_steps': 'not-set'
         }
         from bua.handler.pipeline_notify import lambda_handler
         snapshot_arn = 'arn:aws:rds:southeast-2:9876543210:snapshot:12345'
@@ -75,6 +77,7 @@ class TestCase:
         monkey_patch.patch.client('ssm').parameters = {
             '/dev/bua/update_id': '100',
             '/dev/bua/snapshot_arn': '',
+            '/dev/bua/notify_steps': 'not-set'
         }
         from bua.handler.pipeline_notify import lambda_handler
         snapshot_arn = 'arn:aws:rds:southeast-2:1111111111:snapshot:12345'
