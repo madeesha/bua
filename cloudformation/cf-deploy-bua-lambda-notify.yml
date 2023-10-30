@@ -31,9 +31,6 @@ Parameters:
     Description: Number of days to retain logs
     Type: String
     Default: 365
-  SourceAccountId:
-    Description: Account ID where snapshots can come from
-    Type: String
 
 Resources:
 
@@ -123,7 +120,6 @@ Resources:
           buaTableName: !Join [ "-" , [ !Ref ResourcePrefix , "ddb", "bua" ] ]
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-notify-failure-queue" ] ]
           stateMachineArn: !Join [ "", [ "arn:aws:states:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":stateMachine:", !Ref ResourcePrefix, "-bua"]]
-          sourceAccountId: !Ref SourceAccountId
           awsAccountId: !Ref "AWS::AccountId"
           awsRegion: !Ref "AWS::Region"
       Code:

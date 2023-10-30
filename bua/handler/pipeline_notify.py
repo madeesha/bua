@@ -21,7 +21,6 @@ ssm_client = boto3.client('ssm', config=ssm_config)
 config = {
     'prefix': os.environ['resourcePrefix'],
     'state_machine_arn': os.environ['stateMachineArn'],
-    'source_account_id': os.environ['sourceAccountId'],
     'aws_account_id': os.environ['awsAccountId'],
     'aws_region': os.environ['awsRegion']
 }

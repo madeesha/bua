@@ -57,6 +57,9 @@ Parameters:
   NotifySteps:
     Description: Steps to execute on notification
     Type: String
+  SourceAccountID:
+    Description: The expected account id for notifications
+    Type: String
 
 Resources:
 
@@ -203,3 +206,11 @@ Resources:
       Description: "Steps to execute on notification"
       Type: "String"
       Value: !Ref NotifySteps
+
+  SourceAccountIDParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/source_account_id"
+      Description: "The expected source account for notificiations"
+      Type: "String"
+      Value: !Ref SourceAccountID
