@@ -36,23 +36,6 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "000_restore_database"
-              }
-            }
-          },
-          "000_restore_database": {
-            "action": "choice",
-            "args": {
-              "choices": [
-                {
-                  "variable": "mysql_version",
-                  "string_equals": "8.0.32",
-                  "result": "MYSQL80"
-                }
-              ]
-            },
-            "on": {
-              "MYSQL80": {
                 "next": "010_restore_database"
               }
             }
