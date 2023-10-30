@@ -1,26 +1,7 @@
 {
   "Comment": "Restore Database",
-  "StartAt": "DefaultValues",
+  "StartAt": "RestoreDatabase",
   "States": {
-    "DefaultValues": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "$.data",
-        "defaults": {
-          "instance_class": "DBInstanceClassR6i",
-          "instance_type": "8xlarge",
-          "mysql_version": "8.0.32"
-        }
-      },
-      "Next": "MergeData"
-    },
-    "MergeData": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "States.JsonMerge($.defaults, $.data, false)"
-      },
-      "Next": "RestoreDatabase"
-    },
     "RestoreDatabase": {
       "Type": "Pass",
       "Parameters": {
@@ -41,6 +22,9 @@
                 "suffix",
                 "schema",
                 "snapshot_arn",
+                "instance_class",
+                "instance_type",
+                "mysql_version",
                 "hosted_zone_id",
                 "cluster_name",
                 "node_group_name",

@@ -16,6 +16,26 @@ Parameters:
   RDSUpdateID:
     Description: RDS Update ID
     Type: String
+  RDSSuffix:
+    Description: RDS Suffix
+    Type: String
+    Default: "bua-sql"
+  RDSSchema:
+    Description: RDS Schema
+    Type: String
+    Default: "Turkey_BLU"
+  RDSInstanceClass:
+    Description: RDS Instance Class
+    Type: String
+    Default: "DBInstanceClassR6i"
+  RDSInstanceType:
+    Description: RDS Instance Type
+    Type: String
+    Default: "8xlarge"
+  RDSMySQLVersion:
+    Description: RDS MySQL Version
+    Type: String
+    Default: "8.0.32"
   SQLSecret:
     Description: SQL Secret Name
     Type: String
@@ -51,7 +71,7 @@ Resources:
       Name: !Sub "/${ResourcePrefix}/bua/suffix"
       Description: "RDS Suffix"
       Type: "String"
-      Value: "bua-sql"
+      Value: !Ref RDSSuffix
 
   RDSSchemaParam:
     Type: "AWS::SSM::Parameter"
@@ -59,7 +79,31 @@ Resources:
       Name: !Sub "/${ResourcePrefix}/bua/schema"
       Description: "RDS Schema"
       Type: "String"
-      Value: "Turkey_BLU"
+      Value: !Ref RDSSchema
+
+  RDSInstanceClassParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/instance_class"
+      Description: "RDS Instance Class"
+      Type: "String"
+      Value: !Ref RDSInstanceClass
+
+  RDSInstanceTypeParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/instance_type"
+      Description: "RDS Instance Type"
+      Type: "String"
+      Value: !Ref RDSInstanceType
+
+  RDSMySQLVersionParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/mysql_version"
+      Description: "RDS MySQL Version"
+      Type: "String"
+      Value: !Ref RDSMySQLVersion
 
   RDSParamsIDParam:
     Type: "AWS::SSM::Parameter"
