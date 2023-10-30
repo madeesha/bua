@@ -24,21 +24,18 @@ test: venv
 # Trigger Restore Pipeline
 
 scale-up-workflow:
-	bin/execute-bua-step --run-date 2023-10-01 --update-id 14 ScaleUpWorkflow
+	bin/execute-bua-step ScaleUpWorkflow
 
 scale-down:
-	bin/execute-bua-step --run-date 2023-10-01 --update-id 14 ScaleDown
+	bin/execute-bua-step ScaleDown
 
 utility-profiles:
-	bin/execute-bua-step --run-date 2023-10-26 --update-id 14 UtilityProfiles
+	bin/execute-bua-step UtilityProfiles
 
 segments:
-	bin/execute-bua-step --run-date 2023-10-26 --update-id 14 Segments
+	bin/execute-bua-step Segments
 
 # Manual Upgrade DB Steps
 
-20-restore-bua-scripts:
-	bash bin/restore-bua-scripts
-
-21-restore-bua-procedures:
+restore-bua-procedures:
 	bash bin/restore-bua-procedures

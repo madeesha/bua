@@ -4,22 +4,22 @@ set -feuo pipefail
 
 print_syntax() {
   echo ""
-  echo "execute-bua-step --run-date <run-date> --snapshot-arn <snapshot-arn> Restore"
-  echo "execute-bua-step --run-date <run-date> ScaleUpWorkflow"
-  echo "execute-bua-step --run-date <run-date> Warming"
-  echo "execute-bua-step --run-date <run-date> UtilityProfiles"
-  echo "execute-bua-step --run-date <run-date> Segments"
-  echo "execute-bua-step --run-date <run-date> Microscalar"
-  echo "execute-bua-step --run-date <run-date> ResetBasicReads"
-  echo "execute-bua-step --run-date <run-date> BasicReads"
-  echo "execute-bua-step --run-date <run-date> ScaleUpMeterdata"
-  echo "execute-bua-step --run-date <run-date> RestartMeterdata"
-  echo "execute-bua-step --run-date <run-date> ResetNEM12"
-  echo "execute-bua-step --run-date <run-date> GenerateNEM12"
-  echo "execute-bua-step --run-date <run-date> InvoiceRuns"
-  echo "execute-bua-step --run-date <run-date> ScaleDown"
-  echo "execute-bua-step --run-date <run-date> Export"
-  echo "execute-bua-step --run-date <run-date> Weekly"
+  echo "execute-bua-step Restore"
+  echo "execute-bua-step ScaleUpWorkflow"
+  echo "execute-bua-step Warming"
+  echo "execute-bua-step UtilityProfiles"
+  echo "execute-bua-step Segments"
+  echo "execute-bua-step Microscalar"
+  echo "execute-bua-step ResetBasicReads"
+  echo "execute-bua-step BasicReads"
+  echo "execute-bua-step ScaleUpMeterdata"
+  echo "execute-bua-step RestartMeterdata"
+  echo "execute-bua-step ResetNEM12"
+  echo "execute-bua-step GenerateNEM12"
+  echo "execute-bua-step InvoiceRuns"
+  echo "execute-bua-step ScaleDown"
+  echo "execute-bua-step Export"
+  echo "execute-bua-step Weekly"
   echo ""
   echo "run-date format YYYY-MM-DD"
   echo ""
@@ -35,35 +35,6 @@ check_inputs() {
   echo "Checking arguments $@"
   echo ""
   if [[ $# -eq 0 ]] ; then
-    print_syntax
-  fi
-  run_date=""
-  snapshot_arn=""
-  while [[ $# -ge 2 ]] ; do
-    case "${1#--}" in
-      run-date)
-        run_date="${2}"
-        ;;
-      snapshot-arn)
-        snapshot_arn="${2}"
-        ;;
-      *)
-        print_syntax
-        ;;
-    esac
-    shift
-    shift
-  done
-  if [[ -z "${run_date}" ]] ; then
-    echo "INVALID ARGUMENTS, MISSING run-date"
-    echo ""
-    print_syntax
-  fi
-  if [[ "${run_date}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] ; then
-    echo "Valid run date ${run_date}"
-  else
-    echo "INVALID RUN DATE FORMAT FOR ${run_date}"
-    echo ""
     print_syntax
   fi
   for step in "$@" ; do
@@ -94,24 +65,6 @@ check_inputs() {
 
 check_inputs "$@"
 
-run_date=""
-snapshot_arn=""
-while [[ $# -ge 2 ]] ; do
-  case "${1#--}" in
-    run-date)
-      run_date="${2}"
-      ;;
-    snapshot-arn)
-      snapshot_arn="${2}"
-      ;;
-    *)
-      print_syntax
-      ;;
-  esac
-  shift
-  shift
-done
-
 today=$(date +'%Y-%m-%d')
 uuid=$(uuid)
 
@@ -121,11 +74,7 @@ for step in "$@" ; do
     step="Segments,Microscalar,ResetBasicReads,BasicReads,ScaleUpMeterdata,ResetNEM12,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export"
   fi
 
-  if [[ "${step}" == "Restore" ]] ; then
-    input=$(jq -n --arg rdt "${run_date}" --arg stp "${step}" --arg arn "${snapshot_arn}" '{"steps": $stp, "run_date": $rdt, "snapshot_arn": $arn}')
-  else
-    input=$(jq -n --arg rdt "${run_date}" --arg stp "${step}" '{"steps": $stp, "run_date": $rdt}')
-  fi
+  input=$(jq -n --arg stp "${step}" '{"steps": $stp}')
 
   aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
       --state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \

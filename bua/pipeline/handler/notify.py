@@ -26,8 +26,6 @@ class BUANotifyHandler(LambdaHandler):
             self.send_failure(str(body), f'Expected a string arn')
             return
 
-        run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
-
         snapshot_arn = self._get_and_set_snapshot_arn(body)
         if snapshot_arn is None:
             self.log(f'Not an acceptable snapshot arn to use')
@@ -36,11 +34,13 @@ class BUANotifyHandler(LambdaHandler):
 
         self.log(f'Using snapshot_arn {snapshot_arn}')
 
+        run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
+        self._set_run_date(run_date)
+
         self._increment_update_id()
 
         event = {
-            'steps': self.config['pipeline_steps'],
-            'run_date': run_date,
+            'steps': self.config['pipeline_steps']
         }
 
         unique_id = uuid.uuid4().hex
@@ -55,6 +55,11 @@ class BUANotifyHandler(LambdaHandler):
             name=step_execution_name,
             input=json.dumps(event)
         )
+
+    def _set_run_date(self, run_date: str):
+        prefix = self.config['prefix']
+        name = f"/{prefix}/bua/run_date"
+        self.ssm.put_parameter(name, run_date)
 
     def _increment_update_id(self):
         prefix = self.config['prefix']

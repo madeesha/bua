@@ -21,6 +21,7 @@
                 "update_id",
                 "suffix",
                 "schema",
+                "run_date",
                 "cluster_name",
                 "node_group_name"
               ]
