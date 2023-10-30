@@ -24,10 +24,10 @@ Conditions:
 
 Resources:
 
-  TestingTopic:
+  LocalNotifyTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Join [ "-" , [ !Ref ResourcePrefix , "sns-bua-testing-topic" ] ]
+      TopicName: !Join [ "-" , [ !Ref ResourcePrefix , "sns-bua-notify-topic" ] ]
       Tags:
         - Key: env
           Value: !Ref EnvironmentName
@@ -38,10 +38,10 @@ Resources:
         - Key: resource-class
           Value: data
 
-  TestTopicSubscription:
+  LocalNotifyTopicSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: !Ref TestingTopic
+      TopicArn: !Ref LocalNotifyTopic
       Protocol: sqs
       Endpoint: !GetAtt
         - BUAControllerNotifyQueue
@@ -795,7 +795,7 @@ Resources:
         Id: BUAControllerNotifyQueuePolicy
         Version: "2012-10-17"
         Statement:
-          - Sid: PermitTestSubscription
+          - Sid: PermitLocalNotifySubscription
             Effect: Allow
             Principal:
               Service: sns.amazonaws.com
@@ -804,7 +804,7 @@ Resources:
             Resource: !GetAtt BUAControllerNotifyQueue.Arn
             Condition:
               ArnEquals:
-                "aws:SourceArn": !Ref TestingTopic
+                "aws:SourceArn": !Ref LocalNotifyTopic
           - Sid: PermitNotifySubscription
             Effect: Allow
             Principal:
