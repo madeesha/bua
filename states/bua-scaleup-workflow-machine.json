@@ -1,25 +1,7 @@
 {
   "Comment": "Scale up workflow service",
-  "StartAt": "DefaultValues",
+  "StartAt": "ScaleUpWorkflow",
   "States": {
-    "DefaultValues": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "$.data",
-        "defaults": {
-          "schema": "Turkey_BLU",
-          "suffix": "bua-sql"
-        }
-      },
-      "Next": "MergeData"
-    },
-    "MergeData": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "States.JsonMerge($.defaults, $.data, false)"
-      },
-      "Next": "ScaleUpWorkflow"
-    },
     "ScaleUpWorkflow": {
       "Type": "Pass",
       "Parameters": {
@@ -37,6 +19,8 @@
                 "domain",
                 "rdssecret",
                 "update_id",
+                "suffix",
+                "schema",
                 "cluster_name",
                 "node_group_name"
               ]

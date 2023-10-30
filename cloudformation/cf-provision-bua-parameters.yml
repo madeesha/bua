@@ -45,6 +45,22 @@ Resources:
       Type: "String"
       Value: ""
 
+  RDSSuffixParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/suffix"
+      Description: "RDS Suffix"
+      Type: "String"
+      Value: "bua-sql"
+
+  RDSSchemaParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/schema"
+      Description: "RDS Schema"
+      Type: "String"
+      Value: "Turkey_BLU"
+
   RDSParamsIDParam:
     Type: "AWS::SSM::Parameter"
     Properties:

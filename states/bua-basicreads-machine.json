@@ -1,25 +1,7 @@
 {
   "Comment": "Basic Reads",
-  "StartAt": "DefaultValues",
+  "StartAt": "BasicReads",
   "States": {
-    "DefaultValues": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "$.data",
-        "defaults": {
-          "suffix": "bua-sql",
-          "schema": "Turkey_BLU"
-        }
-      },
-      "Next": "MergeData"
-    },
-    "MergeData": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "States.JsonMerge($.defaults, $.data, false)"
-      },
-      "Next": "BasicReads"
-    },
     "BasicReads": {
       "Type": "Pass",
       "Parameters": {
@@ -36,7 +18,9 @@
               "names": [
                 "domain",
                 "rdssecret",
-                "update_id"
+                "update_id",
+                "suffix",
+                "schema"
               ]
             },
             "on": {

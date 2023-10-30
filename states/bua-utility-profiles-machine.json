@@ -1,25 +1,7 @@
 {
   "Comment": "Generate Utility Profiles",
-  "StartAt": "DefaultValues",
+  "StartAt": "UtilityProfiles",
   "States": {
-    "DefaultValues": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "$.data",
-        "defaults": {
-          "schema": "Turkey_BLU",
-          "suffix": "bua-sql"
-        }
-      },
-      "Next": "MergeData"
-    },
-    "MergeData": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "States.JsonMerge($.defaults, $.data, false)"
-      },
-      "Next": "UtilityProfiles"
-    },
     "UtilityProfiles": {
       "Type": "Pass",
       "Parameters": {
@@ -36,7 +18,9 @@
               "names": [
                 "domain",
                 "rdssecret",
-                "update_id"
+                "update_id",
+                "suffix",
+                "schema"
               ]
             },
             "on": {
