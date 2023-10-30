@@ -26,7 +26,9 @@ class BUANotifyHandler(LambdaHandler):
             self.send_failure(str(body), f'Expected a string arn')
             return
 
-        snapshot_arn = self._get_and_set_snapshot_arn(body)
+        parameters = self._get_parameters()
+
+        snapshot_arn = self._set_snapshot_arn(body, parameters)
         if snapshot_arn is None:
             self.log(f'Not an acceptable snapshot arn to use')
             self.send_failure(body, f'Not an acceptable snapshot arn to use')
@@ -37,9 +39,9 @@ class BUANotifyHandler(LambdaHandler):
         run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
         self._set_run_date(run_date)
 
-        self._increment_update_id()
+        self._increment_update_id(parameters)
 
-        pipeline_steps = self._get_pipeline_steps()
+        pipeline_steps = self._get_pipeline_steps(parameters)
 
         event = {
             'steps': pipeline_steps
@@ -58,43 +60,53 @@ class BUANotifyHandler(LambdaHandler):
             input=json.dumps(event)
         )
 
+    def _get_parameters(self) -> Dict[str, str]:
+        prefix = self.config['prefix']
+        update_id_name = f"/{prefix}/bua/update_id"
+        snapshot_arn_name = f"/{prefix}/bua/snapshot_arn"
+        source_account_id_name = f"/{prefix}/bua/source_account_id"
+        notify_steps_name = f"/{prefix}/bua/notify_steps"
+        names = [update_id_name, snapshot_arn_name, source_account_id_name, notify_steps_name]
+        return self.ssm.get_parameters(names)
+
     def _set_run_date(self, run_date: str):
         prefix = self.config['prefix']
-        name = f"/{prefix}/bua/run_date"
-        self.ssm.put_parameter(name, run_date)
+        run_date_name = f"/{prefix}/bua/run_date"
+        self.ssm.put_parameter(run_date_name, run_date)
 
-    def _increment_update_id(self):
+    def _increment_update_id(self, parameters: Dict[str, str]):
         prefix = self.config['prefix']
-        name = f"/{prefix}/bua/update_id"
-        update_id = int(self.ssm.get_parameters([name])[name])
+        update_id_name = f"/{prefix}/bua/update_id"
+        update_id = int(parameters[update_id_name])
         update_id += 1
-        self.ssm.put_parameter(name, str(update_id))
+        self.ssm.put_parameter(update_id_name, str(update_id))
 
-    def _get_and_set_snapshot_arn(self, new_snapshot_arn):
+    def _set_snapshot_arn(self, new_snapshot_arn: str, parameters: Dict[str, str]):
         new_snapshot_arn = new_snapshot_arn.strip()
         prefix = self.config['prefix']
-        name = f"/{prefix}/bua/snapshot_arn"
-        old_snapshot_arn = self.ssm.get_parameters([name])[name]
+        snapshot_arn_name = f"/{prefix}/bua/snapshot_arn"
+        source_account_id_name = f"/{prefix}/bua/source_account_id"
+        old_snapshot_arn = parameters[snapshot_arn_name]
+        source_account_id = parameters[source_account_id_name]
         if len(old_snapshot_arn) > 0:
             if old_snapshot_arn == new_snapshot_arn:
                 return old_snapshot_arn
             if new_snapshot_arn == 'reuse':
                 return old_snapshot_arn
-        if self._valid_arn(new_snapshot_arn):
-            self.ssm.put_parameter(name, new_snapshot_arn)
+        if self._valid_arn(new_snapshot_arn, source_account_id):
+            self.ssm.put_parameter(snapshot_arn_name, new_snapshot_arn)
             return new_snapshot_arn
         return None
 
-    def _get_pipeline_steps(self):
+    def _get_pipeline_steps(self, parameters: Dict[str, str]):
         prefix = self.config['prefix']
-        name = f"/{prefix}/bua/notify_steps"
-        notify_steps = self.ssm.get_parameters([name])[name]
+        notify_steps_name = f"/{prefix}/bua/notify_steps"
+        notify_steps = parameters[notify_steps_name]
         if notify_steps == 'not-set':
             return ""
         return notify_steps
 
-    def _valid_arn(self, snapshot_arn: str):
-        source_account_id = self.config['source_account_id']
+    def _valid_arn(self, snapshot_arn: str, source_account_id: str):
         aws_account_id = self.config['aws_account_id']
         aws_region = self.config['aws_region']
         arn = snapshot_arn.split(':')
