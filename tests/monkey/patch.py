@@ -52,6 +52,9 @@ class MonkeyPatch:
     def stepfunctions(self):
         return self._clients['stepfunctions']
 
+    def ssm(self):
+        return self._clients['ssm']
+
     def Session(self):
         return self._session
 

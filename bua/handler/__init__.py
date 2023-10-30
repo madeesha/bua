@@ -42,14 +42,17 @@ class LambdaHandler:
                                 return
                             if self.sqs.undo_deduplicate_request(record):
                                 raise ex
-                            self.failure_queue.send_request([
-                                {
-                                    'body': record['body'],
-                                    'failure': str(ex)
-                                }
-                            ])
+                            self.send_failure(record['body'], str(ex))
         else:
             self._process_message(event)
+
+    def send_failure(self, body: str, failure: str):
+        self.failure_queue.send_request([
+            {
+                'body': body,
+                'failure': failure
+            }
+        ])
 
     def _handle_too_many_retries(self, record, ex):
         if self.max_receive_count >= 0:
@@ -57,12 +60,7 @@ class LambdaHandler:
                 receive_count = int(record['attributes']['ApproximateReceiveCount'])
                 if receive_count >= self.max_receive_count:
                     self.log('Too many retries. Sending to the failure queue.')
-                    self.failure_queue.send_request([
-                        {
-                            'body': record['body'],
-                            'failure': f'Too many retries: {ex}'
-                        }
-                    ])
+                    self.send_failure(record['body'], f'Too many retries: {ex}')
                     return True
         return False
 

@@ -22,6 +22,9 @@ config = {
     'prefix': os.environ['resourcePrefix'],
     'state_machine_arn': os.environ['stateMachineArn'],
     'pipeline_steps': os.environ['pipelineSteps'],
+    'source_account_id': os.environ['sourceAccountId'],
+    'aws_account_id': os.environ['awsAccountId'],
+    'aws_region': os.environ['awsRegion']
 }
 
 handler = BUANotifyHandler(
