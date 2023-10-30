@@ -1,0 +1,9 @@
+#!/bin/bash
+set -feuo pipefail
+my_dir=$(dirname $0)
+export MYSQL_PWD="${DB_PASS}"
+while read -r file ; do
+  echo "Loading ${file}"
+  cat "${HOME}/git/uss/turkey/${file}" | mysql --host="${DB_HOST}" --port="${DB_PORT}" --user="${DB_USER}" Turkey_BLU
+  echo "Loaded ${file}"
+done < "${my_dir}/bua-scripts.txt"
