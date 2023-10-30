@@ -13,9 +13,16 @@ class RDS:
 
     def copy_snapshot(self, snapshot_arn: str, snapshot_name: str, kms_key_id: str, option_group_name: str) \
             -> Optional[str]:
-        snapshot = self._describe_db_snapshot(snapshot_id=snapshot_name)
-        if 'DBSnapshotArn' in snapshot:
-            return snapshot['DBSnapshotArn']
+
+        snapshot_name = snapshot_name.lower()
+        snapshot = self.describe_db_snapshot(snapshot_name=snapshot_name)
+        db_snapshot_identifier = snapshot.get('DBSnapshotIdentifier')
+        db_snapshot_arn = snapshot.get('DBSnapshotArn')
+        status = snapshot.get('Status')
+        print(f'Snapshot {snapshot_name} , Id {db_snapshot_identifier} , Arn {db_snapshot_arn} , Status {status}')
+        if db_snapshot_arn is not None:
+            return db_snapshot_arn
+
         try:
             response = self.rds.copy_db_snapshot(
                 SourceDBSnapshotIdentifier=snapshot_arn,
@@ -35,15 +42,17 @@ class RDS:
                 raise
 
     def check_snapshot_status(self, snapshot_name: str) -> str:
-        snapshot = self._describe_db_snapshot(snapshot_id=snapshot_name)
-        return snapshot['Status']
+        snapshot_name = snapshot_name.lower()
+        snapshot = self.describe_db_snapshot(snapshot_name=snapshot_name)
+        return snapshot['Status'].lower()
 
-    def _describe_db_snapshot(self, snapshot_id: str) -> Dict:
+    def describe_db_snapshot(self, snapshot_name: str) -> Dict:
         try:
-            response = self.rds.describe_db_snapshots(DBSnapshotIdentifier=snapshot_id)
+            snapshot_name = snapshot_name.lower()
+            response = self.rds.describe_db_snapshots(DBSnapshotIdentifier=snapshot_name)
             if 'DBSnapshots' in response:
                 for snapshot in response['DBSnapshots']:
-                    if snapshot['DBSnapshotIdentifier'] == snapshot_id:
+                    if snapshot['DBSnapshotIdentifier'] == snapshot_name:
                         return snapshot
         except ClientError as ex:
             if 'Error' in ex.response:
