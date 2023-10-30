@@ -1,25 +1,7 @@
 {
   "Comment": "Export",
-  "StartAt": "DefaultValues",
+  "StartAt": "Export",
   "States": {
-    "DefaultValues": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "$.data",
-        "defaults": {
-          "schema": "Turkey_BLU",
-          "suffix": "bua-sql"
-        }
-      },
-      "Next": "MergeData"
-    },
-    "MergeData": {
-      "Type": "Pass",
-      "Parameters": {
-        "data.$": "States.JsonMerge($.defaults, $.data, false)"
-      },
-      "Next": "Export"
-    },
     "Export": {
       "Type": "Pass",
       "Parameters": {
@@ -37,6 +19,8 @@
                 "domain",
                 "rdssecret",
                 "update_id",
+                "suffix",
+                "schema",
                 "adh_bucket_name"
               ]
             },
