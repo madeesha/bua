@@ -21,6 +21,7 @@
                 "update_id",
                 "suffix",
                 "schema",
+                "run_date",
                 "adh_bucket_name"
               ]
             },

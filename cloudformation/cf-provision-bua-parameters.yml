@@ -65,6 +65,14 @@ Resources:
       Type: "String"
       Value: "not-set"
 
+  RunDateParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/run_date"
+      Description: "Run Date"
+      Type: "String"
+      Value: "not-set"
+
   RDSSuffixParam:
     Type: "AWS::SSM::Parameter"
     Properties:

@@ -21,6 +21,7 @@
                 "update_id",
                 "suffix",
                 "schema",
+                "run_date",
                 "snapshot_arn",
                 "instance_class",
                 "instance_type",

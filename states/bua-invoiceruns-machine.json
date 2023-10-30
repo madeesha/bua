@@ -20,7 +20,8 @@
                 "rdssecret",
                 "update_id",
                 "suffix",
-                "schema"
+                "schema",
+                "run_date"
               ]
             },
             "on": {
