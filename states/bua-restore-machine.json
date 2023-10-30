@@ -44,10 +44,6 @@
             "comment": "MySQL 8.0 restore",
             "retries": 2,
             "action": "restore_database",
-            "args": {
-              "instance_class": "DBInstanceClassR6i",
-              "instance_type": "8xlarge"
-            },
             "on": {
               "COMPLETE": {
                 "next": "010_wait_for_restore_database"
