@@ -138,8 +138,8 @@ class SQL:
                     )
                     con.commit()
                     cur.execute(
-                        "CALL bua_initiate_invoice_runs(%s, %s, %s, %s, %s)",
-                        (run_date, aws_account, schedule_gap, min_days, num_groups)
+                        "CALL bua_initiate_invoice_runs(%s, %s, %s, %s)",
+                        (run_date, schedule_gap, min_days, num_groups)
                     )
                     con.commit()
             return "COMPLETE", f'BUA initiate invoice runs, max wfi {workflow_instance_id}'
