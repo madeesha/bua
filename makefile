@@ -35,6 +35,12 @@ utility-profiles:
 segments:
 	bin/execute-bua-step Segments
 
+anstead-trigger-weekly:
+	AWS_PROFILE=anstead aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic --message 'reuse'
+
+matten-trigger-weekly:
+	AWS_PROFILE=matten aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic --message 'reuse'
+
 # Manual Upgrade DB Steps
 
 restore-bua-procedures:
