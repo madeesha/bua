@@ -20,9 +20,22 @@ class BUANotifyHandler(LambdaHandler):
         self._default_handler = self._handle_event
 
     def _handle_event(self, body: Union[Dict, str]):
+
+        if not isinstance(body, str):
+            self.log(f'Expected a string arn')
+            self.send_failure(str(body), f'Expected a string arn')
+            return
+
         run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
 
-        self._set_snapshot_arn(body)
+        snapshot_arn = self._get_and_set_snapshot_arn(body)
+        if snapshot_arn is None:
+            self.log(f'Not an acceptable snapshot arn to use')
+            self.send_failure(body, f'Not an acceptable snapshot arn to use')
+            return
+
+        self.log(f'Using snapshot_arn {snapshot_arn}')
+
         self._increment_update_id()
 
         event = {
@@ -50,10 +63,32 @@ class BUANotifyHandler(LambdaHandler):
         update_id += 1
         self.ssm.put_parameter(name, str(update_id))
 
-    def _set_snapshot_arn(self, new_snapshot_arn):
+    def _get_and_set_snapshot_arn(self, new_snapshot_arn):
         new_snapshot_arn = new_snapshot_arn.strip()
         prefix = self.config['prefix']
         name = f"/{prefix}/bua/snapshot_arn"
         old_snapshot_arn = self.ssm.get_parameters([name])[name]
-        if old_snapshot_arn != new_snapshot_arn and len(new_snapshot_arn) > 0:
+        if len(old_snapshot_arn) > 0:
+            if old_snapshot_arn == new_snapshot_arn:
+                return old_snapshot_arn
+            if new_snapshot_arn == 'reuse':
+                return old_snapshot_arn
+        if self._valid_arn(new_snapshot_arn):
             self.ssm.put_parameter(name, new_snapshot_arn)
+            return new_snapshot_arn
+        return None
+
+    def _valid_arn(self, snapshot_arn: str):
+        source_account_id = self.config['source_account_id']
+        aws_account_id = self.config['aws_account_id']
+        aws_region = self.config['aws_region']
+        arn = snapshot_arn.split(':')
+        if len(arn) < 7:
+            return False
+        if arn[3] != aws_region:
+            return False
+        if arn[4] == source_account_id:
+            return True
+        if arn[4] == aws_account_id:
+            return True
+        return False

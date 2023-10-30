@@ -34,6 +34,9 @@ Parameters:
   PipelineSteps:
     Description: The pipeline steps to execute when notified
     Type: String
+  SourceAccountId:
+    Description: Account ID where snapshots can come from
+    Type: String
 
 Resources:
 
@@ -123,6 +126,9 @@ Resources:
           failureQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-controller-notify-failure-queue" ] ]
           stateMachineArn: !Join [ "", [ "arn:aws:states:", !Ref "AWS::Region", ":", !Ref "AWS::AccountId", ":stateMachine:", !Ref ResourcePrefix, "-bua"]]
           pipelineSteps: !Ref PipelineSteps
+          sourceAccountId: !Ref SourceAccountId
+          awsAccountId: !Ref "AWS::AccountId"
+          awsRegion: !Ref "AWS::Region"
       Code:
         ZipFile: |
           from bua.handler.pipeline_notify import lambda_handler

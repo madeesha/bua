@@ -1,3 +1,6 @@
+from typing import List
+
+
 class MonkeyPatchSQSResource:
     def __init__(self):
         self._queue = MonkeyPatchQueue()
@@ -31,7 +34,16 @@ class MonkeyPatchQueue:
     def patch(self):
         pass
 
-    def send_message(self, MessageBody):
+    def send_message(self, *_args, **kwargs):
+        _message_body = kwargs['MessageBody']
         return {
             'MessageId': '123'
+        }
+
+    def send_messages(self, *_args, **kwargs):
+        entries = kwargs['Entries']
+        return {
+            'Successful': [
+                entries
+            ]
         }
