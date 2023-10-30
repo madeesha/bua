@@ -38,5 +38,9 @@
   {
     "ParameterKey": "ADHBucketName",
     "ParameterValue": "prd-matten-s3-bua"
+  },
+  {
+    "ParameterKey": "NotifySteps",
+    "ParameterValue": "not-set"
   }
 ]
