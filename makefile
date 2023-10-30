@@ -35,13 +35,18 @@ utility-profiles:
 segments:
 	bin/execute-bua-step Segments
 
-anstead-trigger-weekly:
-	AWS_PROFILE=anstead aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic --message 'reuse'
-
-matten-trigger-weekly:
+matten-trigger-weekly-restore:
 	AWS_PROFILE=matten aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic --message 'reuse'
 
-# Manual Upgrade DB Steps
+#
+# ANSTEAD WEEKLY RUN
+#
 
-restore-bua-procedures:
-	bash bin/restore-bua-procedures
+anstead-trigger-restore:
+	AWS_PROFILE=anstead aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic --message 'reuse'
+
+anstead-restore-bua-scripts:
+	bash bin/restore-bua-scripts
+
+anstead-weekly-run:
+	bin/execute-bua-step Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export'

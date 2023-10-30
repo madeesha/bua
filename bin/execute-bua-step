@@ -4,22 +4,7 @@ set -feuo pipefail
 
 print_syntax() {
   echo ""
-  echo "execute-bua-step Restore"
-  echo "execute-bua-step ScaleUpWorkflow"
-  echo "execute-bua-step Warming"
-  echo "execute-bua-step UtilityProfiles"
-  echo "execute-bua-step Segments"
-  echo "execute-bua-step Microscalar"
-  echo "execute-bua-step ResetBasicReads"
-  echo "execute-bua-step BasicReads"
-  echo "execute-bua-step ScaleUpMeterdata"
-  echo "execute-bua-step RestartMeterdata"
-  echo "execute-bua-step ResetNEM12"
-  echo "execute-bua-step GenerateNEM12"
-  echo "execute-bua-step InvoiceRuns"
-  echo "execute-bua-step ScaleDown"
-  echo "execute-bua-step Export"
-  echo "execute-bua-step Weekly"
+  echo "execute-bua-step [name] <steps>"
   echo ""
   echo "run-date format YYYY-MM-DD"
   echo ""
@@ -34,33 +19,17 @@ check_inputs() {
   echo ""
   echo "Checking arguments $@"
   echo ""
-  if [[ $# -eq 0 ]] ; then
+  if [[ $# -lt 1 ]] ; then
     print_syntax
   fi
-  for step in "$@" ; do
-    if [[ "${step}" == "Restore" ]] ; then
-      if [[ -z "${snapshot_arn}" ]] ; then
-        echo "INVALID ARGUMENTS FOR Restore, MISSING shapshot-arn"
-        echo ""
-        print_syntax
-      fi
-    fi
-    ok=0
-    for cmd in Restore ScaleUpWorkflow Warming UtilityProfiles Segments Microscalar ResetBasicReads BasicReads ScaleUpMeterdata RestartMeterdata ResetNEM12 GenerateNEM12 InvoiceRuns ScaleDown Export Weekly
-    do
-      if [[ "${cmd}" == "${step}" ]] ; then
-        ok=1
-        break
-      fi
-    done
-    if [[ "${ok}" -eq 1 ]] ; then
-      echo "Valid step ${step}"
-    else
-      echo "INVALID STEP NAME ${step}"
+  if [[ $# -eq 1 ]] ; then
+    if [[ "${1}" =~ .*,.* ]] ; then
+      echo ""
+      echo "You must specify a name if providing multiple steps"
       echo ""
       print_syntax
     fi
-  done
+  fi
 }
 
 check_inputs "$@"
@@ -68,17 +37,12 @@ check_inputs "$@"
 today=$(date +'%Y-%m-%d')
 uuid=$(uuid)
 
-for step in "$@" ; do
+name="$1"
+steps="${2:-${name}}"
 
-  if [[ "${step}" == "Weekly" ]] ; then
-    step="Segments,Microscalar,ResetBasicReads,BasicReads,ScaleUpMeterdata,ResetNEM12,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export"
-  fi
+input=$(jq -n --arg stp "${steps}" '{"steps": $stp}')
 
-  input=$(jq -n --arg stp "${step}" '{"steps": $stp}')
-
-  aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
-      --state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
-      --name "${today}-${step}-${uuid}" \
-      --input "${input}"
-
-done
+aws --profile anstead --region ap-southeast-2 stepfunctions start-execution \
+    --state-machine-arn arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua \
+    --name "${today}-${name}-${uuid}" \
+    --input "${input}"
