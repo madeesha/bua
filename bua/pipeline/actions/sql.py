@@ -259,6 +259,27 @@ class SQL:
         print(f'Max workflow_instance_id is {workflow_instance_id}')
         return workflow_instance_id
 
+    def set_bua_account_id(self, request: HandlerRequest):
+        data = request.data
+        aws_account = self.config['aws_account']
+        try:
+            con = self._connect(data)
+            with con:
+                cur: pymysql.cursors.SSDictCursor = con.cursor()
+                with cur:
+                    stmt = """
+                    UPDATE GlobalSetting 
+                    SET value = %s, active = 1
+                    WHERE name IN ('BUA_AWS_ACCOUNT_ID', 'THIS_AWS_ACCOUNT_ID')
+                    """
+                    params = (aws_account,)
+                    cur.execute(stmt, params)
+            return "COMPLETE", f'Set bua account id {aws_account}'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def check_bua_control(self, request: HandlerRequest):
         data = request.data
         run_type = data['run_type']
