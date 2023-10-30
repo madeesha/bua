@@ -6,55 +6,12 @@
       "Type": "Choice",
       "Choices": [
         {
-          "And": [
-            {
-              "Variable": "$.snapshot_arn",
-              "IsPresent": true
-            },
-            {
-              "Variable": "$.run_date",
-              "IsPresent": true
-            }
-          ],
-          "Next": "InitialiseWithArnAndRunDate"
-        },
-        {
-          "Variable": "$.snapshot_arn",
-          "IsPresent": true,
-          "Next": "InitialiseWithArn"
-        },
-        {
           "Variable": "$.run_date",
           "IsPresent": true,
           "Next": "InitialiseWithRunDate"
         }
       ],
       "Default": "Initialise"
-    },
-    "InitialiseWithArnAndRunDate": {
-      "Type": "Pass",
-      "Parameters": {
-        "data": {
-          "run_date.$": "$.run_date",
-          "snapshot_arn.$": "$.snapshot_arn"
-        },
-        "context": {
-          "steps.$": "$.steps"
-        }
-      },
-      "Next": "DefineDefaultSteps"
-    },
-    "InitialiseWithArn": {
-      "Type": "Pass",
-      "Parameters": {
-        "data": {
-          "snapshot_arn.$": "$.snapshot_arn"
-        },
-        "context": {
-          "steps.$": "$.steps"
-        }
-      },
-      "Next": "DefineDefaultSteps"
     },
     "InitialiseWithRunDate": {
       "Type": "Pass",

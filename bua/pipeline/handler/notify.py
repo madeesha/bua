@@ -22,13 +22,14 @@ class BUANotifyHandler(LambdaHandler):
     def _handle_event(self, body: Union[Dict, str]):
         run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
 
+        self._set_snapshot_arn(body)
         self._increment_update_id()
 
         event = {
             'steps': self.config['pipeline_steps'],
-            'snapshot_arn': body,
             'run_date': run_date,
         }
+
         unique_id = uuid.uuid4().hex
         id_part_1 = unique_id[0:8]
         id_part_2 = unique_id[8:12]
@@ -48,3 +49,11 @@ class BUANotifyHandler(LambdaHandler):
         update_id = int(self.ssm.get_parameters([name])[name])
         update_id += 1
         self.ssm.put_parameter(name, str(update_id))
+
+    def _set_snapshot_arn(self, new_snapshot_arn):
+        new_snapshot_arn = new_snapshot_arn.strip()
+        prefix = self.config['prefix']
+        name = f"/{prefix}/bua/snapshot_arn"
+        old_snapshot_arn = self.ssm.get_parameters([name])[name]
+        if old_snapshot_arn != new_snapshot_arn and len(new_snapshot_arn) > 0:
+            self.ssm.put_parameter(name, new_snapshot_arn)
