@@ -63,7 +63,7 @@ Resources:
       Name: !Sub "/${ResourcePrefix}/bua/snapshot_arn"
       Description: "RDS Snapshot ARN"
       Type: "String"
-      Value: ""
+      Value: "not-set"
 
   RDSSuffixParam:
     Type: "AWS::SSM::Parameter"
