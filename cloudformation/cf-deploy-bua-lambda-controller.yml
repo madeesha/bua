@@ -333,6 +333,8 @@ Resources:
           initiateQueueURL: !Join [ "" , [ "https://sqs." , !Ref "AWS::Region" , ".amazonaws.com/" , !Ref "AWS::AccountId" , "/" , !Ref ResourcePrefix , "-sqs-bua-site-initiate-queue" ] ]
           awsRegion: !Ref "AWS::Region"
           awsAccount: !Ref "AWS::AccountId"
+          mysql80optionGroupName: !ImportValue 'core-rds-mysql80-option-group-name'
+          coreKmsKeyId: !ImportValue CORECMK
       Code:
         ZipFile: |
           from bua.handler.pipeline_controller import lambda_handler
