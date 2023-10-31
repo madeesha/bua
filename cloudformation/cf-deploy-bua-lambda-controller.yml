@@ -223,7 +223,7 @@ Resources:
                 Action:
                   - 'eks:UpdateNodegroupConfig'
                 Resource:
-                  - 'arn:aws:eks:ap-southeast-2:561082505378:nodegroup/anstead/*'
+                  - !Join [ '' , [ 'arn:aws:eks:' , !Ref 'AWS::Region' , ':', !Ref 'AWS::AccountId' , ':nodegroup/' , !Ref ClassName , '/*' ] ]
               - Sid: AllowNodeGroupDescribeUpdate
                 Effect: Allow
                 Action:
