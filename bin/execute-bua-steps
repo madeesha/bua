@@ -1,0 +1,58 @@
+#!/bin/bash
+# Execute bua process steps
+set -feuo pipefail
+
+print_syntax() {
+  echo ""
+  echo "execute-bua-steps <profile> [name] <steps>"
+  echo ""
+  exit 1
+}
+
+check_inputs() {
+  echo ""
+  echo "==========================="
+  echo "Execute a BUA step function"
+  echo "==========================="
+  echo ""
+  echo "Checking arguments $@"
+  echo ""
+  if [[ $# -lt 2 ]] ; then
+    print_syntax
+  fi
+  if [[ $# -eq 2 ]] ; then
+    if [[ "${2}" =~ .*,.* ]] ; then
+      echo ""
+      echo "You must specify a name if providing multiple steps"
+      echo ""
+      print_syntax
+    fi
+  fi
+}
+
+check_inputs "$@"
+
+today=$(date +'%Y-%m-%d')
+uuid=$(uuid)
+
+profile="${1}"
+name="${2}"
+steps="${3:-${name}}"
+
+case "${profile}" in
+  anstead)
+    machine_arn="arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua"
+    ;;
+  matten)
+    machine_arn="arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua"
+    ;;
+  *)
+    print_syntax
+esac
+
+input=$(jq -n --arg stp "${steps}" '{"steps": $stp}')
+
+aws --profile "${profile}" --region ap-southeast-2 stepfunctions start-execution \
+    --state-machine-arn "${machine_arn}" \
+    --name "${today}-${name}-${uuid}" \
+    --input "${input}"
