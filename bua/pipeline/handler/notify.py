@@ -37,15 +37,27 @@ class BUANotifyHandler(LambdaHandler):
         self.log(f'Using snapshot_arn {snapshot_arn}')
 
         run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
-        self._set_run_date(run_date)
+        if body == 'reuse':
+            prefix = self.config['prefix']
+            run_date_name = f"/{prefix}/bua/run_date"
+            last_run_date = parameters.get(run_date_name)
+            self.log(f'Using run_date {last_run_date}')
+        else:
+            self._update_run_date(run_date)
+            self.log(f'Using run_date {run_date}')
 
-        self._increment_update_id(parameters)
+        update_id = self._increment_update_id(parameters)
+        self.log(f'Using update_id {update_id}')
 
         pipeline_steps = self._get_pipeline_steps(parameters)
+        self.log(f'Using steps {pipeline_steps}')
 
         event = {
             'steps': pipeline_steps
         }
+
+        state_machine_arn = self.config['state_machine_arn']
+        self.log(f'Executing state machine {state_machine_arn}')
 
         unique_id = uuid.uuid4().hex
         id_part_1 = unique_id[0:8]
@@ -54,8 +66,10 @@ class BUANotifyHandler(LambdaHandler):
         id_part_4 = unique_id[16:20]
         id_part_5 = unique_id[20:]
         step_execution_name = f"{run_date}-Notify-{id_part_1}-{id_part_2}-{id_part_3}-{id_part_4}-{id_part_5}"
+        self.log(f'Starting execution {step_execution_name}')
+
         self.sfn_client.start_execution(
-            stateMachineArn=self.config['state_machine_arn'],
+            stateMachineArn=state_machine_arn,
             name=step_execution_name,
             input=json.dumps(event)
         )
@@ -66,10 +80,11 @@ class BUANotifyHandler(LambdaHandler):
         snapshot_arn_name = f"/{prefix}/bua/snapshot_arn"
         source_account_id_name = f"/{prefix}/bua/source_account_id"
         notify_steps_name = f"/{prefix}/bua/notify_steps"
-        names = [update_id_name, snapshot_arn_name, source_account_id_name, notify_steps_name]
+        run_date_name = f"/{prefix}/bua/run_date"
+        names = [update_id_name, snapshot_arn_name, source_account_id_name, notify_steps_name, run_date_name]
         return self.ssm.get_parameters(names)
 
-    def _set_run_date(self, run_date: str):
+    def _update_run_date(self, run_date: str):
         prefix = self.config['prefix']
         run_date_name = f"/{prefix}/bua/run_date"
         self.ssm.put_parameter(run_date_name, run_date)
@@ -80,6 +95,7 @@ class BUANotifyHandler(LambdaHandler):
         update_id = int(parameters[update_id_name])
         update_id += 1
         self.ssm.put_parameter(update_id_name, str(update_id))
+        return update_id
 
     def _set_snapshot_arn(self, new_snapshot_arn: str, parameters: Dict[str, str]):
         new_snapshot_arn = new_snapshot_arn.strip()
