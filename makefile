@@ -21,7 +21,27 @@ test: venv
 	venv/bin/coverage run --branch -m pytest --durations=0 tests
 	venv/bin/coverage report -m
 
-# Trigger Restore Pipeline
+
+#
+#
+# MATTEN EKS CONFIGURATION
+#
+#
+
+matten-get-configmap:
+	eks context matten
+	mkdir -p eks/matten
+	kubectl -n kube-system get configmap/aws-auth -o yaml > eks/matten/aws-auth-orig.yml
+
+matten-apply-configmap:
+	eks context matten
+	kubectl apply -f eks/matten/aws-auth-new.yml
+
+#
+#
+# Trigger Anstead Step Functions
+#
+#
 
 scale-up-workflow:
 	bin/execute-bua-step ScaleUpWorkflow
@@ -35,7 +55,11 @@ utility-profiles:
 segments:
 	bin/execute-bua-step Segments
 
-matten-trigger-restore:
+#
+# MATTEN WEEKLY RUN
+#
+
+matten-trigger-weekly:
 	AWS_PROFILE=matten aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic --message 'reuse'
 
 #
