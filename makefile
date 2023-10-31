@@ -24,43 +24,22 @@ test: venv
 
 #
 #
-# MATTEN EKS CONFIGURATION
+# ANSTEAD STEP FUNCTIONS
 #
 #
 
-matten-get-configmap:
-	eks context matten
-	mkdir -p eks/matten
-	kubectl -n kube-system get configmap/aws-auth -o yaml > eks/matten/aws-auth-orig.yml
+anstead-scale-up-workflow:
+	bin/execute-bua-steps anstead ScaleUpWorkflow
 
-matten-apply-configmap:
-	eks context matten
-	kubectl apply -f eks/matten/aws-auth-new.yml
+anstead-scale-down:
+	bin/execute-bua-steps anstead ScaleDown
 
-#
-#
-# Trigger Anstead Step Functions
-#
-#
+anstead-utility-profiles:
+	bin/execute-bua-steps anstead UtilityProfiles
 
-scale-up-workflow:
-	bin/execute-bua-step ScaleUpWorkflow
+anstead-segments:
+	bin/execute-bua-steps anstead Segments
 
-scale-down:
-	bin/execute-bua-step ScaleDown
-
-utility-profiles:
-	bin/execute-bua-step UtilityProfiles
-
-segments:
-	bin/execute-bua-step Segments
-
-#
-# MATTEN WEEKLY RUN
-#
-
-matten-trigger-weekly:
-	AWS_PROFILE=matten aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic --message 'reuse'
 
 #
 # ANSTEAD WEEKLY RUN
@@ -76,4 +55,43 @@ anstead-baseline-snapshot:
 	AWS_PROFILE=anstead AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier tst-anstead-15-bua-sql-2023-10-31-baseline --db-instance-identifier tst-anstead-15-bua-sql
 
 anstead-weekly-run:
-	bin/execute-bua-step Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export'
+	bin/execute-bua-steps Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export'
+
+
+#
+#
+# MATTEN EKS CONFIGURATION
+#
+#
+
+matten-get-configmap:
+	eks context matten
+	mkdir -p eks/matten
+	kubectl -n kube-system get configmap/aws-auth -o yaml > eks/matten/aws-auth-orig.yml
+
+matten-apply-configmap:
+	eks context matten
+	kubectl apply -f eks/matten/aws-auth-new.yml
+
+
+#
+#
+# MATTEN WEEKLY RUN
+#
+#
+
+matten-trigger-weekly:
+	AWS_PROFILE=matten aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic --message 'reuse'
+
+
+#
+#
+# MATTEN STEP FUNCTIONS
+#
+#
+
+matten-scale-up-workflow:
+	bin/execute-bua-steps matten ScaleUpWorkflow
+
+matten-scale-down:
+	bin/execute-bua-steps matten ScaleDown
