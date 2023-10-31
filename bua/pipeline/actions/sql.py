@@ -279,6 +279,7 @@ class SQL:
                     """
                     params = (aws_account,)
                     cur.execute(stmt, params)
+                    con.commit()
             return "COMPLETE", f'Set bua account id {aws_account}'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
