@@ -75,7 +75,15 @@ Resources:
     Type: "AWS::SSM::Parameter"
     Properties:
       Name: !Sub "/${ResourcePrefix}/bua/run_date"
-      Description: "Run Date"
+      Description: "The date that the run is for"
+      Type: "String"
+      Value: "not-set"
+
+  TodayParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/today"
+      Description: "The day that the run is pretending is today"
       Type: "String"
       Value: "not-set"
 

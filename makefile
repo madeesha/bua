@@ -34,10 +34,25 @@ check-meterdata-config:
 	rm -f /tmp/anstead.yaml /tmp/matten.yaml
 
 #
+# ANSTEAD WEEKLY RUN
+# REMEMBER TO REFRESH $(HOME)/git/uss/turkey to the latest master before starting
+# REMEMBER TO HAVE TST_ANSTEAD_SQL_UPDATE_ID SET CORRECTLY
 #
-# ANSTEAD STEP FUNCTIONS
-#
-#
+
+anstead-update-run-date:
+	AWS_PROFILE=anstead aws --region ap-southeast-2 ssm put-parameter --name '/tst-anstead/bua/run_date' --value $(TODAY) --type String --overwrite --data-type text
+
+anstead-trigger-restore:
+	AWS_PROFILE=anstead aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic --message 'reuse'
+
+anstead-restore-bua-scripts:
+	bash bin/restore-bua-scripts anstead
+
+anstead-baseline-snapshot:
+	AWS_PROFILE=anstead AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier tst-anstead-15-bua-sql-2023-10-31-baseline --db-instance-identifier tst-anstead-15-bua-sql
+
+anstead-weekly-run:
+	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export'
 
 anstead-scale-up-workflow:
 	bin/execute-bua-steps anstead ScaleUpWorkflow
@@ -47,23 +62,6 @@ anstead-utility-profiles:
 
 anstead-segments:
 	bin/execute-bua-steps anstead Segments
-
-
-#
-# ANSTEAD WEEKLY RUN
-#
-
-anstead-trigger-restore:
-	AWS_PROFILE=anstead aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic --message 'reuse'
-
-anstead-restore-bua-scripts:
-	bash bin/restore-bua-scripts
-
-anstead-baseline-snapshot:
-	AWS_PROFILE=anstead AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier tst-anstead-15-bua-sql-2023-10-31-baseline --db-instance-identifier tst-anstead-15-bua-sql
-
-anstead-weekly-run:
-	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export'
 
 anstead-invoice-runs:
 	bin/execute-bua-steps anstead InvoiceRuns
@@ -97,11 +95,25 @@ matten-apply-configmap:
 #
 #
 # MATTEN WEEKLY RUN
+# REMEMBER TO REFRESH $(HOME)/git/uss/turkey to the latest master before starting
+# REMEMBER TO HAVE TST_MATTEN_SQL_UPDATE_ID SET CORRECTLY
 #
 #
 
-matten-trigger-weekly:
+matten-update-run-date:
+	AWS_PROFILE=matten aws --region ap-southeast-2 ssm put-parameter --name '/prd-matten/bua/run_date' --value $(TODAY) --type String --overwrite --data-type text
+
+matten-trigger-restore:
 	AWS_PROFILE=matten aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic --message 'reuse'
+
+matten-restore-bua-scripts:
+	bash bin/restore-bua-scripts matten
+
+matten-baseline-snapshot:
+	AWS_PROFILE=matten AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier prd-matten-11-bua-sql-$(TODAY)-baseline --db-instance-identifier prd-matten-11-bua-sql
+
+matten-weekly-run:
+	bin/execute-bua-steps matten Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export'
 
 
 #

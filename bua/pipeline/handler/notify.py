@@ -1,7 +1,7 @@
 import json
 import uuid
 from typing import Union, Dict
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from bua.facade.ssm import SSM
@@ -42,9 +42,17 @@ class BUANotifyHandler(LambdaHandler):
             run_date_name = f"/{prefix}/bua/run_date"
             last_run_date = parameters.get(run_date_name)
             self.log(f'Using run_date {last_run_date}')
+            today_name = f"/{prefix}/bua/today"
+            last_today = parameters.get(today_name)
+            self.log(f'Using today {last_today}')
         else:
             self._update_run_date(run_date)
             self.log(f'Using run_date {run_date}')
+            run_datetime = datetime.strptime(run_date, '%Y-%m-%d')
+            today = run_datetime - timedelta(days=run_datetime.day - 1)
+            today = today.strftime('%Y-%m-%d')
+            self._update_today(today)
+            self.log(f'Using today {today}')
 
         update_id = self._increment_update_id(parameters)
         self.log(f'Using update_id {update_id}')
@@ -81,13 +89,22 @@ class BUANotifyHandler(LambdaHandler):
         source_account_id_name = f"/{prefix}/bua/source_account_id"
         notify_steps_name = f"/{prefix}/bua/notify_steps"
         run_date_name = f"/{prefix}/bua/run_date"
-        names = [update_id_name, snapshot_arn_name, source_account_id_name, notify_steps_name, run_date_name]
+        today_name = f"/{prefix}/bua/today"
+        names = [
+            update_id_name, snapshot_arn_name, source_account_id_name,
+            notify_steps_name, run_date_name, today_name
+        ]
         return self.ssm.get_parameters(names)
 
     def _update_run_date(self, run_date: str):
         prefix = self.config['prefix']
         run_date_name = f"/{prefix}/bua/run_date"
         self.ssm.put_parameter(run_date_name, run_date)
+
+    def _update_today(self, today: str):
+        prefix = self.config['prefix']
+        today_name = f"/{prefix}/bua/today"
+        self.ssm.put_parameter(today_name, today)
 
     def _increment_update_id(self, parameters: Dict[str, str]):
         prefix = self.config['prefix']
