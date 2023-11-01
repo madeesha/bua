@@ -21,6 +21,17 @@ test: venv
 	venv/bin/coverage run --branch -m pytest --durations=0 tests
 	venv/bin/coverage report -m
 
+check-workflow-config:
+	cat $(HOME)/git/ops/cluster/applications/workflow/prd/matten/values.yaml | sed 's/077642019132/1111111111/g' | sed 's/prd-matten/prefix/g' | sort > /tmp/matten.yaml
+	cat $(HOME)/git/ops/cluster/applications/workflow/tst/anstead/values.yaml | sed 's/561082505378/1111111111/g' | sed 's/tst-anstead/prefix/g' | sort > /tmp/anstead.yaml
+	diff /tmp/anstead.yaml /tmp/matten.yaml
+	rm -f /tmp/anstead.yaml /tmp/matten.yaml
+
+check-meterdata-config:
+	cat $(HOME)/git/ops/cluster/applications/meterdata/prd/matten/values.yaml | sed 's/077642019132/1111111111/g' | sed 's/prd-matten/prefix/g' | sort > /tmp/matten.yaml
+	cat $(HOME)/git/ops/cluster/applications/meterdata/tst/anstead/values.yaml | sed 's/561082505378/1111111111/g' | sed 's/tst-anstead/prefix/g' | sort > /tmp/anstead.yaml
+	diff /tmp/anstead.yaml /tmp/matten.yaml
+	rm -f /tmp/anstead.yaml /tmp/matten.yaml
 
 #
 #
@@ -30,9 +41,6 @@ test: venv
 
 anstead-scale-up-workflow:
 	bin/execute-bua-steps anstead ScaleUpWorkflow
-
-anstead-scale-down:
-	bin/execute-bua-steps anstead ScaleDown
 
 anstead-utility-profiles:
 	bin/execute-bua-steps anstead UtilityProfiles
@@ -59,6 +67,12 @@ anstead-weekly-run:
 
 anstead-invoice-runs:
 	bin/execute-bua-steps anstead InvoiceRuns
+
+anstead-scale-down:
+	bin/execute-bua-steps anstead ScaleDown
+
+anstead-export:
+	bin/execute-bua-steps anstead Export
 
 
 #
