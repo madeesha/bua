@@ -1,12 +1,12 @@
 {
-  "Comment": "Export",
-  "StartAt": "Export",
+  "Comment": "Prepare",
+  "StartAt": "Prepare",
   "States": {
-    "Export": {
+    "Prepare": {
       "Type": "Pass",
       "Parameters": {
         "type": "step",
-        "name": "BUA Export",
+        "name": "BUA Prepare",
         "next": "000_get_parameters",
         "speed": "fast",
         "retry_delay": 120,
@@ -27,84 +27,54 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "090_remove_exported_objects"
+                "next": "085_reset_output_tables"
               }
             }
           },
-          "090_remove_exported_objects": {
-            "action": "remove_s3_objects",
-            "speed": "slow",
+          "085_reset_output_tables": {
+            "action": "execute_sql",
             "args": {
-              "bucket_name": "{{prefix}}-s3-bua",
-              "bucket_prefix": "export/csv/{{run_date|short}}/"
+              "sql": [
+                "TRUNCATE TABLE BUAAccountSummary",
+                "TRUNCATE TABLE InvoiceLineItemMonthly"
+              ]
             },
             "on": {
               "COMPLETE": {
-                "next": "095_remove_copied_objects"
+                "next": "100_clear_error_queues"
               }
             }
           },
-          "095_remove_copied_objects": {
-            "action": "remove_s3_objects",
-            "speed": "slow",
-            "args": {
-              "bucket_name": "{{adh_bucket_name}}",
-              "bucket_prefix": "ADH/OUTBOUND/BUA/"
-            },
-            "on": {
-              "COMPLETE": {
-                "next": "200_clear_error_queues"
-              }
-            }
-          },
-          "200_clear_error_queues": {
+          "100_clear_error_queues": {
             "action": "empty_site_errors_queues",
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "210_export_tables_csv"
+                "next": "110_prepare_export"
               }
             }
           },
-          "210_export_tables_csv": {
+          "110_prepare_export": {
+            "comment": "Prepare data to export",
             "action": "bua_initiate",
-            "args": {
-              "run_type": "ExportTables",
-              "table_names": ["BUAAccountSummary", "InvoiceLineItemMonthly"],
-              "file_format": "csv",
-              "bucket_name": "{{prefix}}-s3-bua",
-              "bucket_prefix": "export/csv/{{run_date|short}}/",
-              "index_col": "id"
-            },
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
-                "next": "220_wait_for_export_tables"
-              }
-            }
-          },
-          "220_wait_for_export_tables": {
-            "action": "wait_for_empty_site_queues",
-            "retry_delay": 120,
-            "on": {
-              "COMPLETE": {
-                "next": "230_copy_s3_objects"
-              }
-            }
-          },
-          "230_copy_s3_objects": {
-            "action": "copy_s3_objects",
             "speed": "slow",
             "args": {
-              "source_bucket": "{{prefix}}-s3-bua",
-              "source_prefix": "export/csv/{{run_date|short}}/",
-              "target_bucket": "{{adh_bucket_name}}",
-              "target_prefix": "ADH/OUTBOUND/BUA/",
-              "sse": "aws:kms",
-              "kms_key_id": "alias/{{prefix}}-bua-shared-key"
+              "run_type": "PrepareExport",
+              "identifier_type": "SegmentJurisdictionAvgExclEst"
             },
             "on": {
-              "COMPLETE": {}
+              "COMPLETE": {
+                "delay": 600,
+                "next": "120_wait_for_prepare_export"
+              }
+            }
+          },
+          "120_wait_for_prepare_export": {
+            "action": "wait_for_empty_site_queues",
+            "retry_delay": 300,
+            "on": {
+              "COMPLETE": {
+              }
             }
           }
         }
