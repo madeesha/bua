@@ -22,7 +22,11 @@
                 "suffix",
                 "schema",
                 "run_date",
+                "source_date",
                 "today",
+                "start_inclusive",
+                "end_inclusive",
+                "end_exclusive",
                 "cluster_name",
                 "node_group_name"
               ]

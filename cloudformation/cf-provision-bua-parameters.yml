@@ -87,6 +87,38 @@ Resources:
       Type: "String"
       Value: "not-set"
 
+  StartInclusiveParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/start_inclusive"
+      Description: "The first day of the period being calculated"
+      Type: "String"
+      Value: "not-set"
+
+  EndInclusiveParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/end_inclusive"
+      Description: "The last day of the period being calculated"
+      Type: "String"
+      Value: "not-set"
+
+  EndExclusiveParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/end_exclusive"
+      Description: "The day after the last day of the period being calculated"
+      Type: "String"
+      Value: "not-set"
+
+  SourceDateParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/source_date"
+      Description: "The run date that data is sourced from"
+      Type: "String"
+      Value: "not-set"
+
   RDSSuffixParam:
     Type: "AWS::SSM::Parameter"
     Properties:
