@@ -22,7 +22,11 @@ class TestCase:
             '/dev/bua/notify_steps': 'not-set',
             '/dev/bua/source_account_id': '1234567890',
             '/dev/bua/run_date': '2023-11-01',
+            '/dev/bua/source_date': '2023-11-01',
             '/dev/bua/today': '2023-10-01',
+            '/dev/bua/start_inclusive': '2022-10-01',
+            '/dev/bua/end_inclusive': '2023-09-30',
+            '/dev/bua/end_exclusive': '2023-10-01',
         }
         from bua.handler.pipeline_notify import lambda_handler
         snapshot_arn = 'arn:aws:rds:southeast-2:1234567890:snapshot:12345'
@@ -53,7 +57,11 @@ class TestCase:
             '/dev/bua/notify_steps': 'not-set',
             '/dev/bua/source_account_id': '1234567890',
             '/dev/bua/run_date': '2023-11-01',
+            '/dev/bua/source_date': '2023-11-01',
             '/dev/bua/today': '2023-10-01',
+            '/dev/bua/start_inclusive': '2022-10-01',
+            '/dev/bua/end_inclusive': '2023-09-30',
+            '/dev/bua/end_exclusive': '2023-10-01',
         }
         from bua.handler.pipeline_notify import lambda_handler
         snapshot_arn = 'arn:aws:rds:southeast-2:9876543210:snapshot:12345'
@@ -84,7 +92,11 @@ class TestCase:
             '/dev/bua/notify_steps': 'not-set',
             '/dev/bua/source_account_id': '1234567890',
             '/dev/bua/run_date': '2023-11-01',
+            '/dev/bua/source_date': '2023-11-01',
             '/dev/bua/today': '2023-10-01',
+            '/dev/bua/start_inclusive': '2022-10-01',
+            '/dev/bua/end_inclusive': '2023-09-30',
+            '/dev/bua/end_exclusive': '2023-10-01',
         }
         from bua.handler.pipeline_notify import lambda_handler
         snapshot_arn = 'arn:aws:rds:southeast-2:1111111111:snapshot:12345'

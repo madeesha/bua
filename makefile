@@ -75,6 +75,9 @@ anstead-prepare:
 anstead-export:
 	bin/execute-bua-steps anstead Export
 
+anstead-do-nothing:
+	bin/execute-bua-steps anstead DoNothing
+
 
 #
 #
@@ -115,6 +118,8 @@ matten-baseline-snapshot:
 matten-weekly-run:
 	bin/execute-bua-steps matten Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export'
 
+matten-fix-run:
+	bin/execute-bua-steps matten FixUp 'InvoiceRuns,ScaleDown,Export'
 
 #
 #

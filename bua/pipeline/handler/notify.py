@@ -4,6 +4,8 @@ from typing import Union, Dict
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from dateutil.relativedelta import relativedelta
+
 from bua.facade.ssm import SSM
 from bua.handler import LambdaHandler
 
@@ -18,6 +20,19 @@ class BUANotifyHandler(LambdaHandler):
         self.sfn_client = sfn_client
         self.ssm = SSM(ssm_client=ssm_client)
         self._default_handler = self._handle_event
+
+        prefix = self.config['prefix']
+
+        self.update_id_name = f"/{prefix}/bua/update_id"
+        self.snapshot_arn_name = f"/{prefix}/bua/snapshot_arn"
+        self.source_account_id_name = f"/{prefix}/bua/source_account_id"
+        self.notify_steps_name = f"/{prefix}/bua/notify_steps"
+        self.run_date_name = f"/{prefix}/bua/run_date"
+        self.today_name = f"/{prefix}/bua/today"
+        self.start_inclusive_name = f"/{prefix}/bua/start_inclusive"
+        self.end_inclusive_name = f"/{prefix}/bua/end_inclusive"
+        self.end_exclusive_name = f"/{prefix}/bua/end_exclusive"
+        self.source_date_name = f"/{prefix}/bua/source_date"
 
     def _handle_event(self, body: Union[Dict, str]):
 
@@ -36,23 +51,12 @@ class BUANotifyHandler(LambdaHandler):
 
         self.log(f'Using snapshot_arn {snapshot_arn}')
 
-        run_date = datetime.now(ZoneInfo('Australia/Sydney')).strftime('%Y-%m-%d')
+        now = datetime.now(ZoneInfo('Australia/Sydney'))
+        run_date = now.strftime('%Y-%m-%d')
         if body == 'reuse':
-            prefix = self.config['prefix']
-            run_date_name = f"/{prefix}/bua/run_date"
-            last_run_date = parameters.get(run_date_name)
-            self.log(f'Using run_date {last_run_date}')
-            today_name = f"/{prefix}/bua/today"
-            last_today = parameters.get(today_name)
-            self.log(f'Using today {last_today}')
+            self._reuse_date_parameters(parameters)
         else:
-            self._update_run_date(run_date)
-            self.log(f'Using run_date {run_date}')
-            run_datetime = datetime.strptime(run_date, '%Y-%m-%d')
-            today = run_datetime - timedelta(days=run_datetime.day - 1)
-            today = today.strftime('%Y-%m-%d')
-            self._update_today(today)
-            self.log(f'Using today {today}')
+            self._set_new_date_parameters(run_date)
 
         update_id = self._increment_update_id(parameters)
         self.log(f'Using update_id {update_id}')
@@ -82,59 +86,75 @@ class BUANotifyHandler(LambdaHandler):
             input=json.dumps(event)
         )
 
+    def _set_new_date_parameters(self, run_date):
+        self.ssm.put_parameter(self.run_date_name, run_date)
+        self.log(f'Using run_date {run_date}')
+        source_date = run_date
+        self.ssm.put_parameter(self.source_date_name, source_date)
+        self.log(f'Using source_date {source_date}')
+        run_datetime = datetime.strptime(run_date, '%Y-%m-%d')
+        today_datetime = run_datetime - timedelta(days=run_datetime.day - 1)
+        today = today_datetime.strftime('%Y-%m-%d')
+        self.ssm.put_parameter(self.today_name, today)
+        self.log(f'Using today {today}')
+        month_start_datetime = today_datetime - timedelta(days=today_datetime.day - 1)
+        year_ago_datetime = month_start_datetime - relativedelta(years=1)
+        end_inclusive_datetime = month_start_datetime - timedelta(days=1)
+        start_inclusive = year_ago_datetime.strftime('%Y-%m-%d')
+        self.ssm.put_parameter(self.start_inclusive_name, start_inclusive)
+        self.log(f'Using start_inclusive {start_inclusive}')
+        end_inclusive = end_inclusive_datetime.strftime('%Y-%m-%d')
+        self.ssm.put_parameter(self.end_inclusive_name, end_inclusive)
+        self.log(f'Using end_inclusive {end_inclusive}')
+        end_exclusive = month_start_datetime.strftime('%Y-%m-%d')
+        self.ssm.put_parameter(self.end_exclusive_name, end_exclusive)
+        self.log(f'Using end_exclusive {end_exclusive}')
+
+    def _reuse_date_parameters(self, parameters):
+        last_run_date = parameters.get(self.run_date_name)
+        self.log(f'Using run_date {last_run_date}')
+        last_source_date = parameters.get(self.source_date_name)
+        self.log(f'Using source_date {last_source_date}')
+        last_today = parameters.get(self.today_name)
+        self.log(f'Using today {last_today}')
+        last_start_inclusive = parameters.get(self.start_inclusive_name)
+        self.log(f'Using start_inclusive {last_start_inclusive}')
+        last_end_inclusive = parameters.get(self.end_inclusive_name)
+        self.log(f'Using end_inclusive {last_end_inclusive}')
+        last_end_exclusive = parameters.get(self.end_exclusive_name)
+        self.log(f'Using end_exclusive {last_end_exclusive}')
+
     def _get_parameters(self) -> Dict[str, str]:
-        prefix = self.config['prefix']
-        update_id_name = f"/{prefix}/bua/update_id"
-        snapshot_arn_name = f"/{prefix}/bua/snapshot_arn"
-        source_account_id_name = f"/{prefix}/bua/source_account_id"
-        notify_steps_name = f"/{prefix}/bua/notify_steps"
-        run_date_name = f"/{prefix}/bua/run_date"
-        today_name = f"/{prefix}/bua/today"
         names = [
-            update_id_name, snapshot_arn_name, source_account_id_name,
-            notify_steps_name, run_date_name, today_name
+            self.update_id_name, self.snapshot_arn_name, self.source_account_id_name,
+            self.notify_steps_name, self.run_date_name, self.today_name,
+            self.start_inclusive_name, self.end_inclusive_name, self.end_exclusive_name,
+            self.source_date_name
         ]
         return self.ssm.get_parameters(names)
 
-    def _update_run_date(self, run_date: str):
-        prefix = self.config['prefix']
-        run_date_name = f"/{prefix}/bua/run_date"
-        self.ssm.put_parameter(run_date_name, run_date)
-
-    def _update_today(self, today: str):
-        prefix = self.config['prefix']
-        today_name = f"/{prefix}/bua/today"
-        self.ssm.put_parameter(today_name, today)
-
     def _increment_update_id(self, parameters: Dict[str, str]):
-        prefix = self.config['prefix']
-        update_id_name = f"/{prefix}/bua/update_id"
-        update_id = int(parameters[update_id_name])
+        update_id = int(parameters[self.update_id_name])
         update_id += 1
-        self.ssm.put_parameter(update_id_name, str(update_id))
+        self.ssm.put_parameter(self.update_id_name, str(update_id))
         return update_id
 
     def _set_snapshot_arn(self, new_snapshot_arn: str, parameters: Dict[str, str]):
         new_snapshot_arn = new_snapshot_arn.strip()
-        prefix = self.config['prefix']
-        snapshot_arn_name = f"/{prefix}/bua/snapshot_arn"
-        source_account_id_name = f"/{prefix}/bua/source_account_id"
-        old_snapshot_arn = parameters[snapshot_arn_name]
-        source_account_id = parameters[source_account_id_name]
+        old_snapshot_arn = parameters[self.snapshot_arn_name]
+        source_account_id = parameters[self.source_account_id_name]
         if len(old_snapshot_arn) > 0:
             if old_snapshot_arn == new_snapshot_arn:
                 return old_snapshot_arn
             if new_snapshot_arn == 'reuse':
                 return old_snapshot_arn
         if self._valid_arn(new_snapshot_arn, source_account_id):
-            self.ssm.put_parameter(snapshot_arn_name, new_snapshot_arn)
+            self.ssm.put_parameter(self.snapshot_arn_name, new_snapshot_arn)
             return new_snapshot_arn
         return None
 
     def _get_pipeline_steps(self, parameters: Dict[str, str]):
-        prefix = self.config['prefix']
-        notify_steps_name = f"/{prefix}/bua/notify_steps"
-        notify_steps = parameters[notify_steps_name]
+        notify_steps = parameters[self.notify_steps_name]
         if notify_steps == 'not-set':
             return ""
         return notify_steps
