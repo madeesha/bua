@@ -19,7 +19,7 @@
         "data.$": "$.data",
         "context": {
           "steps.$": "$.context.steps",
-          "default_steps": "Restore,ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export",
+          "default_steps": "Restore,ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export",
           "splitter": ","
         }
       },
@@ -78,6 +78,7 @@
           "bua-scaledown": "",
           "bua-scaleup-workflow": "",
           "bua-warming": "",
+          "bua-prepare": "",
           "bua-export": ""
         }
       },
@@ -190,6 +191,11 @@
           "Variable": "$.context.start",
           "StringEquals": "InvoiceRuns",
           "Next": "InvoiceRuns"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "Prepare",
+          "Next": "Prepare"
         },
         {
           "Variable": "$.context.start",
@@ -430,6 +436,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-invoiceruns",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "Prepare": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-prepare",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {

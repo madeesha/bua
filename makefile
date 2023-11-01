@@ -63,13 +63,16 @@ anstead-baseline-snapshot:
 	AWS_PROFILE=anstead AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier tst-anstead-15-bua-sql-2023-10-31-baseline --db-instance-identifier tst-anstead-15-bua-sql
 
 anstead-weekly-run:
-	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Export'
+	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export'
 
 anstead-invoice-runs:
 	bin/execute-bua-steps anstead InvoiceRuns
 
 anstead-scale-down:
 	bin/execute-bua-steps anstead ScaleDown
+
+anstead-prepare:
+	bin/execute-bua-steps anstead Prepare
 
 anstead-export:
 	bin/execute-bua-steps anstead Export
