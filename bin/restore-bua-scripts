@@ -1,9 +1,25 @@
 #!/bin/bash
 set -feuo pipefail
 my_dir=$(dirname $0)
-export MYSQL_PWD="${DB_PASS}"
+case "$1" in
+  anstead)
+    export MYSQL_HOST="${TST_ANSTEAD_SQL}"
+    export MYSQL_PORT="166${TST_ANSTEAD_SQL_UPDATE_ID}"
+    export MYSQL_USER="core_admin"
+    export MYSQL_PWD="${TST_ANSTEAD_SQL_PASS}"
+    ;;
+  matten)
+    export MYSQL_HOST="${PRD_MATTEN_SQL}"
+    export MYSQL_PORT="176${TST_MATTEN_SQL_UPDATE_ID}"
+    export MYSQL_USER="core_admin"
+    export MYSQL_PWD="${PRD_MATTEN_SQL_PASS}"
+    ;;
+  *)
+    echo 'Must be either anstead or matten'
+    exit 1
+esac
 while read -r file ; do
   echo "Loading ${file}"
-  cat "${HOME}/git/uss/turkey/${file}" | mysql --host="${DB_HOST}" --port="${DB_PORT}" --user="${DB_USER}" Turkey_BLU
+  cat "${HOME}/git/uss/turkey/${file}" | mysql --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" Turkey_BLU
   echo "Loaded ${file}"
 done < "${my_dir}/bua-scripts.txt"

@@ -21,7 +21,8 @@
                 "update_id",
                 "suffix",
                 "schema",
-                "run_date"
+                "run_date",
+                "today"
               ]
             },
             "on": {

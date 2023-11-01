@@ -22,6 +22,7 @@
                 "suffix",
                 "schema",
                 "run_date",
+                "today",
                 "snapshot_arn",
                 "instance_class",
                 "instance_type",
