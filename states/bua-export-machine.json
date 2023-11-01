@@ -41,19 +41,6 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "095_remove_copied_objects"
-              }
-            }
-          },
-          "095_remove_copied_objects": {
-            "action": "remove_s3_objects",
-            "speed": "slow",
-            "args": {
-              "bucket_name": "{{adh_bucket_name}}",
-              "bucket_prefix": "ADH/OUTBOUND/BUA/"
-            },
-            "on": {
-              "COMPLETE": {
                 "next": "200_clear_error_queues"
               }
             }
