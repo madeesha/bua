@@ -42,6 +42,9 @@ check-meterdata-config:
 anstead-update-run-date:
 	AWS_PROFILE=anstead aws --region ap-southeast-2 ssm put-parameter --name '/tst-anstead/bua/run_date' --value $(TODAY) --type String --overwrite --data-type text
 
+anstead-update-source-date:
+	AWS_PROFILE=anstead aws --region ap-southeast-2 ssm put-parameter --name '/tst-anstead/bua/source_date' --value $(TODAY) --type String --overwrite --data-type text
+
 anstead-trigger-restore:
 	AWS_PROFILE=anstead aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic --message 'reuse'
 
@@ -78,6 +81,9 @@ anstead-export:
 anstead-do-nothing:
 	bin/execute-bua-steps anstead DoNothing
 
+anstead-prepare-and-export:
+	bin/execute-bua-steps anstead FixUp Prepare,Export
+
 
 #
 #
@@ -105,6 +111,9 @@ matten-apply-configmap:
 
 matten-update-run-date:
 	AWS_PROFILE=matten aws --region ap-southeast-2 ssm put-parameter --name '/prd-matten/bua/run_date' --value $(TODAY) --type String --overwrite --data-type text
+
+matten-update-source-date:
+	AWS_PROFILE=matten aws --region ap-southeast-2 ssm put-parameter --name '/prd-matten/bua/source_date' --value $(TODAY) --type String --overwrite --data-type text
 
 matten-trigger-restore:
 	AWS_PROFILE=matten aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic --message 'reuse'
