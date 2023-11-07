@@ -13,6 +13,7 @@ conf/Scripts/V2023.10.30.17.05.00__YCY_CB-20256_add_exception_type.sql
 conf/Scripts/V2023.10.30.17.07.01__YCY_CB-20256_add_GlobalSetting.sql
 conf/Scripts/V2023.10.30.17.08.02__YCY_CB-20256_add_column_InvoiceScalar.sql
 conf/Scripts/V2023.10.30.17.08.03__YCY_CB-20256_update_InvoiceScalarSegment.sql
+conf/Scripts/V2023.11.03.12.03.03__YCY_CB-20256_ExceptionType_add_update.sql
 conf/Procedures/R__bua_approve_all_user_inv_hold.sql
 conf/Procedures/R__bua_create_basic_read.sql
 conf/Procedures/R__bua_create_invoice_scalar.sql
@@ -31,6 +32,7 @@ conf/Procedures/R__bua_list_profile_registers.sql
 conf/Procedures/R__bua_list_unbilled_accounts.sql
 conf/Procedures/R__bua_mark_segment_jurisdiction_entries.sql
 conf/Procedures/R__bua_prep_all_accounts.sql
+conf/Procedures/R__bua_prepare_billing_threshold.sql
 conf/Procedures/R__bua_prepare_export_data.sql
 conf/Procedures/R__bua_prep_profile_nmis.sql
 conf/Procedures/R__bua_prep_unbilled_accounts.sql
@@ -42,7 +44,6 @@ conf/Procedures/R__core_warm_database_statistics.sql
 conf/Procedures/R__core_warm_index.sql
 conf/Procedures/R__core_warm_partition.sql
 conf/Procedures/R__core_warm_table.sql
-conf/Procedures/R__ili_invoice_run.sql
 conf/Procedures/R__ili_invoice_run.sql
 conf/Procedures/R__ili_prepare_invoice_run.sql
 conf/Procedures/R__ili_manual_line_item_exceptions.sql
