@@ -39,6 +39,10 @@ check-meterdata-config:
 # REMEMBER TO HAVE TST_ANSTEAD_SQL_UPDATE_ID SET CORRECTLY
 #
 
+anstead-list-parameters:
+	mkdir -p sandpit
+	bin/list-bua-parameters anstead | tee sandpit/anstead-parameters.txt
+
 anstead-update-run-date:
 	AWS_PROFILE=anstead aws --region ap-southeast-2 ssm put-parameter --name '/tst-anstead/bua/run_date' --value $(TODAY) --type String --overwrite --data-type text
 
@@ -108,6 +112,10 @@ matten-apply-configmap:
 # REMEMBER TO HAVE TST_MATTEN_SQL_UPDATE_ID SET CORRECTLY
 #
 #
+
+matten-list-parameters:
+	mkdir -p sandpit
+	bin/list-bua-parameters matten | tee sandpit/matten-parameters.txt
 
 matten-update-run-date:
 	AWS_PROFILE=matten aws --region ap-southeast-2 ssm put-parameter --name '/prd-matten/bua/run_date' --value $(TODAY) --type String --overwrite --data-type text
