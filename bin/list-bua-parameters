@@ -1,0 +1,17 @@
+#!/bin/bash
+set -feuo pipefail
+
+profile="${1}"
+
+case "${profile}" in
+  anstead)
+    param_path="/tst-anstead/bua/"
+    ;;
+  matten)
+    param_path="/prd-matten/bua/"
+    ;;
+esac
+
+aws --profile "${profile}" --region ap-southeast-2 ssm get-parameters-by-path \
+--path "$param_path" --recursive --query "Parameters[*].[Name,Value]" | \
+jq -r '(["Path", "Value"] | (., map(length*"-"))), (.[]) | @tsv' | column -t -o ' | '
