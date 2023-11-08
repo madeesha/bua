@@ -3,6 +3,19 @@ from bua.pipeline.utils.substitutions import Substitutions
 
 class TestCase:
 
+    def test_multiple_substitutions(self):
+        config = {
+            'prefix': 'b'
+        }
+        data = {
+            'when': 'a'
+        }
+        args = {
+            'key': '{{when}}-{{prefix}}-c'
+        }
+        Substitutions(config, data).substitute_values(args)
+        assert args['key'] == 'a-b-c'
+
     def test_config_prefix_substitution(self):
         config = {
             'prefix': 'b'
