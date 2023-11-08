@@ -21,7 +21,7 @@
   },
   {
     "ParameterKey": "RDSDNSAlias",
-    "ParameterValue": "prd-sql1.matten.encore.sh"
+    "ParameterValue": "prd-sql.matten.encore.sh"
   },
   {
     "ParameterKey": "HostedZoneId",
