@@ -116,6 +116,24 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
+    def bua_prepare_billing_threshold(self, request: HandlerRequest):
+        data = request.data
+        end_inclusive = data['end_inclusive']
+        try:
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    stmt = f"CALL bua_prepare_billing_threshold(%s, 0)"
+                    params = (end_inclusive,)
+                    cur.execute(stmt, params)
+                    con.commit()
+            return "COMPLETE", f'BUA prepare billing threshold, end date {end_inclusive}'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def bua_initiate_invoice_runs(self, request: HandlerRequest):
         data = request.data
         run_date = data.get('run_date')
