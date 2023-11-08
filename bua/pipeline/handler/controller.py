@@ -233,7 +233,7 @@ class BUAControllerHandler:
         status, reason = self._check_retries_exceeded(step)
         if status == 'OK':
             reason, status = self._perform_action(log_item, this, event, step, data)
-            status, reason = self._determine_next_step(event, log_item, status, step, reason)
+        status, reason = self._determine_next_step(event, log_item, status, step, reason)
         self._record_result(event, log_item, reason, status, this)
         self.ddb_table.put_item(Item=log_item)
         if status == 'ABORT':
@@ -399,10 +399,10 @@ class BUAControllerHandler:
         reason = None
         if 'retries' in step:
             retries = int(step['retries'])
-            if retries > 0:
+            if retries >= 0:
                 step['retries'] = retries - 1
             else:
-                status = 'TERMINATE'
+                status = 'EXPIRED'
                 reason = f'Retries exceeded'
         return status, reason
 
