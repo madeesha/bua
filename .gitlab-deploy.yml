@@ -49,6 +49,7 @@ provision:
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-warming-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-export-machine.json
       python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-prepare-machine.json
+      python3 -m cicd --cmd upload --bucket ${CI_ENVIRONMENT_NAME}-s3-bua --versioned --version-id $CI_PARENT_PIPELINE_ID --upload-type states --file bua-snapshot-machine.json
     - |
       # Package bua for aws lambda layers
       rm -fr ./target/packages

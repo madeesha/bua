@@ -69,6 +69,7 @@ class BUAControllerHandler:
             'restore_database': restore_handler.restore_database,
             'check_restore_database': restore_handler.check_restore_database,
             'copy_snapshot': restore_handler.copy_snapshot,
+            'create_snapshot': restore_handler.create_snapshot,
             'check_copy_snapshot': restore_handler.check_copy_snapshot,
             'destroy_database': destroy_handler.destroy_database,
             'check_destroy_database': destroy_handler.check_destroy_database,

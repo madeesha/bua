@@ -49,7 +49,7 @@
         "data.$": "$.data",
         "context": {
           "steps.$": "$.context.steps",
-          "default_steps": "Restore,ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export",
+          "default_steps": "Restore,ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export",
           "splitter": ","
         }
       },
@@ -109,7 +109,8 @@
           "bua-scaleup-workflow": "",
           "bua-warming": "",
           "bua-prepare": "",
-          "bua-export": ""
+          "bua-export": "",
+          "bua-snapshot": ""
         }
       },
       "Next": "GetStepfunctionArns"
@@ -226,6 +227,11 @@
           "Variable": "$.context.start",
           "StringEquals": "Prepare",
           "Next": "Prepare"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "Snapshot",
+          "Next": "Snapshot"
         },
         {
           "Variable": "$.context.start",
@@ -484,6 +490,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-prepare",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "Snapshot": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-snapshot",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {

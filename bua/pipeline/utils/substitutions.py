@@ -47,6 +47,8 @@ class Substitutions:
             return value
         if filter == 'short':
             return value[0:10].replace('-','')
+        if filter == 'date':
+            return value[0:10]
         if filter == 'lower':
             return value.lower()
         if filter == 'upper':
