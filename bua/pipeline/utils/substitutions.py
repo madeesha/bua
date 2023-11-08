@@ -39,6 +39,7 @@ class Substitutions:
                 value = prefix + self.filter_value(filter, self.source[match]) + suffix
             else:
                 raise ValueError(f'[{match}] is not found in config or source')
+            sub_start = value.find('{{', len(prefix))
         return value
 
     @staticmethod
