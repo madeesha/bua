@@ -47,6 +47,8 @@ provision:
       bua-scaledown-machine.json \
       bua-scaleup-workflow-machine.json \
       bua-warming-machine.json \
+      bua-warm-statistics-machine.json \
+      bua-warm-indexes-machine.json \
       bua-export-machine.json \
       bua-prepare-machine.json \
       bua-snapshot-machine.json \

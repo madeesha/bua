@@ -18,6 +18,13 @@ case "$1" in
     echo 'Must be either anstead or matten'
     exit 1
 esac
+
+echo "Applying scripts to ${MYSQL_HOST}"
+read -p "Are you sure you wish to continue (Y/N) [N] ?" yesno
+if [[ "$yesno" != "Y" ]] ; then
+  exit 1
+fi
+
 while read -r file ; do
   echo "Loading ${file}"
   cat "${HOME}/git/uss/turkey/${file}" | mysql --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" Turkey_BLU
