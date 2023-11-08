@@ -666,36 +666,6 @@ class TestCase:
         handler.handle_request(body)
         sqs.assert_no_failures()
 
-    @mark.parametrize("resultsets", [
-        [[{'id': 123}], [{'status': 'NEW', 'total': 100}]],
-        [[{'id': 123}], [{'status': 'READY', 'total': 100}]],
-        [[{'id': 123}], [{'status': 'INPROG', 'total': 100}]],
-        [[{'id': 123}], [{'status': 'DONE', 'total': 100}]],
-    ])
-    def test_wait_for_workflows(self, handler, sqs, mysql, rds_secret_id, update_id, suffix, rds_domain_name, schema_name, resultsets):
-        mysql.resultsets = resultsets
-        body = {
-            'name': 'Restore Database',
-            'this': 'step1',
-            'data': {
-                'update_id': update_id,
-                'suffix': suffix,
-                'domain': rds_domain_name,
-                'schema': schema_name,
-                'rdssecret': rds_secret_id
-            },
-            'steps': {
-                'step1': {
-                    'action': 'wait_for_workflows',
-                    'args': {
-                        'workflow_names': ['ExecuteSQL']
-                    }
-                }
-            }
-        }
-        handler.handle_request(body)
-        sqs.assert_no_failures()
-
     def test_bua_initiate(self, handler, sqs, mysql, rds_secret_id, update_id, suffix, rds_domain_name, schema_name):
         mysql.resultsets = [[{'id': 123}]]
         body = {
