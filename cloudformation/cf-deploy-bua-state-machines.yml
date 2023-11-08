@@ -442,3 +442,24 @@ Resources:
           Value: stepfunction
         - Key: resource-class
           Value: data
+
+  DestroyMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      StateMachineName: !Sub "${ResourcePrefix}-bua-destroy"
+      DefinitionS3Location:
+        Bucket: !Sub "${ResourcePrefix}-s3-bua"
+        Key: !Sub "states/bua-destroy-machine.json/${ProjectVersion}"
+      DefinitionSubstitutions:
+        SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
+        FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
+      RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: stepfunction
+        - Key: resource-class
+          Value: data

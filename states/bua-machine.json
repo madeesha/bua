@@ -110,7 +110,8 @@
           "bua-warming": "",
           "bua-prepare": "",
           "bua-export": "",
-          "bua-snapshot": ""
+          "bua-snapshot": "",
+          "bua-destroy": ""
         }
       },
       "Next": "GetStepfunctionArns"
@@ -242,6 +243,11 @@
           "Variable": "$.context.start",
           "StringEquals": "ScaleDown",
           "Next": "ScaleDown"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "Destroy",
+          "Next": "Destroy"
         }
       ],
       "Default": "ExecutionFailed"
@@ -544,6 +550,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-scaledown",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "Destroy": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-destroy",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
