@@ -21,7 +21,7 @@
   },
   {
     "ParameterKey": "RDSDNSAlias",
-    "ParameterValue": "tst-sql1.anstead.encore.sh"
+    "ParameterValue": "tst-sql.anstead.encore.sh"
   },
   {
     "ParameterKey": "HostedZoneId",
