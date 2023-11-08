@@ -58,6 +58,15 @@
             },
             "on": {
               "COMPLETE": {
+                "next": "115_prepare_billing_threshold"
+              }
+            }
+          },
+          "115_prepare_billing_threshold": {
+            "action": "bua_prepare_billing_threshold",
+            "speed": "slow",
+            "on": {
+              "COMPLETE": {
                 "next": "120_invoice_runs"
               }
             }
