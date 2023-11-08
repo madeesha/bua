@@ -59,7 +59,7 @@ anstead-baseline-snapshot:
 	AWS_PROFILE=anstead AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier tst-anstead-15-bua-sql-2023-10-31-baseline --db-instance-identifier tst-anstead-15-bua-sql
 
 anstead-weekly-run:
-	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export'
+	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
 
 anstead-scale-up-workflow:
 	bin/execute-bua-steps anstead ScaleUpWorkflow
@@ -78,6 +78,9 @@ anstead-scale-down:
 
 anstead-prepare:
 	bin/execute-bua-steps anstead Prepare
+
+anstead-snapshot:
+	bin/execute-bua-steps anstead Snapshot
 
 anstead-export:
 	bin/execute-bua-steps anstead Export
@@ -133,16 +136,13 @@ matten-baseline-snapshot:
 	AWS_PROFILE=matten AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier prd-matten-11-bua-sql-$(TODAY)-baseline --db-instance-identifier prd-matten-11-bua-sql
 
 matten-weekly-run:
-	bin/execute-bua-steps matten Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Export'
+	bin/execute-bua-steps matten Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
 
 matten-fix-run:
 	bin/execute-bua-steps matten FixUp 'InvoiceRuns,ScaleDown,Export'
 
-#
-#
-# MATTEN STEP FUNCTIONS
-#
-#
+matten-snapshot:
+	bin/execute-bua-steps matten Snapshot
 
 matten-scale-up-workflow:
 	bin/execute-bua-steps matten ScaleUpWorkflow

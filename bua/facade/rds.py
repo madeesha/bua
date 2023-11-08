@@ -68,3 +68,30 @@ class RDS:
         return {
             'Status': 'Unknown'
         }
+
+    def create_snapshot(self, snapshot_name, db_instance_identifier):
+
+        snapshot_name = snapshot_name.lower()
+        snapshot = self.describe_db_snapshot(snapshot_name=snapshot_name)
+        db_snapshot_identifier = snapshot.get('DBSnapshotIdentifier')
+        db_snapshot_arn = snapshot.get('DBSnapshotArn')
+        status = snapshot.get('Status')
+        print(f'Snapshot {snapshot_name} , Id {db_snapshot_identifier} , Arn {db_snapshot_arn} , Status {status}')
+        if db_snapshot_arn is not None:
+            return db_snapshot_arn
+
+        try:
+            response = self.rds.create_db_snapshot(
+                DBSnapshotIdentifier=snapshot_name,
+                DBInstanceIdentifier=db_instance_identifier
+            )
+            return response['DBSnapshot']['DBSnapshotArn']
+        except ClientError as ex:
+            if 'Error' in ex.response:
+                error = ex.response['Error']
+                if 'Code' in error and error['Code'] == 'DBSnapshotNotFound':
+                    return None
+                else:
+                    raise
+            else:
+                raise

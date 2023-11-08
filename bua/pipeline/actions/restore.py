@@ -101,3 +101,13 @@ class Restore:
             return "COMPLETE", msg
         msg = f'{snapshot_arn} : Status {status}'
         return "RETRY", msg
+
+    def create_snapshot(self, request: HandlerRequest):
+        data = request.data
+        args = request.step['args']
+        snapshot_name = args['snapshot_name']
+        instance_identifier = args['instance_identifier']
+        snapshot_arn = self.rds.create_snapshot(snapshot_name=snapshot_name, db_instance_identifier=instance_identifier)
+        data['snapshot_arn'] = snapshot_arn
+        msg = f'{snapshot_arn} : Create snapshot in progress'
+        return "COMPLETE", msg
