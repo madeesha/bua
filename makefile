@@ -39,9 +39,7 @@ check-meterdata-config:
 # REMEMBER TO HAVE TST_ANSTEAD_SQL_UPDATE_ID SET CORRECTLY
 #
 
-anstead-list-parameters:
-	mkdir -p sandpit
-	bin/list-bua-parameters anstead | tee sandpit/anstead-parameters.txt
+anstead-update-parameters: anstead-update-run-date anstead-update-source-date anstead-update-adh_bucket_name anstead-update-snapshot_arn anstead-list-parameters
 
 anstead-update-run-date:
 	AWS_PROFILE=anstead aws --region ap-southeast-2 ssm put-parameter --name '/tst-anstead/bua/run_date' --value $(TODAY) --type String --overwrite --data-type text
@@ -49,47 +47,25 @@ anstead-update-run-date:
 anstead-update-source-date:
 	AWS_PROFILE=anstead aws --region ap-southeast-2 ssm put-parameter --name '/tst-anstead/bua/source_date' --value $(TODAY) --type String --overwrite --data-type text
 
+anstead-update-adh_bucket_name:
+	AWS_PROFILE=anstead aws --region ap-southeast-2 ssm put-parameter --name '/tst-anstead/bua/adh_bucket_name' --value 'tst-anstead-s3-rw-integration' --type String --overwrite --data-type text
+
+anstead-update-snapshot_arn:
+	AWS_PROFILE=anstead aws --region ap-southeast-2 ssm put-parameter --name '/tst-anstead/bua/snapshot_arn' --value 'arn:aws:rds:ap-southeast-2:561082505378:snapshot:prod-data-2023-10-01-snapshot' --type String --overwrite --data-type text
+
+anstead-list-parameters:
+	mkdir -p sandpit
+	bin/list-bua-parameters anstead | tee sandpit/anstead-parameters.txt
+
 anstead-trigger-restore:
 	AWS_PROFILE=anstead aws --region ap-southeast-2 sns publish --topic-arn arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic --message 'reuse'
 
 anstead-restore-bua-scripts:
 	bash bin/restore-bua-scripts anstead
 
-anstead-baseline-snapshot:
-	AWS_PROFILE=anstead AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier tst-anstead-15-bua-sql-2023-10-31-baseline --db-instance-identifier tst-anstead-15-bua-sql
-
 anstead-weekly-run:
-	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
+	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
 
-anstead-scale-up-workflow:
-	bin/execute-bua-steps anstead ScaleUpWorkflow
-
-anstead-utility-profiles:
-	bin/execute-bua-steps anstead UtilityProfiles
-
-anstead-segments:
-	bin/execute-bua-steps anstead Segments
-
-anstead-invoice-runs:
-	bin/execute-bua-steps anstead InvoiceRuns
-
-anstead-scale-down:
-	bin/execute-bua-steps anstead ScaleDown
-
-anstead-prepare:
-	bin/execute-bua-steps anstead Prepare
-
-anstead-snapshot:
-	bin/execute-bua-steps anstead Snapshot
-
-anstead-export:
-	bin/execute-bua-steps anstead Export
-
-anstead-do-nothing:
-	bin/execute-bua-steps anstead DoNothing
-
-anstead-prepare-and-export:
-	bin/execute-bua-steps anstead FixUp Prepare,Export
 
 
 #
@@ -116,6 +92,8 @@ matten-apply-configmap:
 #
 #
 
+matten-update-parameters: matten-update-run-date matten-update-source-date matten-list-parameters
+
 matten-list-parameters:
 	mkdir -p sandpit
 	bin/list-bua-parameters matten | tee sandpit/matten-parameters.txt
@@ -132,11 +110,8 @@ matten-trigger-restore:
 matten-restore-bua-scripts:
 	bash bin/restore-bua-scripts matten
 
-matten-baseline-snapshot:
-	AWS_PROFILE=matten AWS_REGION=ap-southeast-2 aws rds create-db-snapshot --db-snapshot-identifier prd-matten-11-bua-sql-$(TODAY)-baseline --db-instance-identifier prd-matten-11-bua-sql
-
 matten-weekly-run:
-	bin/execute-bua-steps matten Weekly 'ScaleUpWorkflow,Warming,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
+	bin/execute-bua-steps matten Weekly 'ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
 
 matten-fix-run:
 	bin/execute-bua-steps matten FixUp 'InvoiceRuns,ScaleDown,Export'

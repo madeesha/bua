@@ -1,0 +1,166 @@
+{
+  "Comment": "Warm Indexes",
+  "StartAt": "Warm",
+  "States": {
+    "Warm": {
+      "Type": "Pass",
+      "Parameters": {
+        "type": "step",
+        "name": "Warm Indexes",
+        "next": "000_get_parameters",
+        "speed": "fast",
+        "retry_delay": 120,
+        "data.$": "$.data",
+        "steps": {
+          "000_get_parameters": {
+            "action": "get_parameters",
+            "args": {
+              "names": [
+                "domain",
+                "rdssecret",
+                "update_id",
+                "suffix",
+                "schema",
+                "run_date",
+                "source_date",
+                "today",
+                "start_inclusive",
+                "end_inclusive",
+                "end_exclusive"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_database_warming"
+              }
+            }
+          },
+          "100_database_warming": {
+            "action": "core_warm_database_indexes",
+            "args": {
+              "concurrency": 32
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "110_wait_for_database_warming"
+              }
+            }
+          },
+          "110_wait_for_database_warming": {
+            "action": "wait_for_workflows",
+            "retry_delay": 300,
+            "args": {
+              "max_errors": 1000,
+              "workflow_names": [
+                "WARM_INDEX"
+              ]
+            },
+            "on": {
+              "COMPLETE": {},
+              "FAILED": {},
+              "ONHOLD": {}
+            }
+          }
+        }
+      },
+      "Next": "NextTransition"
+    },
+    "FastController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FastControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 180,
+      "Next": "WhatNext"
+    },
+    "SlowController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlowControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 900,
+      "Next": "WhatNext"
+    },
+    "WhatNext": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.next",
+              "StringEquals": ""
+            },
+            {
+              "Variable": "$.result.status",
+              "StringEquals": "COMPLETE"
+            }
+          ],
+          "Next": "ExecutionDone"
+        },
+        {
+          "Variable": "$.next",
+          "StringEquals": "",
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$.delay",
+          "NumericGreaterThan": 0,
+          "Next": "WaitForNext"
+        }
+      ],
+      "Default": "NextTransition"
+    },
+    "ExecutionDone": {
+      "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "Step not COMPLETE"
+    },
+    "WaitForNext": {
+      "Type": "Wait",
+      "SecondsPath": "$.delay",
+      "Next": "NextTransition"
+    },
+    "NextTransition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.speed",
+          "StringEquals": "slow",
+          "Next": "NextTransitionSlow"
+        }
+      ],
+      "Default": "NextTransitionFast"
+    },
+    "NextTransitionSlow": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "SlowController"
+    },
+    "NextTransitionFast": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "FastController"
+    }
+  }
+}
