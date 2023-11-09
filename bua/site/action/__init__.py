@@ -1,12 +1,12 @@
 import traceback
 from typing import Callable
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 
 
 class Action:
 
-    def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool):
+    def __init__(self, queue: Queue, conn: DBProxy, log: Callable, debug: bool):
         self.queue = queue
         self.conn = conn
         self.log = log

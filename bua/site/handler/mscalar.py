@@ -1,4 +1,6 @@
 from typing import Dict
+
+from bua.facade.connection import DBProxy
 from bua.handler import DBLambdaHandler
 from bua.site.action.scalar import MicroScalar
 
@@ -10,7 +12,7 @@ class BUASiteMscalarHandler(DBLambdaHandler):
             self, s3_client, meterdata_bucket_name,
             sqs_client, ddb_meterdata_table, ddb_bua_table,
             mscalar_queue, failure_queue,
-            conn, ctl_conn,
+            conn: DBProxy, ctl_conn: DBProxy,
             debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(

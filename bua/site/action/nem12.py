@@ -9,7 +9,7 @@ import csv
 
 from pymysql import InternalError, InterfaceError, DatabaseError
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
 from bua.site.action.control import Control
@@ -19,7 +19,7 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 class NEM12(Accounts):
 
     def __init__(
-            self, queue: Queue, conn: DB, ctl_conn: DB, log: Callable, debug: bool, batch_size=100,
+            self, queue: Queue, conn: DBProxy, ctl_conn: DBProxy, log: Callable, debug: bool, batch_size=100,
             s3_client=None, bucket_name=None
     ):
         Accounts.__init__(self, queue, conn, ctl_conn, log, debug, batch_size)
@@ -198,7 +198,7 @@ class NEM12Status:
 
 class NEM12Generator:
     def __init__(
-            self, log, conn: DB, ctl_conn: DB, s3_client, bucket_name, run_type: str, nmi: str,
+            self, log, conn: DBProxy, ctl_conn: DBProxy, s3_client, bucket_name, run_type: str, nmi: str,
             start_inclusive: str, end_exclusive: str, today: str, run_date: str, identifier_type: str,
             now: datetime
     ):

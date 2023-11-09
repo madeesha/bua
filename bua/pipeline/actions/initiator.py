@@ -10,6 +10,7 @@ class Initiator:
     def __init__(self, config: Dict, sqs: SQS):
         self.sqs = sqs
         self.queue_url = config['initiate_queue_url']
+        self.prefix = config['prefix']
 
     def bua_initiate(self, request: HandlerRequest):
         data = request.data
@@ -21,6 +22,10 @@ class Initiator:
         run_date = data['run_date']
         source_date = data.get('source_date')
         identifier_type = data.get('identifier_type')
+        update_id = data['update_id']
+        suffix = data['suffix']
+        domain = data['domain']
+        schema = data['schema']
         other_args = request.step.get('args', dict())
         message = {
             'run_type': run_type,
@@ -31,6 +36,11 @@ class Initiator:
             'end_inclusive': end_inclusive,
             'source_date': source_date,
             'identifier_type': identifier_type,
+            'prefix': self.prefix,
+            'update_id': update_id,
+            'suffix': suffix,
+            'domain': domain,
+            'schema': schema,
         }
         for key in other_args.keys():
             message[key] = data[key]

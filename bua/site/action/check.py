@@ -3,7 +3,7 @@ from typing import Callable
 
 from pymysql import IntegrityError, InternalError, InterfaceError
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 from bua.site.action.datestocheck import DatesToCheck
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
@@ -11,7 +11,7 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 class Check(DatesToCheck):
 
-    def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool, batch_size=1):
+    def __init__(self, queue: Queue, conn: DBProxy, log: Callable, debug: bool, batch_size=1):
         DatesToCheck.__init__(self, queue, conn, log, debug, batch_size)
 
     def initiate_segment_jurisdiction_check(

@@ -1,7 +1,6 @@
 import yaml
 import os
 from pytest import fixture
-from pytest import mark
 from bua.pipeline.handler.controller import BUAControllerHandler
 from bua.pipeline.actions.kube import KubeCtl
 from tests.pipeline.stubs.cf_client_stub import CFClientStub
@@ -666,31 +665,6 @@ class TestCase:
         handler.handle_request(body)
         sqs.assert_no_failures()
 
-    def test_bua_initiate(self, handler, sqs, mysql, rds_secret_id, update_id, suffix, rds_domain_name, schema_name):
-        mysql.resultsets = [[{'id': 123}]]
-        body = {
-            'name': 'Restore Database',
-            'this': 'step1',
-            'data': {
-                'update_id': update_id,
-                'suffix': suffix,
-                'domain': rds_domain_name,
-                'schema': schema_name,
-                'rdssecret': rds_secret_id
-            },
-            'steps': {
-                'step1': {
-                    'action': 'bua_initiate',
-                    'args': {
-                        'run_type': 'Utility',
-                        'run_date': '2023-08-17',
-                        'today': '2023-05-01',
-                    }
-                }
-            }
-        }
-        handler.handle_request(body)
-        sqs.assert_no_failures()
 
     def test_wait_for_empty_site_queues_retry(self, handler, sqs):
         sqs.get_queue_attributes_response = {

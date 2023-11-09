@@ -3,14 +3,14 @@ from typing import Callable
 
 from pymysql import InternalError, InterfaceError
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 from bua.site.action import Action
 
 
 class DatesToCheck(Action):
 
-    def __init__(self, queue: Queue, conn: DB, log: Callable, debug: bool, batch_size: int):
+    def __init__(self, queue: Queue, conn: DBProxy, log: Callable, debug: bool, batch_size: int):
         Action.__init__(self, queue, conn, log, debug)
         self.batch_size = batch_size
 

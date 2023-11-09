@@ -1,4 +1,6 @@
 import os
+
+from bua.facade.connection import DBProxy
 from bua.site.handler.initiate import BUASiteInitiateHandler
 import boto3
 import botocore.config
@@ -33,15 +35,11 @@ session = boto3.Session()
 client = session.client('secretsmanager')
 response = client.get_secret_value(SecretId=rdssecret)
 decoded = json.loads(response['SecretString'])
-rdshost = decoded['rdshost']
 username = decoded['username']
 password = decoded['password']
-dbname = decoded['dbname']
 
-conn = pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
-                       cursorclass=pymysql.cursors.SSDictCursor)
-ctl_conn = pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
-                       cursorclass=pymysql.cursors.SSDictCursor)
+conn = DBProxy(mysql=pymysql, username=username, password=password, lock_wait_timeout=900)
+ctl_conn = DBProxy(mysql=pymysql, username=username, password=password, lock_wait_timeout=900)
 
 debug = os.environ['debugEnabled'] == 'Yes'
 util_batch_size = int(os.environ['utilityBatchSize'])
@@ -64,18 +62,4 @@ handler = BUASiteInitiateHandler(
 
 
 def lambda_handler(event, context):
-    try:
-        handler.handle_request(event)
-    except Exception as ex:
-        traceback.print_exception(ex)
-        try:
-            handler.reconnect(
-                pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
-                                cursorclass=pymysql.cursors.SSDictCursor),
-                pymysql.connect(host=rdshost, user=username, passwd=password, db=dbname, connect_timeout=5,
-                                cursorclass=pymysql.cursors.SSDictCursor)
-            )
-        except Exception as ex2:
-            handler.log('Failed to reconnect to the database after a failure')
-            traceback.print_exception(ex2)
-        raise RuntimeError(f'Failed to handle request: {event}')
+    handler.handle_request(event)

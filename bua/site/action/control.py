@@ -2,12 +2,12 @@ import traceback
 from datetime import date
 from typing import Optional, Union
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 
 
 class Control:
     def __init__(
-            self, conn: DB, run_type: str,
+            self, conn: DBProxy, run_type: str,
             start_inclusive: str, end_exclusive: str,
             today: str, run_date: str, identifier_type: str
     ):

@@ -6,7 +6,7 @@ from typing import Optional, Callable
 from boto3.dynamodb.conditions import Key
 from pymysql import InternalError, InterfaceError
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 from bua.site.action import Action
 
@@ -14,7 +14,7 @@ from bua.site.action import Action
 class SiteData(Action):
 
     def __init__(
-            self, queue: Queue, conn: DB, log: Callable, debug: bool,
+            self, queue: Queue, conn: DBProxy, log: Callable, debug: bool,
             ddb_meterdata_table, batch_size=10, check_nem=True, check_aggread=False
     ):
         Action.__init__(self, queue, conn, log, debug)
