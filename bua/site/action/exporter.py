@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Callable
 from pymysql import IntegrityError, InternalError, InterfaceError
 from pymysql.cursors import SSDictCursor
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.s3 import S3
 from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
@@ -19,7 +19,7 @@ class Exporter(Accounts):
     def __init__(
             self, *,
             queue: Queue,
-            conn: DB, ctl_conn: DB,
+            conn: DBProxy, ctl_conn: DBProxy,
             log: Callable, debug: bool,
             s3: S3,
             batch_size=1

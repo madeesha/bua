@@ -1,3 +1,4 @@
+from bua.facade.connection import DBProxy
 from bua.handler import DBLambdaHandler
 from bua.site.action.sitedata import SiteData
 
@@ -7,7 +8,7 @@ class BUASiteDataHandler(DBLambdaHandler):
     def __init__(self, s3_client, bucket_name,
                  sqs_client, ddb_meterdata_table, ddb_bua_table,
                  site_data_queue, failure_queue,
-                 conn, ctl_conn,
+                 conn: DBProxy, ctl_conn: DBProxy,
                  debug=False, check_nem=True, check_aggread=False, max_receive_count=10
                  ):
         DBLambdaHandler.__init__(

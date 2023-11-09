@@ -1,7 +1,7 @@
 import traceback
 from typing import Dict, Callable
 from pymysql import DatabaseError, InternalError, InterfaceError
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 from bua.site.action.accounts import Accounts
 from bua.site.action.control import Control
@@ -9,7 +9,7 @@ from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
 
 class BasicRead(Accounts):
-    def __init__(self, queue: Queue, conn: DB, ctl_conn: DB, log: Callable, debug: bool, batch_size=100):
+    def __init__(self, queue: Queue, conn: DBProxy, ctl_conn: DBProxy, log: Callable, debug: bool, batch_size=100):
         Accounts.__init__(self, queue, conn, ctl_conn, log, debug, batch_size)
 
     def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str,

@@ -3,7 +3,7 @@ from typing import Callable
 
 from pymysql import InternalError, InterfaceError
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 from bua.site.action import Action
 from bua.site.handler import STATUS_DONE
@@ -13,7 +13,7 @@ class SiteSegment(Action):
     """Management of utility profile site data including profile segment calculations"""
 
     def __init__(
-            self, queue: Queue, conn: DB, log: Callable, debug: bool,
+            self, queue: Queue, conn: DBProxy, log: Callable, debug: bool,
             meterdata_table, batch_size=10, check_nem=True, check_aggread=False
     ):
         Action.__init__(self, queue, conn, log, debug)

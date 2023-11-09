@@ -1,7 +1,8 @@
 import json
 import traceback
-from typing import Dict, Callable, Optional, Union
+from typing import Dict, Callable, Optional, Union, Any
 
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import SQS, Queue
 from bua.site.handler import STATUS_DONE, STATUS_FAIL
 
@@ -17,7 +18,7 @@ class LambdaHandler:
         self.sqs = SQS(sqs_client=sqs_client, ddb_table=ddb_table)
         self.failure_queue = Queue(queue=failure_queue, debug=debug, log=self.log)
         self.debug = debug
-        self._handler: Dict[str, Callable[[str, Dict, bool], None]] = dict()
+        self._handler: Dict[str, Callable[[str, Dict, bool], Any]] = dict()
         self._default_handler: Optional[Callable[[Union[Dict, str]], None]] = None
         self.max_receive_count = max_receive_count
 
@@ -77,7 +78,7 @@ class LambdaHandler:
         if self._default_handler is not None:
             self._default_handler(body)
 
-    def _process_with_entries(self, body, debug):
+    def _process_with_entries(self, body: Dict, debug: bool):
         failure_entries = []
         failures = []
         for entry in body['entries']:
@@ -85,7 +86,8 @@ class LambdaHandler:
                 run_type: str = entry['run_type']
                 if run_type in self._handler:
                     try:
-                        result = self._handler[run_type](run_type, entry, debug)
+                        handler = self._handler[run_type]
+                        result = self._handle(handler, run_type, entry, debug)
                         if isinstance(result, dict) and 'status' in result and result['status'] != STATUS_DONE:
                             failure_entries.append(entry)
                             failures.append(result)
@@ -113,11 +115,12 @@ class LambdaHandler:
                 }
             ])
 
-    def _process_with_run_type(self, body, debug):
+    def _process_with_run_type(self, body: Dict, debug: bool):
         run_type: str = body['run_type']
         if run_type in self._handler:
             try:
-                self._handler[run_type](run_type, body, debug)
+                handler = self._handler[run_type]
+                self._handle(handler, run_type, body, debug)
             except KeyError as ex:
                 traceback.print_exception(ex)
                 self.failure_queue.send_failure_event(body, str(ex))
@@ -130,6 +133,9 @@ class LambdaHandler:
     def log(*args, **kwargs):
         print(*args, **kwargs)
 
+    def _handle(self, handler: Callable[[str, Dict, bool], Any], run_type: str, body: Dict, debug: bool):
+        return handler(run_type, body, debug)
+
 
 class DBLambdaHandler(LambdaHandler):
     """
@@ -138,24 +144,20 @@ class DBLambdaHandler(LambdaHandler):
     Override the _process_message(event) and _initialise_connection() methods in subclasses.
     """
 
-    def __init__(self, sqs_client, ddb_table, conn, ctl_conn, debug, failure_queue, lock_wait_timeout=60, max_receive_count=10):
+    def __init__(self, sqs_client, ddb_table, conn: DBProxy, ctl_conn: DBProxy, debug, failure_queue, max_receive_count=10):
         LambdaHandler.__init__(
             self, sqs_client=sqs_client, ddb_table=ddb_table, debug=debug, failure_queue=failure_queue,
             max_receive_count=max_receive_count
         )
         self.conn = conn
         self.ctl_conn = ctl_conn
-        self.lock_wait_timeout = lock_wait_timeout
-        self._initialise_connection()
 
-    def reconnect(self, conn, ctl_conn):
-        self.log('Reconnected to the database')
-        self.conn = conn
-        self.ctl_conn = ctl_conn
-        self._initialise_connection()
+    def connect(self, event: Dict):
+        self.conn.connect(event)
+        self.ctl_conn.connect(event)
 
-    def _initialise_connection(self):
-        with self.conn.cursor() as cur:
-            cur.execute(f"SET SESSION innodb_lock_wait_timeout = {self.lock_wait_timeout}")
-        with self.ctl_conn.cursor() as cur:
-            cur.execute(f"SET SESSION innodb_lock_wait_timeout = {self.lock_wait_timeout}")
+    def _handle(self, handler: Callable[[str, Dict, bool], Any], run_type: str, event: Dict, debug: bool):
+        self.connect(event)
+        with self.conn:
+            with self.ctl_conn:
+                return LambdaHandler._handle(self, handler, run_type, event, debug)

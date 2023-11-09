@@ -6,7 +6,7 @@ import pytest
 from boto3.dynamodb.types import Binary
 from pymysql import Connection
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 from bua.site.action.sitedata import SiteData
 from bua.site.action.sitesegment import SiteSegment
@@ -150,8 +150,8 @@ class TestClass:
              'VAL': ['1'] * 48, 'QUA': ['A'] * 48,
              'UOM': 'KWH', 'FDT': '202301010203', 'UDT': '20230101020304', 'MDT': None, 'SER': 'SERIAL1', 'REG': '001',
              'MDM': 'N1'}
-        ], 5),
-        ('1234567890', 'RES', 'QLD', 'QSPN', {'B1': 'SOLAR', 'E1': 'PRIMARY'}, '2023-01-01', '2023-01-01', [], 4),
+        ], 6),
+        ('1234567890', 'RES', 'QLD', 'QSPN', {'B1': 'SOLAR', 'E1': 'PRIMARY'}, '2023-01-01', '2023-01-01', [], 5),
     ])
     def test_insert(
             self, nmi, res_bus, jurisdiction, tni, stream_types, start_inclusive, end_exclusive, records, count
@@ -159,7 +159,8 @@ class TestClass:
         table = {}
         queue = Queue({}, True, self.log)
         db = Database()
-        conn = DB(conn=db)
+        conn = DBProxy(mysql=MySQL(db), username='test', password='test')
+        conn.connect({'prefix': 'tst', 'update_id': '1', 'suffix': 'sql', 'domain': 'com', 'schema': 'turkey'})
         site = SiteData(queue, conn, self.log, True, table)
         site.insert_site_data('Utility', '2023-06-01 00:00:00', nmi, res_bus, jurisdiction, tni, stream_types,
                               start_inclusive, end_exclusive, records)
@@ -207,7 +208,8 @@ class TestClass:
         table = {}
         queue = Queue({}, True, self.log)
         db = Database(rowcount=10)
-        conn = DB(conn=db)
+        conn = DBProxy(mysql=MySQL(db), username='test', password='test')
+        conn.connect({'prefix': 'tst', 'update_id': '1', 'suffix': 'sql', 'domain': 'com', 'schema': 'turkey'})
         site = SiteSegment(queue, conn, self.log, True, table)
         printer = Printer()
         site.log = printer.print
@@ -223,10 +225,10 @@ class TestClass:
             avg_sum=avg_sum,
             incl_est=incl_est
         )
-        assert len(db.executions) == 4
-        assert aggregator in db.executions[2][0]
+        assert len(db.executions) == 5
+        assert aggregator in db.executions[3][0]
         if _filter is not None:
-            assert _filter in db.executions[2][0]
+            assert _filter in db.executions[3][0]
         assert db.commits == [True]
         assert len(printer.prints) == 1
         assert printer.prints[0][0] == f'Imported 10 records for segment {identifier} on 2022-06-01'
@@ -235,7 +237,8 @@ class TestClass:
         table = {}
         queue = Queue({}, True, self.log)
         db = Database(rowcount=10)
-        conn = DB(conn=db)
+        conn = DBProxy(mysql=MySQL(db), username='test', password='test')
+        conn.connect({'prefix': 'tst', 'update_id': '1', 'suffix': 'sql', 'domain': 'com', 'schema': 'turkey'})
         site = SiteData(queue, conn, self.log, True, table, check_aggread=True, check_nem=True)
         printer = Printer()
         site.log = printer.print
@@ -247,7 +250,7 @@ class TestClass:
             '2022-06-01',
             '2023-06-01'
         )
-        assert len(db.executions) == 5
+        assert len(db.executions) == 6
         assert db.commits == [True]
         assert len(printer.prints) == 1
         assert printer.prints[0][0] == '20 variances identified for nmi 1234567890'
@@ -267,6 +270,8 @@ class TestClass:
         nem12_queue = {}
         conn = Database(rowcount=10)
         ctl_conn = Database(rowcount=10)
+        conn = DBProxy(mysql=MySQL(conn), username='test', password='test')
+        ctl_conn = DBProxy(mysql=MySQL(ctl_conn), username='test', password='test')
         handler = BUASiteInitiateHandler(
             sqs_client=sqs_client,
             s3_client=s3_client,
@@ -281,7 +286,12 @@ class TestClass:
             'source_date': '2023-05-10',
             'start_inclusive': '2022-05-01',
             'end_exclusive': '2023-05-01',
-            'identifier_type': 'Excl'
+            'identifier_type': 'Excl',
+            'prefix': 'tst',
+            'update_id': '1',
+            'suffix': 'sql',
+            'domain': 'com',
+            'schema': 'turkey'
         }
         handler.handle_request(event)
 
@@ -342,3 +352,13 @@ class Database(Connection):
 
     def fetchall_unbuffered(self):
         return self.unbuffered_result
+
+
+class MySQL:
+    def __init__(self, db: Database):
+        self._db = db
+        self.cursors = self
+        self.SSDictCursor = self
+
+    def connect(self, **_kwargs):
+        return self._db

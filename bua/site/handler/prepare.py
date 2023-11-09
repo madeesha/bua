@@ -1,5 +1,6 @@
 from typing import Dict
 
+from bua.facade.connection import DBProxy
 from bua.facade.s3 import S3
 from bua.handler import DBLambdaHandler
 from bua.site.action.exporter import Exporter
@@ -14,7 +15,7 @@ class BUASitePrepareHandler(DBLambdaHandler):
             s3_client,
             ddb_bua_table,
             prepare_queue, failure_queue,
-            conn, ctl_conn,
+            conn: DBProxy, ctl_conn: DBProxy,
             debug=False, max_receive_count=10
     ):
         DBLambdaHandler.__init__(

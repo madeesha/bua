@@ -3,7 +3,7 @@ from typing import Callable
 
 from pymysql import InternalError, InterfaceError
 
-from bua.facade.connection import DB
+from bua.facade.connection import DBProxy
 from bua.facade.sqs import Queue
 from bua.site.action import Action
 from bua.site.action.control import Control
@@ -11,7 +11,7 @@ from bua.site.action.control import Control
 
 class Accounts(Action):
 
-    def __init__(self, queue: Queue, conn: DB, ctl_conn: DB, log: Callable, debug: bool, batch_size=100):
+    def __init__(self, queue: Queue, conn: DBProxy, ctl_conn: DBProxy, log: Callable, debug: bool, batch_size=100):
         Action.__init__(self, queue, conn, log, debug)
         self.ctl_conn = ctl_conn
         self.batch_size = batch_size

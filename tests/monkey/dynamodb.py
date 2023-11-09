@@ -17,5 +17,8 @@ class MonkeyPatchTable:
     def put_item(self, *args, **kwargs):
         return {}
 
+    def delete_item(self, *args, **kwargs):
+        return {}
+
     def patch(self):
         pass

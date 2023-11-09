@@ -1,4 +1,7 @@
+import json
+
 import pytest
+from pymysql import InternalError
 
 
 class TestCase:
@@ -23,7 +26,7 @@ class TestCase:
         lambda_handler(event, context)
 
     def test_invoke_handler_failure(self):
-        with pytest.raises(RuntimeError) as ex:
+        with pytest.raises(KeyError) as ex:
             import tests.monkey.patch as monkey_patch
             monkey_patch.patch.patch(environ=self._environ)
             from bua.handler.site_basic import lambda_handler
@@ -36,26 +39,36 @@ class TestCase:
             }
             context = {}
             lambda_handler(event, context)
-        assert str(ex.value).startswith('Failed to handle request')
+        assert str(ex.value) == "'messageId'"
 
     def test_invoke_handler_reconnect_failure(self):
         import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
-        with pytest.raises(RuntimeError) as ex:
+        with pytest.raises(InternalError) as ex:
             from bua.handler.site_basic import lambda_handler, handler
             handler.log = monkey_patch.patch.log
             monkey_patch.patch.connect().cursor().execute_fails_after_invocations = 0
+            body = {
+                'run_type': 'ResetBasicRead',
+                'prefix': 'tst',
+                'update_id': '1',
+                'suffix': 'sql',
+                'domain': 'com',
+                'schema': 'turkey',
+            }
             event = {
                 'Records': [
                     {
-                        'eventSource': 'aws:sqs'
+                        'eventSource': 'aws:sqs',
+                        'messageId': '123',
+                        'eventSourceARN': 'aws:sqs',
+                        'body': json.dumps(body)
                     }
                 ]
             }
             context = {}
             lambda_handler(event, context)
-        assert str(ex.value).startswith('Failed to handle request')
-        monkey_patch.patch.assert_log('Failed to reconnect to the database after a failure')
+        assert str(ex.value).startswith('Database connection lost')
 
     def test_basic_read(self):
         import tests.monkey.patch as monkey_patch
