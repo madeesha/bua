@@ -119,20 +119,88 @@
             "action": "disable_workflow_schedules",
             "on": {
               "COMPLETE": {
-                "next": "180_truncate_working_tables"
+                "next": "180_truncate_workflow_instance"
               }
             }
           },
-          "180_truncate_working_tables": {
+          "180_truncate_workflow_instance": {
             "action": "execute_sql",
             "speed": "slow",
             "args": {
               "sql": [
-                "TRUNCATE TABLE WorkflowInstance",
+                "TRUNCATE TABLE WorkflowInstance"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_truncate_eventlog"
+              }
+            }
+          },
+          "180_truncate_eventlog": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "SET FOREIGN_KEY_CHECKS=0",
                 "TRUNCATE TABLE EventLog",
-                "SET FOREIGN_KEY_CHECKS=1",
+                "SET FOREIGN_KEY_CHECKS=1"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_truncate_invoice_attribute"
+              }
+            }
+          },
+          "180_truncate_invoice_attribute": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "TRUNCATE TABLE InvoiceAttribute"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_truncate_utility_profile"
+              }
+            }
+          },
+          "180_truncate_utility_profile": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "TRUNCATE TABLE UtilityProfile"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_truncate_utility_profile_summary"
+              }
+            }
+          },
+          "180_truncate_utility_profile_summary": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "TRUNCATE TABLE UtilityProfileSummary"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_truncate_utility_profile_variance"
+              }
+            }
+          },
+          "180_truncate_utility_profile_variance": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "TRUNCATE TABLE UtilityProfileVariance"
               ]
             },
             "on": {
