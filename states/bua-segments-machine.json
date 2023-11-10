@@ -31,20 +31,20 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "115_clear_error_queues"
+                "next": "100_clear_error_queues"
               }
             }
           },
-          "115_clear_error_queues": {
+          "100_clear_error_queues": {
             "action": "empty_site_errors_queues",
             "on": {
               "COMPLETE": {
                 "delay": 60,
-                "next": "120_jurisdiction_segments"
+                "next": "110_jurisdiction_segments_avg"
               }
             }
           },
-          "120_jurisdiction_segments": {
+          "110_jurisdiction_segments_avg": {
             "action": "bua_initiate",
             "args": {
               "run_type": "SegmentJurisdiction",
@@ -52,31 +52,43 @@
             },
             "on": {
               "COMPLETE": {
-                "delay": 120,
-                "next": "125_wait_for_jurisdiction_segments"
+                "next": "120_jurisdiction_segments_total"
               }
             }
           },
-          "125_wait_for_jurisdiction_segments": {
+          "120_jurisdiction_segments_total": {
+            "action": "bua_initiate",
+            "args": {
+              "run_type": "SegmentJurisdiction",
+              "identifier_type": "SegmentJurisdictionTotalExclEst"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "130_wait_for_jurisdiction_segments"
+              }
+            }
+          },
+          "130_wait_for_jurisdiction_segments": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "130_clear_error_queues"
+                "next": "140_clear_error_queues"
               }
             }
           },
-          "130_clear_error_queues": {
+          "140_clear_error_queues": {
             "action": "empty_site_errors_queues",
             "on": {
               "COMPLETE": {
                 "delay": 60,
-                "next": "135_segment_jurisdiction_check"
+                "next": "150_segment_jurisdiction_check_avg"
               }
             }
           },
-          "135_segment_jurisdiction_check": {
+          "150_segment_jurisdiction_check_avg": {
             "action": "bua_initiate",
             "args": {
               "run_type": "SegmentJurisdictionCheck",
@@ -85,30 +97,43 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "140_wait_for_segment_jurisdiction_check"
+                "next": "160_segment_jurisdiction_check_total"
               }
             }
           },
-          "140_wait_for_segment_jurisdiction_check": {
+          "160_segment_jurisdiction_check_total": {
+            "action": "bua_initiate",
+            "args": {
+              "run_type": "SegmentJurisdictionCheck",
+              "identifier_type": "SegmentJurisdictionTotalExclEst"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "170_wait_for_segment_jurisdiction_check"
+              }
+            }
+          },
+          "170_wait_for_segment_jurisdiction_check": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "145_clear_error_queues"
+                "next": "180_clear_error_queues"
               }
             }
           },
-          "145_clear_error_queues": {
+          "180_clear_error_queues": {
             "action": "empty_site_errors_queues",
             "on": {
               "COMPLETE": {
                 "delay": 60,
-                "next": "150_segment_jurisdiction_fix"
+                "next": "190_segment_jurisdiction_fix_avg"
               }
             }
           },
-          "150_segment_jurisdiction_fix": {
+          "190_segment_jurisdiction_fix_avg": {
             "action": "bua_initiate",
             "args": {
               "run_type": "SegmentJurisdictionFix",
@@ -117,21 +142,34 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "155_wait_for_segment_jurisdiction_fix"
+                "next": "200_segment_jurisdiction_fix_total"
               }
             }
           },
-          "155_wait_for_segment_jurisdiction_fix": {
+          "200_segment_jurisdiction_fix_total": {
+            "action": "bua_initiate",
+            "args": {
+              "run_type": "SegmentJurisdictionFix",
+              "identifier_type": "SegmentJurisdictionTotalExclEst"
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "210_wait_for_segment_jurisdiction_fix"
+              }
+            }
+          },
+          "210_wait_for_segment_jurisdiction_fix": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "180_create_macro_profile_scalar"
+                "next": "220_create_macro_profile_scalar"
               }
             }
           },
-          "180_create_macro_profile_scalar": {
+          "220_create_macro_profile_scalar": {
             "action": "bua_create_macro_profile",
             "args": {
               "identifier_type": "SegmentJurisdictionAvgExclEst",
