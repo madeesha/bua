@@ -14,18 +14,22 @@ class BasicRead(Accounts):
 
     def initiate_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str,
                                         start_inclusive: str, end_exclusive: str, end_inclusive: str,
+                                        db: Dict[str, str],
                                         proc_name=None):
         self.reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type,
                                      start_inclusive, end_exclusive, end_inclusive,
+                                     db=db,
                                      all_accounts=False, proc_name=proc_name)
 
     def initiate_reset_basic_read_calculation(self, run_type: str, today: str, run_date: str, identifier_type: str,
                                               start_inclusive: str, end_exclusive: str, end_inclusive: str,
+                                              db: Dict[str, str],
                                               proc_name=None):
         self.reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type,
                                      start_inclusive, end_exclusive, end_inclusive,
+                                     db=db,
                                      all_accounts=False, proc_name=proc_name)
 
     def execute_basic_read_calculation(

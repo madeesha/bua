@@ -287,11 +287,13 @@ class TestClass:
             'start_inclusive': '2022-05-01',
             'end_exclusive': '2023-05-01',
             'identifier_type': 'Excl',
-            'prefix': 'tst',
-            'update_id': '1',
-            'suffix': 'sql',
-            'domain': 'com',
-            'schema': 'turkey'
+            'db': {
+                'prefix': 'tst',
+                'update_id': '1',
+                'suffix': 'sql',
+                'domain': 'com',
+                'schema': 'turkey'
+            }
         }
         handler.handle_request(event)
 

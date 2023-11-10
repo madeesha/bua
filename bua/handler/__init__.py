@@ -157,7 +157,7 @@ class DBLambdaHandler(LambdaHandler):
         self.ctl_conn.connect(event)
 
     def _handle(self, handler: Callable[[str, Dict, bool], Any], run_type: str, event: Dict, debug: bool):
-        self.connect(event)
+        self.connect(event['db'])
         with self.conn:
             with self.ctl_conn:
                 return LambdaHandler._handle(self, handler, run_type, event, debug)

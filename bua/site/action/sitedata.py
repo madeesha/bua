@@ -23,7 +23,7 @@ class SiteData(Action):
         self.check_nem = check_nem
         self.check_aggread = check_aggread
 
-    def initiate_site_data_processing(self, run_type, run_date, today, start_inclusive, end_exclusive, source_date,
+    def initiate_site_data_processing(self, run_type, run_date, today, start_inclusive, end_exclusive, source_date, db,
                                       limit=1000000000):
         """Initiate the extraction or validation of site data"""
         bodies = []
@@ -88,7 +88,8 @@ class SiteData(Action):
                                 nmi_suffix: stream_type
                             },
                             'start_inclusive': start_inclusive,
-                            'end_exclusive': end_exclusive
+                            'end_exclusive': end_exclusive,
+                            'db': db,
                         }
                         total += 1
                     else:

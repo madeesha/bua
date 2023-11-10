@@ -21,7 +21,7 @@ class SegmentJurisdiction(Action):
         self.check_aggread = check_aggread
 
     def initiate_segment_jurisdiction_calculation(
-            self, run_type, run_date, start_inclusive, end_exclusive, source_date, identifier_type
+            self, run_type, run_date, start_inclusive, end_exclusive, source_date, identifier_type, db
     ):
         """Initiate the calculation of jurisdiction profile segments"""
         bodies = []
@@ -65,7 +65,8 @@ class SegmentJurisdiction(Action):
                         'interval_date': interval_date.strftime('%Y%m%d'),
                         'source_date': source_date,
                         'avg_sum': 'Average' if 'Avg' in identifier_type else 'Sum',
-                        'incl_est': 'InclEst' in identifier_type
+                        'incl_est': 'InclEst' in identifier_type,
+                        'db': db,
                     }
                     bodies.append(body)
                     self.queue.send_if_needed(bodies, batch_size=self.batch_size)

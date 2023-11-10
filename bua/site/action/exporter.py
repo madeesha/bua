@@ -30,7 +30,8 @@ class Exporter(Accounts):
 
     def initiate_export_tables(
             self, table_names: List[str], partitions: List[str], batch_size: int,
-            bucket_name: str, bucket_prefix: str, run_date: str, today: str, run_type: str, file_format: str
+            bucket_name: str, bucket_prefix: str, run_date: str, today: str, run_type: str, file_format: str,
+            db: Dict[str, str]
     ):
         identifier_type = f'Export {file_format}'
         self.reset_control_records(run_type, today, run_date, identifier_type)
@@ -43,12 +44,12 @@ class Exporter(Accounts):
                         for partition in partitions:
                             counter = self._initiate_export_table(
                                 cur, table_name, partition, counter, batch_size,
-                                bucket_name, bucket_prefix, run_date, today, run_type, file_format, identifier_type
+                                bucket_name, bucket_prefix, run_date, today, run_type, file_format, identifier_type, db
                             )
                     else:
                         counter = self._initiate_export_table(
                             cur, table_name, None, counter, batch_size,
-                            bucket_name, bucket_prefix, run_date, today, run_type, file_format, identifier_type
+                            bucket_name, bucket_prefix, run_date, today, run_type, file_format, identifier_type, db
                         )
                     print(f'Initiate export of {counter} files to S3 for {table_name} to {bucket_prefix}')
                 self.conn.commit()
@@ -66,7 +67,7 @@ class Exporter(Accounts):
     def _initiate_export_table(
             self, cur: SSDictCursor, table_name: str, partition: Optional[str], counter: int, batch_size: int,
             bucket_name: str, bucket_prefix: str, run_date: str, today: str, run_type: str, file_format: str,
-            identifier_type: str
+            identifier_type: str, db: Dict[str, str]
     ) -> int:
         if partition is not None:
             cur.execute(f"SELECT COUNT(*) AS total FROM {table_name} PARTITION ({partition})")
@@ -91,7 +92,8 @@ class Exporter(Accounts):
                 'run_type': run_type,
                 'file_format': file_format,
                 'identifier_type': identifier_type,
-                'today': today
+                'today': today,
+                'db': db,
             }
             bodies.append(body)
         self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
@@ -161,12 +163,15 @@ class Exporter(Accounts):
 
     def initiate_prepare_export(
             self, run_type: str, today: str, run_date: str, identifier_type: str,
-            start_inclusive: str, end_exclusive: str, end_inclusive: str
+            start_inclusive: str, end_exclusive: str, end_inclusive: str,
+            db: Dict[str, str]
     ):
         self.reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(
             run_type, today, run_date, identifier_type,
-            start_inclusive, end_exclusive, end_inclusive, all_accounts=True
+            start_inclusive, end_exclusive, end_inclusive,
+            db=db,
+            all_accounts=True
         )
 
     def prepare_export(self, entry: Dict):

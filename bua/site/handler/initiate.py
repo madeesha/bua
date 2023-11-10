@@ -83,7 +83,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             start_inclusive=body['start_inclusive'],
             end_exclusive=body['end_exclusive'],
             source_date=source_date,
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            db=body['db']
         )
 
     def _initiate_segment_jurisdiction_calculation(self, run_type, body, debug):
@@ -101,7 +102,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             start_inclusive=body['start_inclusive'],
             end_exclusive=body['end_exclusive'],
             source_date=source_date,
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            db=body['db']
         )
 
     def _initiate_segment_jurisdiction_check(self, run_type, body, debug):
@@ -117,7 +119,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             today=today,
             start_inclusive=body['start_inclusive'],
             end_exclusive=body['end_exclusive'],
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            db=body['db']
         )
 
     def _initiate_segment_jurisdiction_fix(self, run_type, body, debug):
@@ -133,7 +136,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             today=today,
             start_inclusive=body['start_inclusive'],
             end_exclusive=body['end_exclusive'],
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            db=body['db']
         )
 
     def _initiate_site_data_processing(self, run_type, body, debug):
@@ -153,6 +157,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             start_inclusive=body['start_inclusive'],
             end_exclusive=body['end_exclusive'],
             source_date=source_date,
+            db=body['db'],
             limit=limit
         )
 
@@ -173,7 +178,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             run_date=run_date,
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            db=body['db']
         )
 
     def _initiate_reset_nem12_files(self, run_type, body, debug):
@@ -195,7 +201,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
             end_inclusive=end_inclusive,
-            identifier_type=identifier_type
+            identifier_type=identifier_type,
+            db=body['db']
         )
 
     def _initiate_microscalar(self, run_type, body, debug):
@@ -219,7 +226,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
             end_inclusive=end_inclusive,
-            proc_name=proc_name
+            proc_name=proc_name,
+            db=body['db']
         )
 
     def _initiate_basic_read(self, run_type, body, debug):
@@ -241,7 +249,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             identifier_type=identifier_type,
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
-            end_inclusive=end_inclusive
+            end_inclusive=end_inclusive,
+            db=body['db']
         )
 
     def _initiate_reset_basic_read(self, run_type, body, debug):
@@ -263,7 +272,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             identifier_type=identifier_type,
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
-            end_inclusive=end_inclusive
+            end_inclusive=end_inclusive,
+            db=body['db']
         )
 
     def _initiate_export_tables(self, run_type, body, debug):
@@ -290,7 +300,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             run_date=run_date,
             today=today,
             run_type=run_type,
-            file_format=file_format
+            file_format=file_format,
+            db=body['db']
         )
 
     def _initiate_prepare_export(self, run_type, body, debug):
@@ -313,5 +324,6 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             identifier_type=identifier_type,
             start_inclusive=start_inclusive,
             end_exclusive=end_exclusive,
-            end_inclusive=end_inclusive
+            end_inclusive=end_inclusive,
+            db=body['db']
         )

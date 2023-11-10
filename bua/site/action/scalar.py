@@ -1,5 +1,5 @@
 import traceback
-from typing import Callable
+from typing import Callable, Dict
 
 from pymysql import DatabaseError, InternalError, InterfaceError
 
@@ -17,12 +17,14 @@ class MicroScalar(Accounts):
     def initiate_microscalar_calculation(
             self, run_type: str, today: str, run_date: str, identifier_type: str,
             start_inclusive: str, end_exclusive: str, end_inclusive: str,
+            db: Dict[str, str],
             proc_name=None
     ):
         self.reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(
             run_type, today, run_date, identifier_type,
             start_inclusive, end_exclusive, end_inclusive,
+            db=db,
             all_accounts=False, proc_name=proc_name
         )
 

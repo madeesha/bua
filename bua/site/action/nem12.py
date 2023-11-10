@@ -33,22 +33,24 @@ class NEM12(Accounts):
             run_date: str,
             start_inclusive: Optional[str],
             end_exclusive: Optional[str],
-            identifier_type: str
+            identifier_type: str,
+            db: Dict[str,str]
     ):
         control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
         control.reset_control_records()
         self._prepare_nem12_files_to_process(end_exclusive, identifier_type, run_date, run_type, start_inclusive, today)
-        self._queue_nem12_files_to_process(control, identifier_type, run_date, run_type, today)
+        self._queue_nem12_files_to_process(control, identifier_type, run_date, run_type, today, db)
 
     def initiate_reset_nem12(self, run_type: str, today: str, run_date: str, identifier_type: str,
-                             start_inclusive: str, end_exclusive: str, end_inclusive: str,
+                             start_inclusive: str, end_exclusive: str, end_inclusive: str, db: Dict[str, str],
                              proc_name=None):
         self.reset_control_records(run_type, today, run_date, identifier_type)
         self.queue_eligible_accounts(run_type, today, run_date, identifier_type,
                                      start_inclusive, end_exclusive, end_inclusive,
+                                     db=db,
                                      all_accounts=False, proc_name=proc_name)
 
-    def _queue_nem12_files_to_process(self, control: Control, identifier_type, run_date, run_type, today):
+    def _queue_nem12_files_to_process(self, control: Control, identifier_type, run_date, run_type, today, db):
         with self.conn.cursor() as cur:
             try:
                 stmt = """
@@ -75,7 +77,8 @@ class NEM12(Accounts):
                             'nmi': nmi,
                             'start_inclusive': start_date.strftime('%Y-%m-%d'),
                             'end_exclusive': end_date.strftime('%Y-%m-%d'),
-                            'identifier_type': identifier_type
+                            'identifier_type': identifier_type,
+                            'db': db,
                         }
                         bodies.append(body)
                         total += 1

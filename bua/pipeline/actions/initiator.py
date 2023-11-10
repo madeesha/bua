@@ -36,11 +36,13 @@ class Initiator:
             'end_inclusive': end_inclusive,
             'source_date': source_date,
             'identifier_type': identifier_type,
-            'prefix': self.prefix,
-            'update_id': update_id,
-            'suffix': suffix,
-            'domain': domain,
-            'schema': schema,
+            'db': {
+                'prefix': self.prefix,
+                'update_id': update_id,
+                'suffix': suffix,
+                'domain': domain,
+                'schema': schema,
+            }
         }
         for key in other_args.keys():
             message[key] = data[key]

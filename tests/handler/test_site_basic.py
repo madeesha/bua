@@ -50,11 +50,13 @@ class TestCase:
             monkey_patch.patch.connect().cursor().execute_fails_after_invocations = 0
             body = {
                 'run_type': 'ResetBasicRead',
-                'prefix': 'tst',
-                'update_id': '1',
-                'suffix': 'sql',
-                'domain': 'com',
-                'schema': 'turkey',
+                'db': {
+                    'prefix': 'tst',
+                    'update_id': '1',
+                    'suffix': 'sql',
+                    'domain': 'com',
+                    'schema': 'turkey',
+                }
             }
             event = {
                 'Records': [

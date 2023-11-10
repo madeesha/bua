@@ -61,11 +61,13 @@ class TestCase:
                             'today': '2023-01-01',
                             'run_date': '2023-01-01',
                             'identifier_type': 'ABC',
-                            'prefix': 'tst',
-                            'update_id': '1',
-                            'suffix': 'sql',
-                            'domain': 'com',
-                            'schema': 'turkey'
+                            'db': {
+                                'prefix': 'tst',
+                                'update_id': '1',
+                                'suffix': 'sql',
+                                'domain': 'com',
+                                'schema': 'turkey'
+                            }
                         }),
                     }
                 ]

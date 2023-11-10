@@ -15,7 +15,7 @@ class DatesToCheck(Action):
         self.batch_size = batch_size
 
     def _initiate_dates_to_check(
-            self, run_type, run_date, today, start_inclusive, end_exclusive, identifier_type
+            self, run_type, run_date, today, start_inclusive, end_exclusive, identifier_type, db
     ):
         with self.conn.cursor() as cur:
             try:
@@ -32,6 +32,7 @@ class DatesToCheck(Action):
                         'run_date': run_date,
                         'identifier_type': identifier_type,
                         'interval_date': interval_date.strftime('%Y-%m-%d'),
+                        'db': db,
                     }
                     bodies.append(body)
                     total += 1

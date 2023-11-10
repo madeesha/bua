@@ -41,9 +41,11 @@ class TestCase(TestBase):
             'end_inclusive': '2023-10-31',
             'source_date': '2023-11-10',
             'identifier_type': None,
-            'prefix': prefix,
-            'update_id': update_id,
-            'suffix': suffix,
-            'domain': rds_domain_name,
-            'schema': schema_name,
+            'db': {
+                'prefix': prefix,
+                'update_id': update_id,
+                'suffix': suffix,
+                'domain': rds_domain_name,
+                'schema': schema_name,
+            }
         }

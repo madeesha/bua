@@ -15,9 +15,9 @@ class Fix(DatesToCheck):
         DatesToCheck.__init__(self, queue, conn, log, debug, batch_size)
 
     def initiate_segment_jurisdiction_fix(
-        self, run_type, run_date, today, start_inclusive, end_exclusive, identifier_type
+        self, run_type, run_date, today, start_inclusive, end_exclusive, identifier_type, db
     ):
-        self._initiate_dates_to_check(run_type, run_date, today, start_inclusive, end_exclusive, identifier_type)
+        self._initiate_dates_to_check(run_type, run_date, today, start_inclusive, end_exclusive, identifier_type, db)
 
     def segment_jurisdiction_fix(self, run_date, identifier_type, interval_date):
         with self.conn.cursor() as cur:

@@ -1,5 +1,5 @@
 import traceback
-from typing import Callable
+from typing import Callable, Dict
 
 from pymysql import InternalError, InterfaceError
 
@@ -29,6 +29,7 @@ class Accounts(Action):
             start_inclusive: str,
             end_exclusive: str,
             end_inclusive: str,
+            db: Dict[str, str],
             all_accounts=False,
             proc_name=None
     ):
@@ -36,10 +37,10 @@ class Accounts(Action):
                                           start_inclusive, end_exclusive,
                                           proc_name=proc_name)
         self._queue_accounts_to_process(end_exclusive, end_inclusive, identifier_type, run_date, run_type,
-                                        start_inclusive, today)
+                                        start_inclusive, today, db)
 
     def _queue_accounts_to_process(self, end_exclusive, end_inclusive, identifier_type, run_date, run_type,
-                                   start_inclusive, today):
+                                   start_inclusive, today, db):
         with self.conn.cursor() as cur:
             stmt = "SELECT identifier FROM BUAControl WHERE run_type = %s AND run_date = %s AND status = 'PREP'"
             params = (run_type, run_date)
@@ -59,7 +60,8 @@ class Accounts(Action):
                     'identifier_type': identifier_type,
                     'start_inclusive': start_inclusive,
                     'end_exclusive': end_exclusive,
-                    'end_inclusive': end_inclusive
+                    'end_inclusive': end_inclusive,
+                    'db': db,
                 }
                 bodies.append(body)
                 total += 1
