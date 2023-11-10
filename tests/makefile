@@ -31,7 +31,7 @@ update-snapshot_arn:
 
 list-parameters:
 	mkdir -p ../sandpit
-	bin/list-bua-parameters $(PROFILE) | tee ../sandpit/$(PROFILE)-parameters.txt
+	../bin/list-bua-parameters $(PROFILE) | tee ../sandpit/$(PROFILE)-parameters.txt
 
 restore:
 	../bin/execute-bua-steps $(PROFILE) Restore

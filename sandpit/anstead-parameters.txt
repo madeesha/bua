@@ -18,9 +18,9 @@ Path                               | Value
 /tst-anstead/bua/rdssecret         | cicd/tst-anstead/rds/bua
 /tst-anstead/bua/snapshot_arn      | arn:aws:rds:ap-southeast-2:561082505378:snapshot:prod-data-2023-10-01-snapshot
 /tst-anstead/bua/source_account_id | 760694178318
-/tst-anstead/bua/source_date       | 2023-11-09
+/tst-anstead/bua/source_date       | 2023-11-10
 /tst-anstead/bua/start_inclusive   | 2022-10-01
 /tst-anstead/bua/rds_dns_alias     | tst-sql.anstead.encore.sh
-/tst-anstead/bua/run_date          | 2023-11-09
+/tst-anstead/bua/run_date          | 2023-11-10
 /tst-anstead/bua/schema            | Turkey_BLU
 /tst-anstead/bua/today             | 2023-10-01
