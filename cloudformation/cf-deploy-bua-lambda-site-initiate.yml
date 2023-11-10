@@ -53,7 +53,7 @@ Parameters:
   UtilityBatchSize:
     Description: Number of items to put in a Utility data extract request
     Type: String
-    Default: "8"
+    Default: "4"
     AllowedValues:
       - "8"
       - "4"
@@ -77,7 +77,7 @@ Parameters:
   MaxReceiveCount:
     Description: Maximum number of attempts to process a request
     Type: String
-    Default: "10"
+    Default: "20"
 
 Resources:
 

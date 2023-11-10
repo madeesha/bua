@@ -24,7 +24,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             data_queue, segment_queue, export_queue, failure_queue,
             basic_queue, mscalar_queue, prepare_queue, nem12_queue,
             conn: DBProxy, ctl_conn: DBProxy,
-            debug=False, util_batch_size=10, jur_batch_size=5, tni_batch_size=10, max_receive_count=10
+            debug=False, util_batch_size=5, jur_batch_size=5, tni_batch_size=5, max_receive_count=10
     ):
         DBLambdaHandler.__init__(
             self, sqs_client=sqs_client, ddb_table=ddb_bua_table,

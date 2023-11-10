@@ -5,9 +5,7 @@ from bua.site.handler.initiate import BUASiteInitiateHandler
 import boto3
 import botocore.config
 import json
-import pymysql
 import pymysql.cursors
-import traceback
 
 
 ddb_config = botocore.config.Config(max_pool_connections=10, connect_timeout=10, read_timeout=30)

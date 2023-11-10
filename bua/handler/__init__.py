@@ -82,6 +82,7 @@ class LambdaHandler:
         failure_entries = []
         failures = []
         for entry in body['entries']:
+            self.log(entry)
             if 'run_type' in entry:
                 run_type: str = entry['run_type']
                 if run_type in self._handler:
