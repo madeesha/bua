@@ -155,6 +155,7 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             run_date=run_date,
             today=today,
             start_inclusive=body['start_inclusive'],
+            end_inclusive=body['end_inclusive'],
             end_exclusive=body['end_exclusive'],
             source_date=source_date,
             db=body['db'],

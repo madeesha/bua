@@ -115,11 +115,14 @@ class Queue:
         message_id = response['MessageId']
         self._log(f'Sent failure message {message_id} because [{cause}]')
 
-    def send_if_needed(self, bodies: list, force=False, batch_size=10):
+    def send_if_needed(self, bodies: list, force=False, batch_size=10, db=None):
         """Send SQS message batches if needed"""
         if len(bodies) >= (batch_size * 10) or (len(bodies) > 0 and force):
             batches = [
-                {'entries': [bodies[n] for n in range(index, min(index + batch_size, len(bodies)))]}
+                {
+                    'entries': [bodies[n] for n in range(index, min(index + batch_size, len(bodies)))],
+                    'db': db,
+                }
                 for index in range(0, len(bodies), batch_size)
             ]
             for index in range(0, len(batches), 10):

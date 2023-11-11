@@ -23,8 +23,9 @@ class SiteData(Action):
         self.check_nem = check_nem
         self.check_aggread = check_aggread
 
-    def initiate_site_data_processing(self, run_type, run_date, today, start_inclusive, end_exclusive, source_date, db,
-                                      limit=1000000000):
+    def initiate_site_data_processing(
+            self, run_type, run_date, today, start_inclusive, end_inclusive, end_exclusive, source_date, db,
+            limit=1000000000):
         """Initiate the extraction or validation of site data"""
         bodies = []
         with self.conn.cursor() as cur:
@@ -75,10 +76,11 @@ class SiteData(Action):
                             break
                         if body is not None:
                             bodies.append(body)
-                            self.queue.send_if_needed(bodies, batch_size=self.batch_size)
+                            self.queue.send_if_needed(bodies, batch_size=self.batch_size, db=db)
                         body = {
                             'run_type': run_type,
                             'run_date': run_date,
+                            'today': today,
                             'source_date': source_date,
                             'nmi': nmi,
                             'res_bus': res_bus,
@@ -88,15 +90,15 @@ class SiteData(Action):
                                 nmi_suffix: stream_type
                             },
                             'start_inclusive': start_inclusive,
+                            'end_inclusive': end_inclusive,
                             'end_exclusive': end_exclusive,
-                            'db': db,
                         }
                         total += 1
                     else:
                         body['stream_types'][nmi_suffix] = stream_type
                 if body is not None:
                     bodies.append(body)
-                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size, db=db)
                 cur.execute(
                     "INSERT INTO UtilityProfileLog (run_date, run_type, source_date, total_entries) "
                     "VALUES (%s, %s, %s, %s)",

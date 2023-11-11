@@ -32,12 +32,11 @@ class DatesToCheck(Action):
                         'run_date': run_date,
                         'identifier_type': identifier_type,
                         'interval_date': interval_date.strftime('%Y-%m-%d'),
-                        'db': db,
                     }
                     bodies.append(body)
                     total += 1
-                    self.queue.send_if_needed(bodies, batch_size=self.batch_size)
-                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+                    self.queue.send_if_needed(bodies, batch_size=self.batch_size, db=db)
+                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size, db=db)
                 self.conn.commit()
                 self.log(f'{total} dates to check')
             except InternalError as ex:

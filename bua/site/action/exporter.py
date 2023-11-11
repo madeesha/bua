@@ -79,7 +79,7 @@ class Exporter(Accounts):
         for offset in range(0, total_rows, batch_size):
             counter += 1
             if body is not None:
-                self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size, db=db)
             body = {
                 'table_name': table_name,
                 'partition': partition,
@@ -93,10 +93,9 @@ class Exporter(Accounts):
                 'file_format': file_format,
                 'identifier_type': identifier_type,
                 'today': today,
-                'db': db,
             }
             bodies.append(body)
-        self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+        self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size, db=db)
         return counter
 
     def export_table(self, entry: Dict):
