@@ -51,7 +51,7 @@ class Accounts(Action):
             for record in cur.fetchall_unbuffered():
                 account_id = int(record['identifier'])
                 if body is not None:
-                    self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size)
+                    self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size, db=db)
                 body = {
                     'account_id': account_id,
                     'run_type': run_type,
@@ -61,11 +61,10 @@ class Accounts(Action):
                     'start_inclusive': start_inclusive,
                     'end_exclusive': end_exclusive,
                     'end_inclusive': end_inclusive,
-                    'db': db,
                 }
                 bodies.append(body)
                 total += 1
-            self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+            self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size, db=db)
             self.log(f'{total} accounts to generate {run_type} data')
 
     def _prepare_accounts_to_process(

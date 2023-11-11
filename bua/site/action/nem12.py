@@ -69,7 +69,7 @@ class NEM12(Accounts):
                     end_date: date = record['end_exclusive']
                     if start_date <= end_date:
                         if body is not None:
-                            self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size)
+                            self.queue.send_if_needed(bodies, force=False, batch_size=self.batch_size, db=db)
                         body = {
                             'run_type': run_type,
                             'today': today,
@@ -78,7 +78,6 @@ class NEM12(Accounts):
                             'start_inclusive': start_date.strftime('%Y-%m-%d'),
                             'end_exclusive': end_date.strftime('%Y-%m-%d'),
                             'identifier_type': identifier_type,
-                            'db': db,
                         }
                         bodies.append(body)
                         total += 1
@@ -87,7 +86,7 @@ class NEM12(Accounts):
                             identifier=nmi, status='SKIP', reason='Start date after end date', commit=False,
                             start_inclusive=start_date
                         )
-                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size, db=db)
                 self.log(f'{total} sites to generate {run_type} profiled estimates data')
                 self.conn.commit()
                 control.commit()

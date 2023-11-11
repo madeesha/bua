@@ -57,3 +57,44 @@ class SQSClientStub:
         for key in kwargs.keys():
             assert key in {'QueueUrl', 'AttributeNames'}, f'Unexpected key {key}'
         return self.get_queue_attributes_response
+
+
+class SQSQueueStub:
+
+    def __init__(self):
+        self.messages = []
+        self.get_queue_attributes_response = {
+            'Attributes': {
+                'ApproximateNumberOfMessages': 100,
+                'ApproximateNumberOfMessagesNotVisible': 100,
+                'ApproximateNumberOfMessagesDelayed': 100
+            }
+        }
+
+    def assert_no_messages(self):
+        assert self.messages == []
+
+    def send_message(self, *args, **kwargs):
+        self.messages.append({**kwargs})
+        for key in kwargs.keys():
+            assert key in {'MessageBody', 'DelaySeconds'}
+        return {
+            'MessageId': '123'
+        }
+
+    def send_messages(self, *args, **kwargs):
+        self.messages.append({**kwargs})
+        for key in kwargs.keys():
+            assert key in {'Entries'}
+        return {
+            'Successful': [
+                {
+                    'MessageId': '123'
+                }
+            ]
+        }
+
+    def delete_message(self, *args, **kwargs):
+        for key in kwargs.keys():
+            assert key in {'ReceiptHandle'}
+        return {}

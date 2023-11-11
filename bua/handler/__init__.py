@@ -81,8 +81,13 @@ class LambdaHandler:
     def _process_with_entries(self, body: Dict, debug: bool):
         failure_entries = []
         failures = []
+        db = body.get('db')
+        if db is not None:
+            self.log(db)
         for entry in body['entries']:
             self.log(entry)
+            if 'db' not in entry and db is not None:
+                entry['db'] = db
             if 'run_type' in entry:
                 run_type: str = entry['run_type']
                 if run_type in self._handler:

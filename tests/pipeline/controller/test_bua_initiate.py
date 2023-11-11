@@ -25,6 +25,7 @@ class TestCase(TestBase):
                     'args': {
                         'run_type': 'Utility',
                         'run_date': '2023-08-17',
+                        'source_date': '2023-08-17',
                         'today': '2023-05-01',
                     }
                 }
@@ -39,7 +40,7 @@ class TestCase(TestBase):
             'start_inclusive': '2022-11-01',
             'end_exclusive': '2023-11-01',
             'end_inclusive': '2023-10-31',
-            'source_date': '2023-11-10',
+            'source_date': '2023-08-17',
             'identifier_type': None,
             'db': {
                 'prefix': prefix,

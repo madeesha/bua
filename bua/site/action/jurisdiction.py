@@ -66,12 +66,11 @@ class SegmentJurisdiction(Action):
                         'source_date': source_date,
                         'avg_sum': 'Average' if 'Avg' in identifier_type else 'Sum',
                         'incl_est': 'InclEst' in identifier_type,
-                        'db': db,
                     }
                     bodies.append(body)
-                    self.queue.send_if_needed(bodies, batch_size=self.batch_size)
+                    self.queue.send_if_needed(bodies, batch_size=self.batch_size, db=db)
                     total += 1
-                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size)
+                self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size, db=db)
                 cur.execute(
                     "INSERT INTO UtilityProfileLog (run_date, run_type, source_date, total_entries) "
                     "VALUES (%s,%s,%s,%s)",
