@@ -67,7 +67,7 @@ anstead-restore-bua-scripts:
 	bash bin/restore-bua-scripts anstead
 
 anstead-weekly-run:
-	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
+	bin/execute-bua-steps anstead Weekly 'ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
 
 
 
@@ -120,16 +120,4 @@ matten-restore-bua-scripts:
 	bash bin/restore-bua-scripts matten
 
 matten-weekly-run:
-	bin/execute-bua-steps matten Weekly 'ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
-
-matten-fix-run:
-	bin/execute-bua-steps matten FixUp 'InvoiceRuns,ScaleDown,Export'
-
-matten-snapshot:
-	bin/execute-bua-steps matten Snapshot
-
-matten-scale-up-workflow:
-	bin/execute-bua-steps matten ScaleUpWorkflow
-
-matten-scale-down:
-	bin/execute-bua-steps matten ScaleDown
+	bin/execute-bua-steps matten Weekly 'ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export'
