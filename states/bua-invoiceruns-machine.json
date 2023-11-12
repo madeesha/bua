@@ -238,7 +238,7 @@
             "action": "execute_sql",
             "speed": "slow",
             "args": {
-              "stmt": [
+              "sql": [
                 "UPDATE WorkflowInstance SET status = 'HOLD' WHERE status IN ('NEW', 'READY', 'INPROG')"
               ]
             },
