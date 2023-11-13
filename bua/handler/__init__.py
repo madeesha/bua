@@ -35,7 +35,7 @@ class LambdaHandler:
                         except Exception as ex:
                             self.log(str(ex))
                         try:
-                            self._process_message(body)
+                            return self._process_message(body)
                         except Exception as ex:
                             self.log('Failed to process request')
                             traceback.print_exception(ex)
@@ -45,7 +45,7 @@ class LambdaHandler:
                                 raise ex
                             self.send_failure(record['body'], str(ex))
         else:
-            self._process_message(event)
+            return self._process_message(event)
 
     def send_failure(self, body: str, failure: str):
         self.failure_queue.send_request([
@@ -70,8 +70,7 @@ class LambdaHandler:
         if isinstance(body, dict):
             debug = self.debug or body.get('debug') is True
             if 'run_type' in body:
-                self._process_with_run_type(body, debug)
-                return
+                return self._process_with_run_type(body, debug)
             if 'entries' in body:
                 self._process_with_entries(body, debug)
                 return
@@ -126,7 +125,7 @@ class LambdaHandler:
         if run_type in self._handler:
             try:
                 handler = self._handler[run_type]
-                self._handle(handler, run_type, body, debug)
+                return self._handle(handler, run_type, body, debug)
             except KeyError as ex:
                 traceback.print_exception(ex)
                 self.failure_queue.send_failure_event(body, str(ex))
