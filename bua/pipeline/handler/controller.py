@@ -243,8 +243,10 @@ class BUAControllerHandler:
     @staticmethod
     def _calculate_run_dates(data):
         run_date = datetime.now(ZoneInfo('Australia/Sydney'))
+        data['current_date'] = run_date.strftime('%Y-%m-%d')
+        data['current_time'] = run_date.strftime('%H:%M:%S')
         if 'run_date' not in data or data['run_date'] is None or len(data['run_date']) == 0:
-            data['run_date'] = run_date.strftime('%Y-%m-%d')
+            data['run_date'] = data['current_date']
         else:
             if len(data['run_date']) == 10:
                 run_date = datetime.strptime(data['run_date'], '%Y-%m-%d')
