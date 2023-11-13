@@ -183,8 +183,8 @@ class Exporter(Accounts):
             identifier_type = entry['identifier_type']
             account_id = entry['account_id']
             end_inclusive = entry['end_inclusive']
-            stmt = f'CALL bua_prepare_export_data(%s, %s, %s, 1)'
-            params = (account_id, account_id, end_inclusive)
+            stmt = f'CALL bua_prepare_export_data(%s, %s, %s, %s, 1)'
+            params = (account_id, account_id, end_inclusive, identifier_type)
             control = Control(self.ctl_conn, run_type, start_inclusive, end_exclusive, today, run_date, identifier_type)
             with self.conn.cursor() as cur:
                 try:
