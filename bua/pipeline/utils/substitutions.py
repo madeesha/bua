@@ -46,8 +46,10 @@ class Substitutions:
     def filter_value(filter: Optional[str], value: str) -> str:
         if filter is None:
             return value
-        if filter == 'short':
+        if filter == 'short' or filter == 'shortdate':
             return value[0:10].replace('-','')
+        if filter == 'shorttime':
+            return value[0:8].replace(':', '')
         if filter == 'date':
             return value[0:10]
         if filter == 'lower':
