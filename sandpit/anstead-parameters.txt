@@ -1,6 +1,6 @@
 Path                               | Value
 ----                               | -----
-/tst-anstead/bua/adh_bucket_name   | tst-anstead-s3-bua
+/tst-anstead/bua/adh_bucket_name   | tst-anstead-s3-rw-integration
 /tst-anstead/bua/end_inclusive     | 2023-09-30
 /tst-anstead/bua/hosted_zone_id    | Z06477101FOH3N8B2WK6N
 /tst-anstead/bua/instance_type     | 8xlarge
@@ -18,9 +18,9 @@ Path                               | Value
 /tst-anstead/bua/rdssecret         | cicd/tst-anstead/rds/bua
 /tst-anstead/bua/snapshot_arn      | arn:aws:rds:ap-southeast-2:561082505378:snapshot:prod-data-2023-10-01-snapshot
 /tst-anstead/bua/source_account_id | 760694178318
-/tst-anstead/bua/source_date       | 2023-11-10
+/tst-anstead/bua/source_date       | 2023-11-14
 /tst-anstead/bua/start_inclusive   | 2022-10-01
 /tst-anstead/bua/rds_dns_alias     | tst-sql.anstead.encore.sh
-/tst-anstead/bua/run_date          | 2023-11-10
+/tst-anstead/bua/run_date          | 2023-11-14
 /tst-anstead/bua/schema            | Turkey_BLU
 /tst-anstead/bua/today             | 2023-10-01
