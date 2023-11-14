@@ -50,7 +50,7 @@
             }
           },
           "200_clear_error_queues": {
-            "action": "empty_site_errors_queues",
+            "action": "record_site_errors_queues",
             "on": {
               "COMPLETE": {
                 "delay": 120,

@@ -52,6 +52,7 @@ provision:
       bua-export-machine.json \
       bua-prepare-machine.json \
       bua-snapshot-machine.json \
+      bua-empty-queues-machine.json \
       bua-destroy-machine.json
     - |
       # Package bua for aws lambda layers

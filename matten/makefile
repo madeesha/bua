@@ -21,7 +21,7 @@ BUCKET=prd-matten-s3-bua
 	bash ../bin/restore-bua-scripts $(PROFILE)
 
 4-weekly-run:
-	../bin/execute-bua-steps $(PROFILE) Weekly 'ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export'
+	../bin/execute-bua-steps $(PROFILE) Weekly 'EmptyQueues,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export'
 
 update-run-date:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/run_date --value $(TODAY) --type String --overwrite --data-type text

@@ -101,6 +101,7 @@ class BUAControllerHandler:
             'bua_resolve_variances': sql_handler.bua_resolve_variances,
             'wait_for_empty_site_queues': profiles_handler.wait_for_empty_site_queues,
             'empty_site_errors_queues': profiles_handler.empty_site_errors_queues,
+            'record_site_errors_queues': profiles_handler.record_site_errors_queues,
             'execute_sql': sql_handler.execute_sql,
             'insert_event_log': sql_handler.insert_event_log,
             'set_rds_dns_entry': dns_handler.set_rds_dns_entry,
