@@ -29,7 +29,8 @@
               "start_inclusive",
               "end_inclusive",
               "end_exclusive",
-              "source_date"
+              "source_date",
+              "default_steps"
             ]
           },
           "data.$": "$.data",
@@ -49,7 +50,7 @@
         "data.$": "$.data",
         "context": {
           "steps.$": "$.context.steps",
-          "default_steps": "Restore,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown,Prepare,Snapshot,Export",
+          "default_steps.$": "$.data.default_steps",
           "splitter": ","
         }
       },

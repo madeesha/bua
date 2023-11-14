@@ -60,6 +60,9 @@ Parameters:
   SourceAccountID:
     Description: The expected account id for notifications
     Type: String
+  DefaultSteps:
+    Description: The default steps to use when triggering bua
+    Type: String
 
 Resources:
 
@@ -254,3 +257,11 @@ Resources:
       Description: "The expected source account for notificiations"
       Type: "String"
       Value: !Ref SourceAccountID
+
+  DefaultStepsParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/default_steps"
+      Description: "The default steps to execute when triggering BUA"
+      Type: "String"
+      Value: !Ref DefaultSteps

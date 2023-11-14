@@ -46,5 +46,9 @@
   {
     "ParameterKey": "SourceAccountID",
     "ParameterValue": "760694178318"
+  },
+  {
+    "ParameterKey": "DefaultSteps",
+    "ParameterValue": "EmptyQueues,Restore,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export"
   }
 ]
