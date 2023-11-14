@@ -96,6 +96,7 @@
         "stepfunction": {
           "bua-restore": "",
           "bua-utility-profiles": "",
+          "bua-empty-queues": "",
           "bua-segments": "",
           "bua-microscalar": "",
           "bua-scaleup-meterdata": "",
@@ -165,6 +166,11 @@
           "Variable": "$.context.start",
           "StringEquals": "Restore",
           "Next": "Restore"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "EmptyQueues",
+          "Next": "EmptyQueues"
         },
         {
           "Variable": "$.context.start",
@@ -274,6 +280,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-restore",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "EmptyQueues": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-empty-queues",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
