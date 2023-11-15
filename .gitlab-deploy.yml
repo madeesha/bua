@@ -53,6 +53,9 @@ provision:
       bua-prepare-machine.json \
       bua-snapshot-machine.json \
       bua-empty-queues-machine.json \
+      bua-clean-invoiceattribute-machine.json \
+      bua-clean-utilityprofile-machine.json \
+      bua-clean-workflows-machine.json \
       bua-destroy-machine.json
     - |
       # Package bua for aws lambda layers

@@ -1,0 +1,37 @@
+#!/bin/bash
+set -feuo pipefail
+my_dir=$(dirname $0)
+case "${1}" in
+  anstead)
+    export MYSQL_HOST="${TST_ANSTEAD_SQL}"
+    export MYSQL_PORT="166${TST_ANSTEAD_SQL_UPDATE_ID}"
+    export MYSQL_USER="core_admin"
+    export MYSQL_PWD="${TST_ANSTEAD_SQL_PASS}"
+    ;;
+  matten)
+    export MYSQL_HOST="${PRD_MATTEN_SQL}"
+    export MYSQL_PORT="176${TST_MATTEN_SQL_UPDATE_ID}"
+    export MYSQL_USER="core_admin"
+    export MYSQL_PWD="${PRD_MATTEN_SQL_PASS}"
+    ;;
+  *)
+    echo 'Must be either anstead or matten'
+    exit 1
+esac
+
+file="conf/Procedures/R__${2}.sql"
+file_path="${HOME}/git/uss/turkey/${file}"
+if [[ ! -f "${file_path}" ]] ; then
+  echo "${file} does not exist at ${file_path}"
+  exit 1
+fi
+
+echo "Applying ${file} to ${MYSQL_HOST}"
+read -p "Are you sure you wish to continue (Y/N) [N] ?" yesno
+if [[ "$yesno" != "Y" ]] ; then
+  exit 1
+fi
+
+echo "Loading ${file}"
+cat "${file_path}" | mysql --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" Turkey_BLU
+echo "Loaded ${file}"
