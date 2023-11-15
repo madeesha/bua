@@ -35,7 +35,8 @@ class LambdaHandler:
                         except Exception as ex:
                             self.log(str(ex))
                         try:
-                            return self._process_message(body)
+                            result = self._process_message(body)
+                            self.log(result)
                         except Exception as ex:
                             self.log('Failed to process request')
                             traceback.print_exception(ex)
