@@ -71,7 +71,7 @@
           },
           "130_wait_for_jurisdiction_segments": {
             "action": "wait_for_empty_site_queues",
-            "retry_delay": 120,
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "delay": 120,
@@ -116,7 +116,7 @@
           },
           "170_wait_for_segment_jurisdiction_check": {
             "action": "wait_for_empty_site_queues",
-            "retry_delay": 120,
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "delay": 120,
@@ -161,7 +161,7 @@
           },
           "210_wait_for_segment_jurisdiction_fix": {
             "action": "wait_for_empty_site_queues",
-            "retry_delay": 120,
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {
                 "delay": 120,
