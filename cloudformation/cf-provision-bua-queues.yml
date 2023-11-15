@@ -636,7 +636,7 @@ Resources:
       QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-nem12-queue" ] ]
       MessageRetentionPeriod: 1209600
       ReceiveMessageWaitTimeSeconds: 20
-      VisibilityTimeout: 300
+      VisibilityTimeout: 360
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BUASiteNEM12DLQ.Arn
         maxReceiveCount: 10
