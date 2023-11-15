@@ -25,6 +25,9 @@ BRANCH=release-uat
 4-restore-bua-prepare-export-data:
 	bash ../bin/restore-procedure $(PROFILE) bua_prepare_export_data
 
+4-restore-bua-run-status:
+	bash ../bin/restore-procedure $(PROFILE) bua_run_status
+
 4-restore-bua-scripts:
 	bash ../bin/restore-bua-scripts $(PROFILE)
 

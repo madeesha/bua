@@ -9,9 +9,9 @@ Path                               | Value
 /tst-anstead/bua/params_id         | 2
 /tst-anstead/bua/sqlsecret         | cicd/tst-anstead/rds/bua/passwords
 /tst-anstead/bua/suffix            | bua-sql
-/tst-anstead/bua/update_id         | 17
+/tst-anstead/bua/update_id         | 18
 /tst-anstead/bua/cluster_name      | anstead
-/tst-anstead/bua/default_steps     | EmptyQueues,Restore,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export
+/tst-anstead/bua/default_steps     | EmptyQueues,Restore,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export
 /tst-anstead/bua/domain            | cmil2mssslzz.ap-southeast-2.rds.amazonaws.com
 /tst-anstead/bua/end_exclusive     | 2023-10-01
 /tst-anstead/bua/node_group_name   | managed-ng-anstead-demand-1-22-v20230914
