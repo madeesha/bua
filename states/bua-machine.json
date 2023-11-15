@@ -115,7 +115,10 @@
           "bua-prepare": "",
           "bua-export": "",
           "bua-snapshot": "",
-          "bua-destroy": ""
+          "bua-destroy": "",
+          "bua-clean-invoiceattribute": "",
+          "bua-clean-utilityprofile": "",
+          "bua-clean-workflows": ""
         }
       },
       "Next": "GetStepfunctionArns"
@@ -167,6 +170,21 @@
           "Variable": "$.context.start",
           "StringEquals": "Restore",
           "Next": "Restore"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "CleanInvoiceAttribute",
+          "Next": "CleanInvoiceAttribute"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "CleanUtilityProfile",
+          "Next": "CleanUtilityProfile"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "CleanWorkflows",
+          "Next": "CleanWorkflows"
         },
         {
           "Variable": "$.context.start",
@@ -281,6 +299,60 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-restore",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "CleanInvoiceAttribute": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-clean-invoiceattribute",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "CleanUtilityProfile": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-clean-utilityprofile",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "CleanWorkflows": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-clean-workflows",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {

@@ -107,6 +107,69 @@ Resources:
         - Key: resource-class
           Value: data
 
+  CleanInvoiceAttributeMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      StateMachineName: !Sub "${ResourcePrefix}-bua-clean-invoiceattribute"
+      DefinitionS3Location:
+        Bucket: !Sub "${ResourcePrefix}-s3-bua"
+        Key: !Sub "states/bua-clean-invoiceattribute-machine.json/${ProjectVersion}"
+      DefinitionSubstitutions:
+        SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
+        FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
+      RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: stepfunction
+        - Key: resource-class
+          Value: data
+
+  CleanUtilityProfileMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      StateMachineName: !Sub "${ResourcePrefix}-bua-clean-utilityprofile"
+      DefinitionS3Location:
+        Bucket: !Sub "${ResourcePrefix}-s3-bua"
+        Key: !Sub "states/bua-clean-utilityprofile-machine.json/${ProjectVersion}"
+      DefinitionSubstitutions:
+        SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
+        FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
+      RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: stepfunction
+        - Key: resource-class
+          Value: data
+
+  CleanWorkflowsMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      StateMachineName: !Sub "${ResourcePrefix}-bua-clean-workflows"
+      DefinitionS3Location:
+        Bucket: !Sub "${ResourcePrefix}-s3-bua"
+        Key: !Sub "states/bua-clean-workflows-machine.json/${ProjectVersion}"
+      DefinitionSubstitutions:
+        SlowControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-slow"
+        FastControllerFunction: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ResourcePrefix}-lambda-bua-controller-fast"
+      RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
+      Tags:
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: stepfunction
+        - Key: resource-class
+          Value: data
+
   EmptyQueuesMachine:
     Type: "AWS::StepFunctions::StateMachine"
     Properties:

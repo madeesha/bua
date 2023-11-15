@@ -1,0 +1,189 @@
+{
+  "Comment": "Clean UtilityProfile",
+  "StartAt": "CleanUtilityProfile",
+  "States": {
+    "CleanUtilityProfile": {
+      "Type": "Pass",
+      "Parameters": {
+        "type": "step",
+        "name": "Clean UtilityProfile",
+        "next": "000_get_parameters",
+        "speed": "fast",
+        "retry_delay": 120,
+        "data.$": "$.data",
+        "steps": {
+          "000_get_parameters": {
+            "action": "get_parameters",
+            "args": {
+              "names": [
+                "domain",
+                "rdssecret",
+                "update_id",
+                "suffix",
+                "schema",
+                "run_date",
+                "source_date",
+                "today",
+                "start_inclusive",
+                "end_inclusive",
+                "end_exclusive",
+                "snapshot_arn",
+                "instance_class",
+                "instance_type",
+                "mysql_version",
+                "hosted_zone_id",
+                "cluster_name",
+                "node_group_name",
+                "rds_dns_alias",
+                "sqlsecret",
+                "params_id"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_truncate_utility_profile"
+              }
+            }
+          },
+          "180_truncate_utility_profile": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "TRUNCATE TABLE UtilityProfile"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_truncate_utility_profile_summary"
+              }
+            }
+          },
+          "180_truncate_utility_profile_summary": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "TRUNCATE TABLE UtilityProfileSummary"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "180_truncate_utility_profile_variance"
+              }
+            }
+          },
+          "180_truncate_utility_profile_variance": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "TRUNCATE TABLE UtilityProfileVariance"
+              ]
+            },
+            "on": {
+              "COMPLETE": {}
+            }
+          }
+        }
+      },
+      "Next": "NextTransition"
+    },
+    "FastController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FastControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 180,
+      "Next": "WhatNext"
+    },
+    "SlowController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlowControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 900,
+      "Next": "WhatNext"
+    },
+    "WhatNext": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.next",
+              "StringEquals": ""
+            },
+            {
+              "Variable": "$.result.status",
+              "StringEquals": "COMPLETE"
+            }
+          ],
+          "Next": "ExecutionDone"
+        },
+        {
+          "Variable": "$.next",
+          "StringEquals": "",
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$.delay",
+          "NumericGreaterThan": 0,
+          "Next": "WaitForNext"
+        }
+      ],
+      "Default": "NextTransition"
+    },
+    "ExecutionDone": {
+      "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "Step not COMPLETE"
+    },
+    "WaitForNext": {
+      "Type": "Wait",
+      "SecondsPath": "$.delay",
+      "Next": "NextTransition"
+    },
+    "NextTransition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.speed",
+          "StringEquals": "slow",
+          "Next": "NextTransitionSlow"
+        }
+      ],
+      "Default": "NextTransitionFast"
+    },
+    "NextTransitionSlow": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "SlowController"
+    },
+    "NextTransitionFast": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "FastController"
+    }
+  }
+}
