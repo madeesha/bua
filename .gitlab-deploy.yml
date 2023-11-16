@@ -56,6 +56,7 @@ provision:
       bua-clean-invoiceattribute-machine.json \
       bua-clean-utilityprofile-machine.json \
       bua-clean-workflows-machine.json \
+      bua-dump-errors-machine.json \
       bua-destroy-machine.json
     - |
       # Package bua for aws lambda layers

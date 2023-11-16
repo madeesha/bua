@@ -118,7 +118,8 @@
           "bua-destroy": "",
           "bua-clean-invoiceattribute": "",
           "bua-clean-utilityprofile": "",
-          "bua-clean-workflows": ""
+          "bua-clean-workflows": "",
+          "bua-dump-errors": ""
         }
       },
       "Next": "GetStepfunctionArns"
@@ -190,6 +191,11 @@
           "Variable": "$.context.start",
           "StringEquals": "EmptyQueues",
           "Next": "EmptyQueues"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "DumpErrors",
+          "Next": "DumpErrors"
         },
         {
           "Variable": "$.context.start",
@@ -371,6 +377,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-empty-queues",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "DumpErrors": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-dump-errors",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {

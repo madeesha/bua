@@ -99,6 +99,12 @@ class SQS:
     def empty_queue(self, queue_url):
         self.sqs.purge_queue(QueueUrl=queue_url)
 
+    def delete_message_batch(self, queue_url: str, entries: List):
+        return self.sqs.delete_message_batch(QueueUrl=queue_url, Entries=entries)
+
+    def receive_message(self, queue_url: str, max_number_of_messages: int):
+        return self.sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=max_number_of_messages)
+
 
 class Queue:
     def __init__(self, queue, debug, log):
