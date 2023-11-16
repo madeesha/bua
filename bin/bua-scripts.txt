@@ -14,6 +14,7 @@ conf/Scripts/V2023.10.30.17.07.01__YCY_CB-20256_add_GlobalSetting.sql
 conf/Scripts/V2023.10.30.17.08.02__YCY_CB-20256_add_column_InvoiceScalar.sql
 conf/Scripts/V2023.10.30.17.08.03__YCY_CB-20256_update_InvoiceScalarSegment.sql
 conf/Scripts/V2023.11.03.12.03.03__YCY_CB-20256_ExceptionType_add_update.sql
+conf/Scripts/V2023.11.13.15.45.00__MS_CB-20298_BUA_RAD_ExceptionType.sql
 conf/Procedures/R__bua_approve_all_user_inv_hold.sql
 conf/Procedures/R__bua_create_basic_read.sql
 conf/Procedures/R__bua_create_invoice_scalar.sql
