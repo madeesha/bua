@@ -1,3 +1,5 @@
+from base64 import b64encode
+from hashlib import md5
 from typing import List
 
 
@@ -56,3 +58,11 @@ class S3:
 
     def delete_object(self, *, bucket_name: str, bucket_key: str):
         self.s3_client.delete_object(Bucket=bucket_name, Key=bucket_key)
+
+    def put_object(self, bucket_name: str, bucket_path: str, content: str):
+        body = content.encode('utf-8')
+        checksum = b64encode(md5(body).digest()).decode('utf-8')
+        self.s3_client.put_object(
+            Bucket=bucket_name, Key=bucket_path,
+            Body=body, ContentMD5=checksum, ContentType='text/plain'
+        )

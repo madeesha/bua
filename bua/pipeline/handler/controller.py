@@ -54,7 +54,7 @@ class BUAControllerHandler:
         kubectl_handler = KubeCtl(
             config=config, sts_client=sts_client, eks_client=eks_client, session=session, kubes=kubes
         )
-        profiles_handler = Profiles(config=config, sqs=self.sqs)
+        profiles_handler = Profiles(config=config, sqs=self.sqs, s3=self.s3)
         route53 = Route53(r53_client=r53_client)
         dns_handler = DNS(config=config, route53=route53)
         trigger_handler = Trigger(config=config, sqs=self.sqs)
@@ -102,6 +102,7 @@ class BUAControllerHandler:
             'wait_for_empty_site_queues': profiles_handler.wait_for_empty_site_queues,
             'empty_site_errors_queues': profiles_handler.empty_site_errors_queues,
             'record_site_errors_queues': profiles_handler.record_site_errors_queues,
+            'dump_site_errors_queues_to_s3': profiles_handler.dump_site_errors_queues_to_s3,
             'execute_sql': sql_handler.execute_sql,
             'insert_event_log': sql_handler.insert_event_log,
             'set_rds_dns_entry': dns_handler.set_rds_dns_entry,
