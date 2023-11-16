@@ -37,6 +37,7 @@
           },
           "100_dump_errors": {
             "action": "dump_site_errors_queues_to_s3",
+            "speed": "slow",
             "args": {
               "bucket_name": "{{prefix}}-s3-bua",
               "bucket_prefix": "errors/{{run_date|short}}"
