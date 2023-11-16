@@ -49,6 +49,6 @@
   },
   {
     "ParameterKey": "DefaultSteps",
-    "ParameterValue": "EmptyQueues,Restore,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export"
+    "ParameterValue": "Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export"
   }
 ]
