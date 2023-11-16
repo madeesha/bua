@@ -2,7 +2,7 @@ Path                              | Value
 ----                              | -----
 /prd-matten/bua/adh_bucket_name   | prd-matten-s3-bua
 /prd-matten/bua/cluster_name      | matten
-/prd-matten/bua/default_steps     | EmptyQueues,Restore,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export
+/prd-matten/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export
 /prd-matten/bua/domain            | ckhrilltzfkv.ap-southeast-2.rds.amazonaws.com
 /prd-matten/bua/end_exclusive     | 2023-11-01
 /prd-matten/bua/end_inclusive     | 2023-10-31
