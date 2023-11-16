@@ -89,3 +89,6 @@ export-1:
 
 destroy:
 	../bin/execute-bua-steps $(PROFILE) Destroy
+
+dump-errors:
+	../bin/execute-bua-steps $(PROFILE) DumpErrors

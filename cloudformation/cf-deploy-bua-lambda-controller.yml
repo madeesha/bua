@@ -211,6 +211,14 @@ Resources:
                   - 's3:DeleteObject*'
                 Resource:
                   - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/schedule/*" ] ]
+              - Sid: AllowS3AccessForDumpingErrors
+                Effect: Allow
+                Action:
+                  - 's3:GetObject*'
+                  - 's3:PutObject*'
+                  - 's3:DeleteObject*'
+                Resource:
+                  - !Join [ "" , [ "arn:aws:s3:::" , !Ref ResourcePrefix , "-s3-bua/errors/*" ] ]
               - Sid: AllowUpdatingRoute53
                 Effect: Allow
                 Action:
