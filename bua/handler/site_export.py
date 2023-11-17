@@ -47,4 +47,4 @@ handler = BUASiteExportHandler(
 
 
 def lambda_handler(event, context):
-    handler.handle_request(event)
+    return handler.handle_request(event)

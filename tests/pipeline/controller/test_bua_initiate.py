@@ -41,6 +41,8 @@ class TestCase(TestBase):
             'end_exclusive': '2023-11-01',
             'end_inclusive': '2023-10-31',
             'source_date': '2023-08-17',
+            'current_date': body['data']['current_date'],
+            'current_time': body['data']['current_time'],
             'identifier_type': None,
             'db': {
                 'prefix': prefix,
