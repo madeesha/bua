@@ -576,7 +576,7 @@ Resources:
       QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-basic-queue" ] ]
       MessageRetentionPeriod: 1209600
       ReceiveMessageWaitTimeSeconds: 20
-      VisibilityTimeout: 360
+      VisibilityTimeout: 660
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BUASiteBasicDLQ.Arn
         maxReceiveCount: 10
