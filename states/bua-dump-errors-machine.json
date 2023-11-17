@@ -40,7 +40,7 @@
             "speed": "slow",
             "args": {
               "bucket_name": "{{prefix}}-s3-bua",
-              "bucket_prefix": "errors/{{run_date|short}}"
+              "bucket_prefix": "errors/{{run_date|shortdate}}/{{current_date|shortdate}}/{{current_time|shorttime}}"
             },
             "on": {
               "COMPLETE": {}
