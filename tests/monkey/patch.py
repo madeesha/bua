@@ -10,10 +10,10 @@ from tests.monkey.eks import MonkeyPatchEKSClient
 from tests.monkey.mysql import MonkeyPatchConnection
 from tests.monkey.rds import MonkeyPatchRDSClient
 from tests.monkey.route53 import MonkeyPatchRoute53Client
-from tests.monkey.s3 import MonkeyPatchS3Client
+from tests.monkey.s3 import MonkeyPatchS3Client, MyS3
 from tests.monkey.secretsmanager import MonkeyPatchSecretsManagerClient
 from tests.monkey.session import MonkeyPatchSession
-from tests.monkey.sqs import MonkeyPatchSQSResource, MonkeyPatchSQSClient
+from tests.monkey.sqs import MonkeyPatchSQSResource, MonkeyPatchSQSClient, MySQS
 from tests.monkey.ssm import MonkeyPatchSSMClient
 from tests.monkey.stepfunctions import MonkeyPatchStepFunctionsClient
 from tests.monkey.sts import MonkeyPatchSTSClient
@@ -22,10 +22,12 @@ from tests.monkey.sts import MonkeyPatchSTSClient
 class MonkeyPatch:
 
     def __init__(self):
+        self.mysqs = MySQS()
+        self.mys3 = MyS3()
         self._clients = {
-            's3': MonkeyPatchS3Client(),
+            's3': MonkeyPatchS3Client(mys3=self.mys3),
             'secretsmanager': MonkeyPatchSecretsManagerClient(),
-            'sqs': MonkeyPatchSQSClient(),
+            'sqs': MonkeyPatchSQSClient(mysqs=self.mysqs),
             'cloudformation': MonkeyPatchCloudformationClient(),
             'rds': MonkeyPatchRDSClient(),
             'sts': MonkeyPatchSTSClient(),
@@ -36,7 +38,7 @@ class MonkeyPatch:
         }
         self._resources = {
             'dynamodb': MonkeyPatchDynamoDBResource(),
-            'sqs': MonkeyPatchSQSResource(),
+            'sqs': MonkeyPatchSQSResource(mysqs=self.mysqs),
         }
         self._session = MonkeyPatchSession(self._clients, self._resources)
         self._connection = MonkeyPatchConnection()

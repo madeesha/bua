@@ -20,6 +20,8 @@ class Initiator:
         end_inclusive = data['end_inclusive']
         today = data['today']
         run_date = data['run_date']
+        current_date = data['current_date']
+        current_time = data['current_time']
         source_date = data.get('source_date')
         identifier_type = data.get('identifier_type')
         update_id = data['update_id']
@@ -35,6 +37,8 @@ class Initiator:
             'end_exclusive': end_exclusive,
             'end_inclusive': end_inclusive,
             'source_date': source_date,
+            'current_date': current_date,
+            'current_time': current_time,
             'identifier_type': identifier_type,
             'db': {
                 'prefix': self.prefix,

@@ -107,6 +107,8 @@ class Exporter(Accounts):
                 offset = entry['offset']
                 batch_size = entry['batch_size']
                 run_date = entry['run_date']
+                current_date = entry['current_date']
+                current_time = entry['current_time']
                 bucket_name = entry['bucket_name']
                 bucket_prefix = entry['bucket_prefix']
                 file_format = entry['file_format']
@@ -115,8 +117,9 @@ class Exporter(Accounts):
                 today = entry['today']
                 control = Control(self.ctl_conn, run_type, today, today, today, run_date, identifier_type)
 
-                file_run_date = run_date[0:10].replace('-', '')
-                file_name = f"BUA_{table_name}_{file_run_date}_{counter:05d}.{file_format}"
+                file_current_date = current_date.replace('-', '')
+                file_current_time = current_time.replace(':', '')
+                file_name = f"BUA_{table_name}_{file_current_date}_{file_current_time}_{counter:05d}.{file_format}"
                 file_path = f"/tmp/{file_name}"
                 key = f'{bucket_prefix}{file_name}'
                 if partition is not None:

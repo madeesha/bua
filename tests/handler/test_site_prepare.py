@@ -8,12 +8,12 @@ from tests.monkey.logs import Logs
 class TestCase:
 
     _environ = {
-        'buaTableName': '',
-        'prepareQueueURL': '',
-        'failureQueueURL': '',
-        'rdsSecretName': '',
+        'buaTableName': 'bua-table',
+        'prepareQueueURL': 'prepare-queue',
+        'failureQueueURL': 'failure-queue',
+        'rdsSecretName': 'rds-secret',
         'debugEnabled': 'Yes',
-        'buaBucketName': '',
+        'buaBucketName': 'bua-bucket',
         'maxReceiveCount': '100',
     }
 
@@ -53,7 +53,7 @@ class TestCase:
         context = {}
         lambda_handler(event, context)
         assert len(logs.find_logs_with_args({'status': 'DONE'})) == 1
-        monkey_patch.patch.sqs().assert_no_messages()
+        assert len(monkey_patch.patch.mysqs.get_queue('failure-queue').messages) == 0
 
     def test_invoke_handler_multiple_messages(self):
         import tests.monkey.patch as monkey_patch
@@ -114,7 +114,7 @@ class TestCase:
         context = {}
         lambda_handler(event, context)
         assert len(logs.find_logs_with_args({'status': 'DONE'})) == 2
-        monkey_patch.patch.sqs().assert_no_messages()
+        assert len(monkey_patch.patch.mysqs.get_queue('failure-queue').messages) == 0
 
     def test_invoke_handler_failure(self):
         with pytest.raises(KeyError):

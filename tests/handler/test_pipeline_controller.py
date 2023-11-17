@@ -4,19 +4,19 @@ from botocore.exceptions import ClientError
 class TestCase:
 
     _environ = {
-        'buaTableName': '',
-        'projectVersion': '',
-        'resourcePrefix': '',
-        'className': '',
-        'environmentName': '',
-        'awsRegion': '',
-        'awsAccount': '',
-        'nextQueueURL': '',
-        'failureQueueURL': '',
-        'initiateQueueURL': '',
-        'bucketName': '',
-        'mysql80optionGroupName': '',
-        'coreKmsKeyId': '',
+        'buaTableName': 'bua-table',
+        'projectVersion': '1',
+        'resourcePrefix': 'tst-anstead',
+        'className': 'anstead',
+        'environmentName': 'tst',
+        'awsRegion': 'ap-southeast-2',
+        'awsAccount': '12345',
+        'nextQueueURL': 'next-queue',
+        'failureQueueURL': 'failure-queue',
+        'initiateQueueURL': 'initiate-queue',
+        'bucketName': 'bucket-name',
+        'mysql80optionGroupName': 'option-group-name',
+        'coreKmsKeyId': 'core-kms-key',
     }
 
     def test_invoke_handler(self):
@@ -100,5 +100,5 @@ class TestCase:
         }
         context = {}
         lambda_handler(event, context)
-        monkey_patch.patch.sqs().assert_no_messages()
+        assert len(monkey_patch.patch.mysqs.get_queue('failure-queue').messages) == 0
         monkey_patch.patch.connect().cursor().assert_n_execute_invocations(6)

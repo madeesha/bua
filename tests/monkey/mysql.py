@@ -67,5 +67,10 @@ class MonkeyPatchCursor:
             raise InternalError('fetchall called before execute')
         return self._result_set
 
+    def fetchall_unbuffered(self):
+        if self._result_set is None:
+            raise InternalError('fetchall called before execute')
+        return self._result_set
+
     def add_result_set(self, result_set: List[Dict]):
         self._result_sets.append(result_set)
