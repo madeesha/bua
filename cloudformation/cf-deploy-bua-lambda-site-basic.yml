@@ -31,7 +31,7 @@ Parameters:
   ReservedConcurrentExecutions:
     Description: Number of lambda instances to reserve
     Type: String
-    Default: "32"
+    Default: "16"
   KMSKeyId:
     Description: KMS Key ID to use for encryption
     Type: String
@@ -164,7 +164,7 @@ Resources:
         ZipFile: |
           from bua.handler.site_basic import lambda_handler
       Runtime: python3.10
-      Timeout: 300
+      Timeout: 600
       Layers:
         - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-python-libs-" , !Ref ProjectVersion , ":1" ] ]
       MemorySize: 512
