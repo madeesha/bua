@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from bua.facade.connection import DBProxy
 from bua.facade.s3 import S3
 from bua.facade.sqs import Queue
@@ -286,12 +288,14 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             log=self.log, debug=debug,
             s3=self.s3
         )
-        table_names = body['table_names']
-        partitions = body.get('partitions')
-        file_format = body.get('file_format', 'csv')
-        batch_size = body.get('batch_size', 1000000)
-        bucket_name = body['bucket_name']
-        bucket_prefix = body.get('bucket_prefix', 'export')
+        table_names: List[str] = body['table_names']
+        partitions: Optional[List[str]] = body.get('partitions')
+        file_format: str = body.get('file_format', 'csv')
+        batch_size: int = body.get('batch_size', 1000000)
+        bucket_name: str = body['bucket_name']
+        bucket_prefix: str = body.get('bucket_prefix', 'export')
+        current_date: str = body['current_date']
+        current_time: str = body['current_time']
         action.initiate_export_tables(
             table_names=table_names,
             partitions=partitions,
@@ -300,6 +304,8 @@ class BUASiteInitiateHandler(DBLambdaHandler):
             bucket_prefix=bucket_prefix,
             run_date=run_date,
             today=today,
+            current_date=current_date,
+            current_time=current_time,
             run_type=run_type,
             file_format=file_format,
             db=body['db']

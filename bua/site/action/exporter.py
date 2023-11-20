@@ -30,7 +30,8 @@ class Exporter(Accounts):
 
     def initiate_export_tables(
             self, table_names: List[str], partitions: List[str], batch_size: int,
-            bucket_name: str, bucket_prefix: str, run_date: str, today: str, run_type: str, file_format: str,
+            bucket_name: str, bucket_prefix: str, run_date: str, today: str, current_date: str, current_time: str,
+            run_type: str, file_format: str,
             db: Dict[str, str]
     ):
         identifier_type = f'Export {file_format}'
@@ -44,12 +45,14 @@ class Exporter(Accounts):
                         for partition in partitions:
                             counter = self._initiate_export_table(
                                 cur, table_name, partition, counter, batch_size,
-                                bucket_name, bucket_prefix, run_date, today, run_type, file_format, identifier_type, db
+                                bucket_name, bucket_prefix, run_date, today, current_date, current_time,
+                                run_type, file_format, identifier_type, db
                             )
                     else:
                         counter = self._initiate_export_table(
                             cur, table_name, None, counter, batch_size,
-                            bucket_name, bucket_prefix, run_date, today, run_type, file_format, identifier_type, db
+                            bucket_name, bucket_prefix, run_date, today, current_date, current_time,
+                            run_type, file_format, identifier_type, db
                         )
                     print(f'Initiate export of {counter} files to S3 for {table_name} to {bucket_prefix}')
                 self.conn.commit()
@@ -66,7 +69,8 @@ class Exporter(Accounts):
 
     def _initiate_export_table(
             self, cur: SSDictCursor, table_name: str, partition: Optional[str], counter: int, batch_size: int,
-            bucket_name: str, bucket_prefix: str, run_date: str, today: str, run_type: str, file_format: str,
+            bucket_name: str, bucket_prefix: str, run_date: str, today: str, current_date: str, current_time: str,
+            run_type: str, file_format: str,
             identifier_type: str, db: Dict[str, str]
     ) -> int:
         if partition is not None:
@@ -93,6 +97,8 @@ class Exporter(Accounts):
                 'file_format': file_format,
                 'identifier_type': identifier_type,
                 'today': today,
+                'current_date': current_date,
+                'current_time': current_time
             }
             bodies.append(body)
         self.queue.send_if_needed(bodies, force=True, batch_size=self.batch_size, db=db)

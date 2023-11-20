@@ -1,4 +1,5 @@
 import struct
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -9,6 +10,7 @@ from bua.facade.sqs import Queue
 from bua.site.action.sitedata import SiteData
 from bua.site.action.sitesegment import SiteSegment
 from bua.site.handler.initiate import BUASiteInitiateHandler
+from tests.pipeline.stubs.sqs_client_stub import SQSQueueStub
 from tests.site.stubs import MySQL, Database, Printer
 
 
@@ -260,7 +262,7 @@ class TestClass:
         ddb_meterdata_table = {}
         ddb_bua_table = {}
         data_queue = {}
-        segment_queue = {}
+        segment_queue = SQSQueueStub()
         export_queue = {}
         failure_queue = {}
         basic_queue = {}
@@ -268,6 +270,16 @@ class TestClass:
         prepare_queue = {}
         nem12_queue = {}
         conn = Database(rowcount=10)
+        conn.unbuffered_results = [
+            [
+                {
+                    'jurisdiction_name': 'VIC',
+                    'res_bus': 'BUS',
+                    'stream_type': 'PRIMARY',
+                    'interval_date': datetime.strptime('2023-01-01', '%Y-%m-%d')
+                }
+            ]
+        ]
         ctl_conn = Database(rowcount=10)
         conn = DBProxy(mysql=MySQL(conn), username='test', password='test')
         ctl_conn = DBProxy(mysql=MySQL(ctl_conn), username='test', password='test')

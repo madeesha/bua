@@ -8,7 +8,7 @@ class Database(Connection):
         Connection.__init__(self, defer_connect=True)
         self.executions = []
         self.commits = []
-        self.unbuffered_result = []
+        self.unbuffered_results = []
         self.rowcount = rowcount
 
     def cursor(self, cursor=None):
@@ -37,7 +37,10 @@ class Database(Connection):
         self.commits.append(True)
 
     def fetchall_unbuffered(self):
-        return self.unbuffered_result
+        return self.unbuffered_results.pop(0)
+
+    def fetchall(self):
+        return self.unbuffered_results.pop(0)
 
 
 class Printer:

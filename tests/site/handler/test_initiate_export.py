@@ -10,7 +10,7 @@ from tests.site.stubs import Database, MySQL
 
 class TestClass:
 
-    def test_initiate_utility(self):
+    def test_initiate_export(self):
         sqs_client = SQSClientStub(failure_queue_url='')
         s3_client = S3ClientStub()
         ddb_meterdata_table = DDBTableStub()
@@ -25,6 +25,11 @@ class TestClass:
         nem12_queue = SQSQueueStub()
         conn = Database(rowcount=10)
         conn.unbuffered_results = [
+            [
+                {
+                    'total': 1
+                }
+            ],
             [
                 {
                     'nmi': '123',
@@ -47,14 +52,31 @@ class TestClass:
             basic_queue=basic_queue, mscalar_queue=mscalar_queue, prepare_queue=prepare_queue, nem12_queue=nem12_queue,
             conn=conn, ctl_conn=ctl_conn
         )
+        run_type = 'ExportTables'
+        run_date = '2023-10-01'
+        today = '2023-10-01'
+        current_date = '2023-10-02'
+        current_time = '10:11:12'
+        source_date = '2023-10-01'
+        start_inclusive = '2022-10-01'
+        end_inclusive = '2023-09-30'
+        end_exclusive = '2023-10-01'
+        bucket_name = 'my-bucket-1'
+        table_name = 'TableName'
         event = {
-            'run_type': 'Utility',
-            'run_date': '2023-10-01',
-            'today': '2023-10-01',
-            'source_date': '2023-10-01',
-            'start_inclusive': '2022-10-01',
-            'end_inclusive': '2023-09-30',
-            'end_exclusive': '2023-10-01',
+            'run_type': run_type,
+            'run_date': run_date,
+            'today': today,
+            'current_date': current_date,
+            'current_time': current_time,
+            'source_date': source_date,
+            'start_inclusive': start_inclusive,
+            'end_inclusive': end_inclusive,
+            'end_exclusive': end_exclusive,
+            'bucket_name': bucket_name,
+            'table_names': [
+                table_name
+            ],
             'db': {
                 'prefix': 'tst',
                 'update_id': '1',
@@ -65,22 +87,24 @@ class TestClass:
         }
         handler.handle_request(event)
         failure_queue.assert_no_messages()
-        assert len(data_queue.messages) == 1
+        assert len(export_queue.messages) == 1
         body = {
             'entries': [
                 {
-                    'run_type': 'Utility',
-                    'run_date': '2023-10-01',
-                    'today': '2023-10-01',
-                    'source_date': '2023-10-01',
-                    'start_inclusive': '2022-10-01',
-                    'end_inclusive': '2023-09-30',
-                    'end_exclusive': '2023-10-01',
-                    'nmi': '123',
-                    'res_bus': 'RES',
-                    'jurisdiction': 'VIC',
-                    'tni': 'ABC',
-                    'stream_types': { 'E1': 'PRIMARY' },
+                    'table_name': table_name,
+                    'partition': None,
+                    'counter': 1,
+                    'offset': 0,
+                    'batch_size': 1000000,
+                    'bucket_name': bucket_name,
+                    'bucket_prefix': 'export',
+                    'run_date': run_date,
+                    'run_type': run_type,
+                    'file_format': 'csv',
+                    'identifier_type': 'Export csv',
+                    'today': today,
+                    'current_date': current_date,
+                    'current_time': current_time
                 }
             ],
             'db': {
@@ -91,4 +115,4 @@ class TestClass:
                 'schema': 'turkey',
             }
         }
-        assert json.loads(data_queue.messages[0]['Entries'][0]['MessageBody']) == body
+        assert json.loads(export_queue.messages[0]['Entries'][0]['MessageBody']) == body
