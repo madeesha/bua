@@ -596,7 +596,7 @@ Resources:
       QueueName: !Join [ "-" , [ !Ref ResourcePrefix , "sqs-bua-site-mscalar-queue" ] ]
       MessageRetentionPeriod: 1209600
       ReceiveMessageWaitTimeSeconds: 20
-      VisibilityTimeout: 360
+      VisibilityTimeout: 660
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BUASiteMscalarDLQ.Arn
         maxReceiveCount: 10
