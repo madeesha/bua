@@ -1,15 +1,14 @@
-RUN_DATE=2023-11-16
+RUN_DATE=2023-11-21
 TODAY=2023-11-01
 START_INCLUSIVE=2022-11-01
 END_INCLUSIVE=2023-10-31
 END_EXCLUSIVE=2023-11-01
-UUID=$(shell uuid)
 PROFILE=matten
 TOPIC=arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic
 SNAPSHOT=arn:aws:rds:ap-southeast-2:760694178318:snapshot:prd-earl-1-sql-21-20-Oct-31-2023-shared-key-encrypted
 PREFIX=prd-matten
 BUCKET=prd-matten-s3-bua
-BRANCH=release-uat
+BRANCH=master
 
 #
 # MATTEN WEEKLY RUN
@@ -30,7 +29,7 @@ BRANCH=release-uat
 	bash ../bin/restore-bua-scripts $(PROFILE)
 
 5-weekly-run:
-	../bin/execute-bua-steps $(PROFILE) Weekly 'EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,DumpErrors'
+	../bin/execute-bua-steps $(PROFILE) Weekly 'EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,DumpErrors'
 
 update-today:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/today --value $(TODAY) --type String --overwrite --data-type text
