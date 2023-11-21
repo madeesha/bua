@@ -1,8 +1,8 @@
 Path                               | Value
 ----                               | -----
-/tst-anstead/bua/adh_bucket_name   | tst-anstead-s3-bua
+/tst-anstead/bua/adh_bucket_name   | tst-anstead-s3-rw-integration
 /tst-anstead/bua/cluster_name      | anstead
-/tst-anstead/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export,DumpErrors
+/tst-anstead/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,DumpErrors
 /tst-anstead/bua/domain            | cmil2mssslzz.ap-southeast-2.rds.amazonaws.com
 /tst-anstead/bua/end_exclusive     | 2023-10-01
 /tst-anstead/bua/end_inclusive     | 2023-09-30
@@ -15,11 +15,11 @@ Path                               | Value
 /tst-anstead/bua/params_id         | 2
 /tst-anstead/bua/rds_dns_alias     | tst-sql.anstead.encore.sh
 /tst-anstead/bua/rdssecret         | cicd/tst-anstead/rds/bua
-/tst-anstead/bua/run_date          | 2023-11-14
+/tst-anstead/bua/run_date          | 2023-11-21
 /tst-anstead/bua/schema            | Turkey_BLU
-/tst-anstead/bua/snapshot_arn      | arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-19-bua-sql-20231001-20231114-20231115-183027
+/tst-anstead/bua/snapshot_arn      | arn:aws:rds:ap-southeast-2:561082505378:snapshot:prod-data-2023-10-01-snapshot
 /tst-anstead/bua/source_account_id | 760694178318
-/tst-anstead/bua/source_date       | 2023-11-14
+/tst-anstead/bua/source_date       | 2023-11-21
 /tst-anstead/bua/sqlsecret         | cicd/tst-anstead/rds/bua/passwords
 /tst-anstead/bua/start_inclusive   | 2022-10-01
 /tst-anstead/bua/suffix            | bua-sql
