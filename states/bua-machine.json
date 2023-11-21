@@ -119,7 +119,8 @@
           "bua-clean-invoiceattribute": "",
           "bua-clean-utilityprofile": "",
           "bua-clean-workflows": "",
-          "bua-dump-errors": ""
+          "bua-dump-errors": "",
+          "bua-ili-exceptions": ""
         }
       },
       "Next": "GetStepfunctionArns"
@@ -266,6 +267,11 @@
           "Variable": "$.context.start",
           "StringEquals": "InvoiceRuns",
           "Next": "InvoiceRuns"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "ILIExceptions",
+          "Next": "ILIExceptions"
         },
         {
           "Variable": "$.context.start",
@@ -647,6 +653,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-invoiceruns",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "ILIExceptions": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-ili-exceptions",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {

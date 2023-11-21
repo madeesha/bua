@@ -1,7 +1,7 @@
 import base64
 from hashlib import md5
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pymysql
 import pymysql.cursors
@@ -340,7 +340,7 @@ class SQL:
         data = request.data
         args = request.step.get('args', dict())
         retries = request.step.get('retries')
-        workflow_names = args['workflow_names']
+        workflow_names: List[str] = args.get('workflow_names', [])
         workflow_instance_id = int(args.get('workflow_instance_id', 0))
         acceptable_error_rate = int(args.get('acceptable_error_rate', 0))
         max_errors = int(args.get('max_errors', 0))
@@ -354,59 +354,120 @@ class SQL:
             with con:
                 cur: pymysql.cursors.SSDictCursor = con.cursor()
                 with cur:
-                    for workflow_name in workflow_names:
-                        cur.execute("SELECT id FROM Workflows WHERE name = %s", (workflow_name,))
-                        workflow_id = int(cur.fetchall()[0]['id'])
-                        cur.execute(
-                            "SELECT status, COUNT(*) AS total "
-                            "FROM WorkflowInstance "
-                            "WHERE workflow_id = %s "
-                            "AND id > %s "
-                            "GROUP BY status",
-                            (workflow_id, workflow_instance_id)
+                    if len(workflow_names) > 0:
+                        for workflow_name in workflow_names:
+                            results = self._fetch_workflow_status_by_name(cur, workflow_name, workflow_instance_id)
+                            status, reason = self._analyse_workflow_status(
+                                results, max_new, max_ready, max_inprog, max_errors, max_exit, max_hold,
+                                acceptable_error_rate, retries
+                            )
+                            if status is not None:
+                                return status, reason
+                    else:
+                        results = self._fetch_workflow_status(cur, workflow_instance_id)
+                        status, reason = self._analyse_workflow_status(
+                            results, max_new, max_ready, max_inprog, max_errors, max_exit, max_hold,
+                            acceptable_error_rate, retries,
                         )
-                        results = {row['status']: row['total'] for row in cur.fetchall()}
-                        if 'NEW' in results:
-                            total_new = results['NEW']
-                            if total_new > max_new:
-                                if retries is None or retries >= 0:
-                                    return "RETRY", f'{results["NEW"]} {workflow_name} workflows in NEW status'
-                                else:
-                                    return "EXPIRED", f'{results["NEW"]} {workflow_name} workflows in NEW status'
-                        if 'READY' in results:
-                            total_ready = results['READY']
-                            if total_ready > max_ready:
-                                if retries is None or retries >= 0:
-                                    return "RETRY", f'{results["READY"]} {workflow_name} workflows in READY status'
-                                else:
-                                    return "EXPIRED", f'{results["READY"]} {workflow_name} workflows in READY status'
-                        if 'INPROG' in results:
-                            total_inprog = results['INPROG']
-                            if total_inprog > max_inprog:
-                                if retries is None or retries >= 0:
-                                    return "RETRY", f'{results["INPROG"]} {workflow_name} workflows in INPROG status'
-                                else:
-                                    return "EXPIRED", f'{results["INPROG"]} {workflow_name} workflows in INPROG status'
-                        if 'ERROR' in results:
-                            total_errors = results.get('ERROR', 0)
-                            total_done = results.get('DONE', 0)
-                            total_instances = total_done + total_errors
-                            acceptable_errors = max(total_instances * acceptable_error_rate / 100, max_errors)
-                            if total_errors > acceptable_errors:
-                                return "FAILED", f'{results["ERROR"]} {workflow_name} workflows in ERROR status'
-                        if 'EXIT' in results:
-                            total_exit = results['EXIT']
-                            if total_exit > max_exit:
-                                return "FAILED", f'{results["EXIT"]} {workflow_name} workflows in EXIT status'
-                        if 'HOLD' in results:
-                            total_hold = results['HOLD']
-                            if total_hold > max_hold:
-                                return "ONHOLD", f'{results["HOLD"]} {workflow_name} workflows in HOLD status'
+                        if status is not None:
+                            return status, reason
             return "COMPLETE", f'Enough workflow instances completed'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
                 return "RETRY", f'{e}'
             raise
+
+    @staticmethod
+    def _fetch_workflow_status_by_name(cur, workflow_name, workflow_instance_id) -> Dict[str, Dict[str, int]]:
+        cur.execute("SELECT id FROM Workflows WHERE name = %s", (workflow_name,))
+        workflow_id = int(cur.fetchall()[0]['id'])
+        cur.execute(
+            "SELECT status, COUNT(*) AS total "
+            "FROM WorkflowInstance "
+            "WHERE workflow_id = %s "
+            "AND id > %s "
+            "GROUP BY status",
+            (workflow_id, workflow_instance_id)
+        )
+        results = {}
+        for row in cur.fetchall():
+            status = row['status']
+            total = row['total']
+            result = results.get(status, {})
+            results[status] = result
+            result[workflow_name] = total
+        return results
+
+    @staticmethod
+    def _fetch_workflow_status(cur, workflow_instance_id) -> Dict[str, Dict[str, int]]:
+        cur.execute(
+            "SELECT wi.status, wf.name, COUNT(*) AS total "
+            "FROM WorkflowInstance wi "
+            "JOIN Workflows wf "
+            "ON wi.workflow_id = wf.id "
+            "WHERE wi.id > %s "
+            "GROUP BY wi.status, wf.name ",
+            (workflow_instance_id)
+        )
+        results = {}
+        for row in cur.fetchall():
+            status = row['status']
+            total = row['total']
+            workflow_name = row['name']
+            result = results.get(status, {})
+            results[status] = result
+            result[workflow_name] = total
+        return results
+
+    @staticmethod
+    def _analyse_workflow_status(
+            results: Dict[str, Dict[str, int]],
+            max_new: int, max_ready: int, max_inprog: int, max_errors: int, max_exit: int, max_hold: int,
+            acceptable_error_rate: int, retries: Optional[int]
+    ):
+        if 'NEW' in results:
+            result = results['NEW']
+            for workflow_name, total_new in result.items():
+                if total_new > max_new:
+                    if retries is None or retries >= 0:
+                        return "RETRY", f'{results["NEW"]} {workflow_name} workflows in NEW status'
+                    else:
+                        return "EXPIRED", f'{results["NEW"]} {workflow_name} workflows in NEW status'
+        if 'READY' in results:
+            result = results['READY']
+            for workflow_name, total_ready in result.items():
+                if total_ready > max_ready:
+                    if retries is None or retries >= 0:
+                        return "RETRY", f'{results["READY"]} {workflow_name} workflows in READY status'
+                    else:
+                        return "EXPIRED", f'{results["READY"]} {workflow_name} workflows in READY status'
+        if 'INPROG' in results:
+            result = results['INPROG']
+            for workflow_name, total_inprog in result.items():
+                if total_inprog > max_inprog:
+                    if retries is None or retries >= 0:
+                        return "RETRY", f'{results["INPROG"]} {workflow_name} workflows in INPROG status'
+                    else:
+                        return "EXPIRED", f'{results["INPROG"]} {workflow_name} workflows in INPROG status'
+        if 'ERROR' in results:
+            result = results['ERROR']
+            for workflow_name, total_errors in result.items():
+                total_done = results.get('DONE', {}).get(workflow_name, 0)
+                total_instances = total_done + total_errors
+                acceptable_errors = max(total_instances * acceptable_error_rate / 100, max_errors)
+                if total_errors > acceptable_errors:
+                    return "FAILED", f'{results["ERROR"]} {workflow_name} workflows in ERROR status'
+        if 'EXIT' in results:
+            result = results['EXIT']
+            for workflow_name, total_exit in result.items():
+                if total_exit > max_exit:
+                    return "FAILED", f'{results["EXIT"]} {workflow_name} workflows in EXIT status'
+        if 'HOLD' in results:
+            result = results['HOLD']
+            for workflow_name, total_hold in result.items():
+                if total_hold > max_hold:
+                    return "ONHOLD", f'{results["HOLD"]} {workflow_name} workflows in HOLD status'
+        return None, None
 
     def resubmit_failed_workflows(self, request: HandlerRequest):
         data = request.data

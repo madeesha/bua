@@ -28,6 +28,9 @@ help:
 6-test-export:
 	../bin/execute-bua-steps $(PROFILE) Export
 
+7-test-ili-exceptions:
+	../bin/execute-bua-steps $(PROFILE) ScaleUpWorkflow,ILIExceptions,ScaleDown
+
 update-update_id:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(ENVIRONMENT)-$(PROFILE)/bua/update_id --value $(UPDATE_ID) --type String --overwrite --data-type text
 
