@@ -56,7 +56,7 @@ class TestCase(TestBase):
             'status': 'COMPLETE'
         },
     ])
-    def test_wait_for_workflows(self, handler, sqs, mysql, rds_secret_id, update_id, suffix, rds_domain_name, schema_name, params):
+    def test_wait_for_workflows_by_name(self, handler, sqs, mysql, rds_secret_id, update_id, suffix, rds_domain_name, schema_name, params):
         mysql.resultsets = params['resultsets']
         body = {
             'name': 'Run a Test',
@@ -79,6 +79,109 @@ class TestCase(TestBase):
                         'max_inprog': params.get('max_inprog', 0),
                         'max_exit': params.get('max_exit', 0),
                         'workflow_names': ['ExecuteSQL']
+                    }
+                }
+            }
+        }
+        handler.handle_request(body)
+        sqs.assert_no_failures()
+        assert body['result']['status'] == params['status']
+
+    @mark.parametrize("params", [
+        {
+            'resultsets': [
+                [{'status': 'NEW', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'status': 'RETRY'
+        },
+        {
+            'resultsets': [
+                [{'status': 'NEW', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'max_new': 100,
+            'status': 'COMPLETE'
+        },
+        {
+            'resultsets': [
+                [{'status': 'READY', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'status': 'RETRY'
+        },
+        {
+            'resultsets': [
+                [{'status': 'READY', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'max_ready': 100,
+            'status': 'COMPLETE'
+        },
+        {
+            'resultsets': [
+                [{'status': 'INPROG', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'status': 'RETRY'
+        },
+        {
+            'resultsets': [
+                [{'status': 'INPROG', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'max_inprog': 100,
+            'status': 'COMPLETE'
+        },
+        {
+            'resultsets': [
+                [{'status': 'DONE', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'status': 'COMPLETE'
+        },
+        {
+            'resultsets': [
+                [{'status': 'ERROR', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'status': 'FAILED'
+        },
+        {
+            'resultsets': [
+                [{'status': 'ERROR', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'max_errors': 100,
+            'status': 'COMPLETE'
+        },
+        {
+            'resultsets': [
+                [{'status': 'EXIT', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'status': 'FAILED'
+        },
+        {
+            'resultsets': [
+                [{'status': 'EXIT', 'name': 'Workflow1', 'total': 100}]
+            ],
+            'max_exit': 100,
+            'status': 'COMPLETE'
+        },
+    ])
+    def test_wait_for_all_workflows(self, handler, sqs, mysql, rds_secret_id, update_id, suffix, rds_domain_name, schema_name, params):
+        mysql.resultsets = params['resultsets']
+        body = {
+            'name': 'Run a Test',
+            'this': 'step1',
+            'data': {
+                'update_id': update_id,
+                'suffix': suffix,
+                'domain': rds_domain_name,
+                'schema': schema_name,
+                'rdssecret': rds_secret_id
+            },
+            'steps': {
+                'step1': {
+                    'action': 'wait_for_workflows',
+                    'args': {
+                        'max_errors': params.get('max_errors', 0),
+                        'max_hold': params.get('max_hold', 0),
+                        'max_new': params.get('max_new', 0),
+                        'max_ready': params.get('max_ready', 0),
+                        'max_inprog': params.get('max_inprog', 0),
+                        'max_exit': params.get('max_exit', 0)
                     }
                 }
             }

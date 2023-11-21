@@ -36,7 +36,7 @@ BRANCH=release-uat
 	bash ../bin/restore-bua-scripts $(PROFILE)
 
 5-weekly-run:
-	../bin/execute-bua-steps $(PROFILE) Weekly 'EmptyQueues,CleanWorkflows,ScaleUpWorkflow,WarmStatistics,ScaleDown,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ScaleDown,Snapshot,Prepare,Snapshot,Export,DumpErrors'
+	../bin/execute-bua-steps $(PROFILE) Weekly 'EmptyQueues,CleanWorkflows,ScaleUpWorkflow,WarmStatistics,ScaleDown,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,DumpErrors'
 
 update-today:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/today --value $(TODAY) --type String --overwrite --data-type text

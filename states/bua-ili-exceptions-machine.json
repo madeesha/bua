@@ -1,0 +1,200 @@
+{
+  "Comment": "ILI Exceptions",
+  "StartAt": "ILIExceptions",
+  "States": {
+    "ILIExceptions": {
+      "Type": "Pass",
+      "Parameters": {
+        "type": "step",
+        "name": "ILI Exceptions",
+        "next": "000_get_parameters",
+        "speed": "fast",
+        "retry_delay": 120,
+        "data.$": "$.data",
+        "steps": {
+          "000_get_parameters": {
+            "action": "get_parameters",
+            "args": {
+              "names": [
+                "domain",
+                "rdssecret",
+                "update_id",
+                "suffix",
+                "schema",
+                "run_date",
+                "source_date",
+                "today",
+                "start_inclusive",
+                "end_inclusive",
+                "end_exclusive"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_record_error_queues"
+              }
+            }
+          },
+          "100_record_error_queues": {
+            "action": "record_site_errors_queues",
+            "on": {
+              "COMPLETE": {
+                "next": "200_record_max_workflow_instance"
+              }
+            }
+          },
+          "200_record_max_workflow_instance": {
+            "action": "get_max_workflow_instance",
+            "on": {
+              "COMPLETE": {
+                "next": "300_ili_manual_line_item_exceptions"
+              }
+            }
+          },
+          "300_ili_manual_line_item_exceptions": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "CALL ili_manual_line_item_exceptions(-1, 1, -1)"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
+                "next": "400_check_workflow_status"
+              }
+            }
+          },
+          "400_check_workflow_status": {
+            "action": "wait_for_workflows",
+            "retries": 30,
+            "retry_delay": 120,
+            "args": {
+              "max_errors": 100000,
+              "max_hold": 100000,
+              "max_exit": 100000
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "500_manual_ili_update_approve_exceptions"
+              },
+              "FAILED": {},
+              "ONHOLD": {},
+              "EXPIRED": {}
+            }
+          },
+          "500_manual_ili_update_approve_exceptions": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "CALL manual_ili_update_approve_exceptions()"
+              ]
+            },
+            "on": {
+              "COMPLETE": {}
+            }
+          }
+        }
+      },
+      "Next": "NextTransition"
+    },
+    "FastController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${FastControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 180,
+      "Next": "WhatNext"
+    },
+    "SlowController": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SlowControllerFunction}",
+        "Payload.$": "$"
+      },
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 900,
+      "Next": "WhatNext"
+    },
+    "WhatNext": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.next",
+              "StringEquals": ""
+            },
+            {
+              "Variable": "$.result.status",
+              "StringEquals": "COMPLETE"
+            }
+          ],
+          "Next": "ExecutionDone"
+        },
+        {
+          "Variable": "$.next",
+          "StringEquals": "",
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$.delay",
+          "NumericGreaterThan": 0,
+          "Next": "WaitForNext"
+        }
+      ],
+      "Default": "NextTransition"
+    },
+    "ExecutionDone": {
+      "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Cause": "Step not COMPLETE"
+    },
+    "WaitForNext": {
+      "Type": "Wait",
+      "SecondsPath": "$.delay",
+      "Next": "NextTransition"
+    },
+    "NextTransition": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.speed",
+          "StringEquals": "slow",
+          "Next": "NextTransitionSlow"
+        }
+      ],
+      "Default": "NextTransitionFast"
+    },
+    "NextTransitionSlow": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "SlowController"
+    },
+    "NextTransitionFast": {
+      "Type": "Pass",
+      "Parameters": {
+        "type.$": "$.type",
+        "name.$": "$.name",
+        "this.$": "$.next",
+        "data.$": "$.data",
+        "steps.$": "$.steps"
+      },
+      "Next": "FastController"
+    }
+  }
+}
