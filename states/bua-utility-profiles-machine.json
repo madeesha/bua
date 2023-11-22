@@ -31,15 +31,25 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "100_clear_error_queues"
+                "next": "100_record_error_queues"
               }
             }
           },
-          "100_clear_error_queues": {
+          "100_record_error_queues": {
             "action": "record_site_errors_queues",
             "on": {
               "COMPLETE": {
-                "delay": 60,
+                "next": "102_clean_utility_profiles"
+              }
+            }
+          },
+          "102_clean_utility_profiles": {
+            "action": "clean_site_data",
+            "args": {
+              "run_type": "Utility"
+            },
+            "on": {
+              "COMPLETE": {
                 "next": "105_utility_profiles"
               }
             }
@@ -62,15 +72,25 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "160_clear_error_queues"
+                "next": "160_record_error_queues"
               }
             }
           },
-          "160_clear_error_queues": {
+          "160_record_error_queues": {
             "action": "record_site_errors_queues",
             "on": {
               "COMPLETE": {
-                "delay": 60,
+                "next": "162_clean_profile_validation"
+              }
+            }
+          },
+          "162_clean_profile_validation": {
+            "action": "clean_site_data",
+            "args": {
+              "run_type": "Validate"
+            },
+            "on": {
+              "COMPLETE": {
                 "next": "165_profile_validation"
               }
             }

@@ -104,6 +104,7 @@ class BUAControllerHandler:
             'record_site_errors_queues': profiles_handler.record_site_errors_queues,
             'dump_site_errors_queues_to_s3': profiles_handler.dump_site_errors_queues_to_s3,
             'execute_sql': sql_handler.execute_sql,
+            'clean_site_data': sql_handler.clean_site_data,
             'insert_event_log': sql_handler.insert_event_log,
             'set_rds_dns_entry': dns_handler.set_rds_dns_entry,
             'trigger_restore': trigger_handler.trigger_restore,
