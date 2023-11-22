@@ -85,6 +85,8 @@ class MonkeyPatch:
             resource.patch()
         self._session.patch()
         self._connection.patch()
+        self.mysqs.patch()
+        self.mys3.patch()
         os.environ = self.environ
         boto3.session = self
         boto3.Session = self.Session

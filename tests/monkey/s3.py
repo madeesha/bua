@@ -22,6 +22,9 @@ class MyS3:
             self.buckets[bucket_name] = bucket
         return bucket
 
+    def patch(self):
+        self.buckets.clear()
+
 
 class MonkeyPatchS3Client:
 

@@ -20,6 +20,7 @@ class TestCase:
     def test_invoke_handler_single_message(self):
         import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
+        monkey_patch.patch.connect().cursor().add_result_set([])
         from bua.handler.site_prepare import lambda_handler
         from bua.handler.site_prepare import handler
         logs = Logs(handler)
@@ -58,6 +59,8 @@ class TestCase:
     def test_invoke_handler_multiple_messages(self):
         import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
+        monkey_patch.patch.connect().cursor().add_result_set([])
+        monkey_patch.patch.connect().cursor().add_result_set([])
         from bua.handler.site_prepare import lambda_handler
         from bua.handler.site_prepare import handler
         logs = Logs(handler)

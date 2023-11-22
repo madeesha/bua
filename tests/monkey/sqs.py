@@ -30,7 +30,7 @@ class MySQSQueue:
 
     def delete_message(self, message_id) -> None:
         if message_id in self.invisible_message_ids:
-            del self.invisible_message_ids[message_id]
+            self.invisible_message_ids.remove(message_id)
         if message_id in self.messages:
             del self.messages[message_id]
 
@@ -47,6 +47,9 @@ class MySQS:
             queue = MySQSQueue()
             self.queues[queue_name] = queue
         return queue
+
+    def patch(self):
+        self.queues.clear()
 
 
 class MonkeyPatchSQSResource:
@@ -80,6 +83,57 @@ class MonkeyPatchSQSClient:
         message_id = queue.put_message(message_body)
         return {
             'MessageId': message_id
+        }
+
+    def send_message_batch(self, **kwargs):
+        queue_url = kwargs['QueueUrl']
+        queue_name = queue_url.split('/')[-1]
+        queue = self.mysqs.get_queue(queue_name)
+        entries = kwargs['Entries']
+        results = {
+            'Successful': [],
+            'Failed': [],
+        }
+        for entry in entries:
+            message_id = queue.put_message(entry['MessageBody'])
+            results['Successful'].append({
+                'Id': entry['Id'],
+                'MessageId': message_id,
+            })
+        return results
+
+    def delete_message_batch(self, **kwargs):
+        queue_url = kwargs['QueueUrl']
+        queue_name = queue_url.split('/')[-1]
+        queue = self.mysqs.get_queue(queue_name)
+        entries = kwargs['Entries']
+        results = {
+            'Successful': [],
+            'Failed': [],
+        }
+        for entry in entries:
+            queue.delete_message(entry['ReceiptHandle'])
+            results['Successful'].append({
+                'Id': entry['Id'],
+            })
+        return results
+
+    def receive_message(self, **kwargs):
+        queue_url = kwargs['QueueUrl']
+        max_number_of_messages = int(kwargs.get('MaxNumberOfMessages', 10))
+        queue_name = queue_url.split('/')[-1]
+        queue = self.mysqs.get_queue(queue_name)
+        messages = []
+        message = queue.get_message()
+        while message is not None and len(messages) < max_number_of_messages:
+            messages.append({
+                'MessageId': message['message_id'],
+                'ReceiptHandle': message['message_id'],
+                'Body': message['message']
+            })
+            message = queue.get_message()
+        return {
+            'Messages': messages
         }
 
 
