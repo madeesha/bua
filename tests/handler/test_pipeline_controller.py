@@ -84,6 +84,11 @@ class TestCase:
     def test_bua_create_macro_profile(self):
         import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=self._environ)
+        monkey_patch.patch.connect().cursor().add_result_set([])
+        monkey_patch.patch.connect().cursor().add_result_set([])
+        monkey_patch.patch.connect().cursor().add_result_set([])
+        monkey_patch.patch.connect().cursor().add_result_set([])
+        monkey_patch.patch.connect().cursor().add_result_set([])
         from bua.handler.pipeline_controller import lambda_handler
         event = {
             'action': 'bua_create_macro_profile',

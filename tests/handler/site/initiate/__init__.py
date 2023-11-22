@@ -1,0 +1,20 @@
+
+environ = {
+    'meterdataTableName': 'meterdata-table',
+    'buaTableName': 'bua-table',
+    'buaBucketName': 'bua-bucket',
+    'dataQueueURL': 'data-queue',
+    'segmentQueueURL': 'segment-queue',
+    'exportQueueURL': 'export-queue',
+    'failureQueueURL': 'failure-queue',
+    'basicQueueURL': 'basic-queue',
+    'mscalarQueueURL': 'mscalar-queue',
+    'prepareQueueURL': 'prepare-queue',
+    'nem12QueueURL': 'nem12-queue',
+    'rdsSecretName': 'rds-secret',
+    'debugEnabled': 'Yes',
+    'utilityBatchSize': '10',
+    'jurisdictionBatchSize': '10',
+    'tniBatchSize': '10',
+    'maxReceiveCount': '100',
+}

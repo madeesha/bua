@@ -52,8 +52,7 @@ class MonkeyPatchCursor:
         assert len(self._execute_invocations) == n, self._execute_invocations
 
     def execute(self, *args, **kwargs):
-        self._result_set = self._result_sets[len(self._execute_invocations)] \
-            if len(self._execute_invocations) < len(self._result_sets) else []
+        self._result_set = self._result_sets.pop(0) if (('SELECT' in args[0] and 'INSERT' not in args[0]) or 'CALL' in args[0]) else []
         self._execute_invocations.append((args, kwargs))
         if self.execute_fails:
             raise InternalError('Database connection lost')
