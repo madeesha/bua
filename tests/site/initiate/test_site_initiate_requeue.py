@@ -1,4 +1,4 @@
-from tests.handler.site.initiate import environ
+from tests.site.initiate import environ
 
 
 class TestCase:
