@@ -1,12 +1,12 @@
 import json
 from datetime import datetime
 
-from tests.handler.site.initiate import environ
+from tests.site.initiate import environ
 
 
 class TestCase:
 
-    def test_invoke_handler_run_type_segment_tni(self):
+    def test_invoke_handler_run_type_segment_jurisdiction_fix(self):
         import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=environ)
         monkey_patch.patch.connect().cursor().add_result_set([
@@ -15,12 +15,11 @@ class TestCase:
                 'res_bus': 'BUS',
                 'stream_type': 'PRIMARY',
                 'interval_date': datetime.strptime('2023-10-01', '%Y-%m-%d'),
-                'tni_name': 'ABC123',
             }
         ])
         from bua.handler.site_initiate import lambda_handler
         event = {
-            'run_type': 'SegmentTNI',
+            'run_type': 'SegmentJurisdictionFix',
             'run_date': '2023-10-01',
             'source_date': '2023-10-01',
             'today': '2023-10-01',
@@ -51,17 +50,10 @@ class TestCase:
             },
             'entries': [
                 {
-                    'avg_sum': 'Sum',
                     'identifier_type': 'Segment1',
-                    'incl_est': False,
-                    'interval_date': '20231001',
-                    'jurisdiction_name': 'VIC',
-                    'res_bus': 'BUS',
+                    'interval_date': '2023-10-01',
                     'run_date': '2023-10-01',
-                    'run_type': 'SegmentTNI',
-                    'source_date': '2023-10-01',
-                    'stream_type': 'PRIMARY',
-                    'tni_name': 'ABC123'
+                    'run_type': 'SegmentJurisdictionFix'
                 }
             ]
         }

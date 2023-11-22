@@ -1,15 +1,19 @@
 import json
 from datetime import datetime
 
-from tests.handler.site.initiate import environ
+from tests.site.initiate import environ
 
 
 class TestCase:
 
-    def test_invoke_handler_run_type_nem12(self):
+    def test_invoke_handler_run_type_export_tables(self):
         import tests.monkey.patch as monkey_patch
         monkey_patch.patch.patch(environ=environ)
-        monkey_patch.patch.connect().cursor().add_result_set([])
+        monkey_patch.patch.connect().cursor().add_result_set([
+            {
+                'total': 1
+            }
+        ])
         monkey_patch.patch.connect().cursor().add_result_set([
            {
                'identifier': '1234567890',
@@ -19,14 +23,18 @@ class TestCase:
         ])
         from bua.handler.site_initiate import lambda_handler
         event = {
-            'run_type': 'NEM12',
+            'run_type': 'ExportTables',
             'run_date': '2023-10-01',
             'source_date': '2023-10-01',
             'today': '2023-10-01',
             'start_inclusive': '2022-10-01',
             'end_inclusive': '2023-09-30',
             'end_exclusive': '2023-10-01',
+            'current_date': '2023-10-02',
+            'current_time': '12:14:15',
             'identifier_type': 'Segment1',
+            'table_names': ['Table1'],
+            'bucket_name': 'bucket-1',
             'db': {
                 'prefix': 'tst',
                 'update_id': '1',
@@ -38,8 +46,8 @@ class TestCase:
         context = {}
         lambda_handler(event, context)
         assert monkey_patch.patch.sqs().mysqs.get_queue('failure-queue').get_message() is None
-        message = monkey_patch.patch.sqs().mysqs.get_queue('nem12-queue').get_message()['message']
-        assert monkey_patch.patch.sqs().mysqs.get_queue('nem12-queue').get_message() is None
+        message = monkey_patch.patch.sqs().mysqs.get_queue('export-queue').get_message()['message']
+        assert monkey_patch.patch.sqs().mysqs.get_queue('export-queue').get_message() is None
         assert json.loads(message) == {
             'db': {
                 'prefix': 'tst',
@@ -50,12 +58,19 @@ class TestCase:
             },
             'entries': [
                 {
-                    'end_exclusive': '2023-10-01',
-                    'identifier_type': 'Segment1',
-                    'nmi': '1234567890',
+                    'batch_size': 1000000,
+                    'bucket_name': 'bucket-1',
+                    'bucket_prefix': 'export',
+                    'counter': 1,
+                    'current_date': '2023-10-02',
+                    'current_time': '12:14:15',
+                    'file_format': 'csv',
+                    'identifier_type': 'Export csv',
+                    'offset': 0,
+                    'partition': None,
                     'run_date': '2023-10-01',
-                    'run_type': 'NEM12',
-                    'start_inclusive': '2022-10-01',
+                    'run_type': 'ExportTables',
+                    'table_name': 'Table1',
                     'today': '2023-10-01'
                 }
             ]
