@@ -151,8 +151,8 @@ class TestClass:
              'VAL': ['1'] * 48, 'QUA': ['A'] * 48,
              'UOM': 'KWH', 'FDT': '202301010203', 'UDT': '20230101020304', 'MDT': None, 'SER': 'SERIAL1', 'REG': '001',
              'MDM': 'N1'}
-        ], 6),
-        ('1234567890', 'RES', 'QLD', 'QSPN', {'B1': 'SOLAR', 'E1': 'PRIMARY'}, '2023-01-01', '2023-01-01', [], 5),
+        ], 5),
+        ('1234567890', 'RES', 'QLD', 'QSPN', {'B1': 'SOLAR', 'E1': 'PRIMARY'}, '2023-01-01', '2023-01-01', [], 4),
     ])
     def test_insert(
             self, nmi, res_bus, jurisdiction, tni, stream_types, start_inclusive, end_exclusive, records, count

@@ -310,15 +310,6 @@ class SiteData(Action):
         with self.conn.cursor() as cur:
             try:
                 cur.execute(
-                    "DELETE FROM UtilityProfile "
-                    "WHERE run_date = %s "
-                    "AND identifier_type = %s "
-                    "AND identifier = %s "
-                    "AND interval_date >= %s "
-                    "AND interval_date < %s",
-                    (run_date, run_type, nmi, start_inclusive, end_exclusive)
-                )
-                cur.execute(
                     "DELETE FROM UtilityProfileSummary "
                     "WHERE run_date = %s "
                     "AND identifier_type = %s "
@@ -375,7 +366,7 @@ class SiteData(Action):
                     columns = ','.join(fields)
                     params = ','.join(['%s'] * len(fields))
                     if sql is None:
-                        sql = f"INSERT INTO UtilityProfile ({columns}) VALUES ({params})"
+                        sql = f"INSERT IGNORE INTO UtilityProfile ({columns}) VALUES ({params})"
                     else:
                         sql = sql + f",({params})"
                     sql_args.extend(args)
