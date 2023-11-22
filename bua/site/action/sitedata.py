@@ -38,26 +38,6 @@ class SiteData(Action):
                     (run_date, run_type, start_inclusive)
                 )
                 self.conn.commit()
-                if run_type == 'Validate':
-                    cur.execute(
-                        "DELETE FROM UtilityProfileVariance "
-                        "WHERE run_date = %s "
-                        "AND identifier_type = %s "
-                        "AND interval_date >= %s "
-                        "AND interval_date < %s",
-                        (run_date, run_type, start_inclusive, end_exclusive)
-                    )
-                    self.conn.commit()
-                if run_type == 'Utility':
-                    cur.execute(
-                        "DELETE FROM UtilityProfile "
-                        "WHERE run_date = %s "
-                        "AND identifier_type = %s "
-                        "AND interval_date >= %s "
-                        "AND interval_date < %s",
-                        (run_date, run_type, start_inclusive, end_exclusive)
-                    )
-                    self.conn.commit()
                 cur.execute(
                     "CALL bua_list_profile_registers(%s, %s, %s, %s)",
                     (start_inclusive, end_exclusive, today, run_date)

@@ -37,6 +37,44 @@ class SQL:
             cur.execute("SET SESSION innodb_lock_wait_timeout = 60")
         return con
 
+    def clean_site_data(self, request: HandlerRequest):
+        data = request.data
+        args = request.step['args']
+        run_type = args['run_type']
+        run_date = data['run_date']
+        start_inclusive = data['start_inclusive']
+        end_exclusive = data['end_exclusive']
+        try:
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    if run_type == 'Validate':
+                        cur.execute(
+                            "DELETE FROM UtilityProfileVariance "
+                            "WHERE run_date = %s "
+                            "AND identifier_type = %s "
+                            "AND interval_date >= %s "
+                            "AND interval_date < %s",
+                            (run_date, run_type, start_inclusive, end_exclusive)
+                        )
+                        con.commit()
+                    if run_type == 'Utility':
+                        cur.execute(
+                            "DELETE FROM UtilityProfile "
+                            "WHERE run_date = %s "
+                            "AND identifier_type = %s "
+                            "AND interval_date >= %s "
+                            "AND interval_date < %s",
+                            (run_date, run_type, start_inclusive, end_exclusive)
+                        )
+                        con.commit()
+            return "COMPLETE", f'Cleaned {run_type} for {run_date} for period from {start_inclusive} to {end_exclusive}'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def insert_event_log(self, request: HandlerRequest):
         data = request.data
         events: List[Dict] = data['events']
