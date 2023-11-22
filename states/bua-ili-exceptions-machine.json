@@ -68,8 +68,8 @@
           },
           "400_check_workflow_status": {
             "action": "wait_for_workflows",
-            "retries": 30,
-            "retry_delay": 120,
+            "retries": 24,
+            "retry_delay": 300,
             "args": {
               "max_errors": 100000,
               "max_hold": 100000,
@@ -81,9 +81,7 @@
               },
               "FAILED": {},
               "ONHOLD": {},
-              "EXPIRED": {
-                "next": "500_manual_ili_update_approve_exceptions"
-              }
+              "EXPIRED": {}
             }
           },
           "500_manual_ili_update_approve_exceptions": {
