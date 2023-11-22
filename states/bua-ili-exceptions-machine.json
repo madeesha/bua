@@ -81,7 +81,9 @@
               },
               "FAILED": {},
               "ONHOLD": {},
-              "EXPIRED": {}
+              "EXPIRED": {
+                "next": "500_manual_ili_update_approve_exceptions"
+              }
             }
           },
           "500_manual_ili_update_approve_exceptions": {
