@@ -183,7 +183,7 @@ Resources:
       Timeout: 900
       Layers:
         - !Join [ "" , [ "arn:aws:lambda:", !Ref "AWS::Region" , ":" , !Ref "AWS::AccountId" , ":layer:" , !Ref ResourcePrefix , "-layer-bua-python-libs-" , !Ref ProjectVersion , ":1" ] ]
-      MemorySize: 512
+      MemorySize: 2048
       ReservedConcurrentExecutions: !Ref ReservedConcurrentExecutions
       VpcConfig:
         SecurityGroupIds: !Ref VPCSecurityGroups
