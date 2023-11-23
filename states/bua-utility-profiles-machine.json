@@ -31,73 +31,190 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "100_record_error_queues"
+                "next": "050_record_error_queues"
               }
             }
           },
-          "100_record_error_queues": {
+          "050_record_error_queues": {
             "action": "record_site_errors_queues",
             "on": {
               "COMPLETE": {
-                "next": "101_warm_tables"
+                "next": "100_warm_meter_register"
               }
             }
           },
-          "101_warm_tables": {
+          "100_warm_meter_register": {
             "action": "execute_sql",
             "speed": "slow",
             "args": {
               "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS mr",
-                "DROP TEMPORARY TABLE IF EXISTS mp",
-                "DROP TEMPORARY TABLE IF EXISTS mt",
-                "DROP TEMPORARY TABLE IF EXISTS ut",
-                "DROP TEMPORARY TABLE IF EXISTS ud",
-                "DROP TEMPORARY TABLE IF EXISTS un",
-                "DROP TEMPORARY TABLE IF EXISTS tn",
-                "DROP TEMPORARY TABLE IF EXISTS ju",
-                "DROP TEMPORARY TABLE IF EXISTS st",
-                "DROP TEMPORARY TABLE IF EXISTS md",
-                "CREATE TEMPORARY TABLE st AS SELECT * FROM ServiceType WHERE name = 'ELECTRICITY'",
-                "CREATE TEMPORARY TABLE un AS SELECT * FROM UtilityNetwork",
-                "CREATE TEMPORARY TABLE ju AS SELECT * FROM Jurisdiction",
-                "CREATE TEMPORARY TABLE ut AS SELECT * FROM Utility WHERE LENGTH(identifier) = 10",
-                "CREATE TEMPORARY TABLE ud AS SELECT * FROM UtilityDetail",
-                "CREATE TEMPORARY TABLE mt AS SELECT * FROM Meter WHERE meter_installation_type LIKE 'COMMS%' OR meter_installation_type LIKE 'MR%'",
                 "CREATE TEMPORARY TABLE mr AS SELECT * FROM MeterRegister",
-                "CREATE TEMPORARY TABLE md AS SELECT * FROM MeterRegisterDetail WHERE status = 'C'",
-                "CREATE TEMPORARY TABLE mp AS SELECT * FROM MarketPayloadMapping WHERE market_tag = 'ControlledLoad'",
-                "CREATE TEMPORARY TABLE tn AS SELECT * FROM UtilityTni",
-                "DROP TEMPORARY TABLE IF EXISTS mr",
+                "DROP TEMPORARY TABLE IF EXISTS mr"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_market_payload_mapping"
+              }
+            }
+          },
+          "100_warm_market_payload_mapping": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS mp",
+                "CREATE TEMPORARY TABLE mp AS SELECT * FROM MarketPayloadMapping WHERE market_tag = 'ControlledLoad'",
+                "DROP TEMPORARY TABLE IF EXISTS mp"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_meter"
+              }
+            }
+          },
+          "100_warm_meter": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS mt",
+                "CREATE TEMPORARY TABLE mt AS SELECT * FROM Meter WHERE meter_installation_type LIKE 'COMMS%' OR meter_installation_type LIKE 'MR%'",
+                "DROP TEMPORARY TABLE IF EXISTS mt"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_utility"
+              }
+            }
+          },
+          "100_warm_utility": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS ut",
+                "CREATE TEMPORARY TABLE ut AS SELECT * FROM Utility WHERE LENGTH(identifier) = 10",
+                "DROP TEMPORARY TABLE IF EXISTS ut"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_utility_detail"
+              }
+            }
+          },
+          "100_warm_utility_detail": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS ud",
+                "CREATE TEMPORARY TABLE ud AS SELECT * FROM UtilityDetail",
+                "DROP TEMPORARY TABLE IF EXISTS ud"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_utility_network"
+              }
+            }
+          },
+          "100_warm_utility_network": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS un",
+                "CREATE TEMPORARY TABLE un AS SELECT * FROM UtilityNetwork",
+                "DROP TEMPORARY TABLE IF EXISTS un"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_utility_tni"
+              }
+            }
+          },
+          "100_warm_utility_tni": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS tn",
+                "CREATE TEMPORARY TABLE tn AS SELECT * FROM UtilityTni",
+                "DROP TEMPORARY TABLE IF EXISTS tn"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_jurisdiction"
+              }
+            }
+          },
+          "100_warm_jurisdiction": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS ju",
+                "CREATE TEMPORARY TABLE ju AS SELECT * FROM Jurisdiction",
+                "DROP TEMPORARY TABLE IF EXISTS ju"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_service_type"
+              }
+            }
+          },
+          "100_warm_service_type": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS st",
+                "CREATE TEMPORARY TABLE st AS SELECT * FROM ServiceType WHERE name = 'ELECTRICITY'",
+                "DROP TEMPORARY TABLE IF EXISTS st"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_warm_meter_register_detail"
+              }
+            }
+          },
+          "100_warm_meter_register_detail": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "DROP TEMPORARY TABLE IF EXISTS md",
+                "CREATE TEMPORARY TABLE md AS SELECT * FROM MeterRegisterDetail WHERE status = 'C'",
                 "DROP TEMPORARY TABLE IF EXISTS md"
               ]
             },
             "on": {
               "COMPLETE": {
-                "next": "102_clean_utility_profiles"
+                "next": "110_clean_utility_profiles"
               }
             }
           },
-          "102_clean_utility_profiles": {
+          "110_clean_utility_profiles": {
             "action": "clean_site_data",
             "args": {
               "run_type": "Utility"
             },
             "on": {
               "COMPLETE": {
-                "next": "105_utility_profiles"
+                "next": "120_utility_profiles"
               }
             }
           },
-          "105_utility_profiles": {
+          "120_utility_profiles": {
             "action": "bua_initiate",
             "args": {
               "run_type": "Utility"
@@ -105,40 +222,40 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "110_wait_for_utility_profiles"
+                "next": "130_wait_for_utility_profiles"
               }
             }
           },
-          "110_wait_for_utility_profiles": {
+          "130_wait_for_utility_profiles": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "160_record_error_queues"
+                "next": "200_record_error_queues"
               }
             }
           },
-          "160_record_error_queues": {
+          "200_record_error_queues": {
             "action": "record_site_errors_queues",
             "on": {
               "COMPLETE": {
-                "next": "162_clean_profile_validation"
+                "next": "210_clean_profile_validation"
               }
             }
           },
-          "162_clean_profile_validation": {
+          "210_clean_profile_validation": {
             "action": "clean_site_data",
             "args": {
               "run_type": "Validate"
             },
             "on": {
               "COMPLETE": {
-                "next": "165_profile_validation"
+                "next": "220_profile_validation"
               }
             }
           },
-          "165_profile_validation": {
+          "220_profile_validation": {
             "action": "bua_initiate",
             "args": {
               "run_type": "Validate"
@@ -146,18 +263,18 @@
             "on": {
               "COMPLETE": {
                 "delay": 120,
-                "next": "170_wait_for_profile_validation"
+                "next": "230_wait_for_profile_validation"
               }
             }
           },
-          "170_wait_for_profile_validation": {
+          "230_wait_for_profile_validation": {
             "action": "wait_for_empty_site_queues",
             "retry_delay": 120,
             "on": {
               "COMPLETE": {}
             }
           },
-          "175_resolve_variances": {
+          "300_resolve_variances": {
             "comment": "bua_resolve_variances",
             "on": {
               "COMPLETE": {}
