@@ -39,6 +39,48 @@
             "action": "record_site_errors_queues",
             "on": {
               "COMPLETE": {
+                "next": "101_warm_tables"
+              }
+            }
+          },
+          "101_warm_tables": {
+            "action": "execute_sql",
+            "args": {
+              "sql": [
+                "DROP TEMPORARY TABLE IF EXISTS mr",
+                "DROP TEMPORARY TABLE IF EXISTS mp",
+                "DROP TEMPORARY TABLE IF EXISTS mt",
+                "DROP TEMPORARY TABLE IF EXISTS ut",
+                "DROP TEMPORARY TABLE IF EXISTS ud",
+                "DROP TEMPORARY TABLE IF EXISTS un",
+                "DROP TEMPORARY TABLE IF EXISTS tn",
+                "DROP TEMPORARY TABLE IF EXISTS ju",
+                "DROP TEMPORARY TABLE IF EXISTS st",
+                "DROP TEMPORARY TABLE IF EXISTS md",
+                "CREATE TEMPORARY TABLE st AS SELECT * FROM ServiceType WHERE name = 'ELECTRICITY'",
+                "CREATE TEMPORARY TABLE un AS SELECT * FROM UtilityNetwork",
+                "CREATE TEMPORARY TABLE ju AS SELECT * FROM Jurisdiction",
+                "CREATE TEMPORARY TABLE ut AS SELECT * FROM Utility WHERE LENGTH(identifier) = 10",
+                "CREATE TEMPORARY TABLE ud AS SELECT * FROM UtilityDetail",
+                "CREATE TEMPORARY TABLE mt AS SELECT * FROM Meter WHERE meter_installation_type LIKE 'COMMS%' OR meter_installation_type LIKE 'MR%'",
+                "CREATE TEMPORARY TABLE mr AS SELECT * FROM MeterRegister",
+                "CREATE TEMPORARY TABLE md AS SELECT * FROM MeterRegisterDetail WHERE status = 'C'",
+                "CREATE TEMPORARY TABLE mp AS SELECT * FROM MarketPayloadMapping WHERE market_tag = 'ControlledLoad'",
+                "CREATE TEMPORARY TABLE tn AS SELECT * FROM UtilityTni",
+                "DROP TEMPORARY TABLE IF EXISTS mr",
+                "DROP TEMPORARY TABLE IF EXISTS mp",
+                "DROP TEMPORARY TABLE IF EXISTS mt",
+                "DROP TEMPORARY TABLE IF EXISTS ut",
+                "DROP TEMPORARY TABLE IF EXISTS ud",
+                "DROP TEMPORARY TABLE IF EXISTS un",
+                "DROP TEMPORARY TABLE IF EXISTS tn",
+                "DROP TEMPORARY TABLE IF EXISTS ju",
+                "DROP TEMPORARY TABLE IF EXISTS st",
+                "DROP TEMPORARY TABLE IF EXISTS md"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
                 "next": "102_clean_utility_profiles"
               }
             }
