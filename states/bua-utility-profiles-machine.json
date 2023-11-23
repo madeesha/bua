@@ -45,6 +45,7 @@
           },
           "101_warm_tables": {
             "action": "execute_sql",
+            "speed": "slow",
             "args": {
               "sql": [
                 "DROP TEMPORARY TABLE IF EXISTS mr",
