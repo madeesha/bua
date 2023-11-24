@@ -221,14 +221,14 @@
             },
             "on": {
               "COMPLETE": {
-                "delay": 120,
+                "delay": 300,
                 "next": "130_wait_for_utility_profiles"
               }
             }
           },
           "130_wait_for_utility_profiles": {
             "action": "wait_for_empty_site_queues",
-            "retry_delay": 120,
+            "retry_delay": 300,
             "on": {
               "COMPLETE": {}
             }
