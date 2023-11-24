@@ -22,6 +22,9 @@ help:
 4-test-utility-profiles:
 	../bin/execute-bua-steps $(PROFILE) Test UtilityProfiles
 
+5-test-profile-validation:
+	../bin/execute-bua-steps $(PROFILE) Test ProfileValidation
+
 update-update_id:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(ENVIRONMENT)-$(PROFILE)/bua/update_id --value $(UPDATE_ID) --type String --overwrite --data-type text
 

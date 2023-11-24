@@ -120,7 +120,8 @@
           "bua-clean-utilityprofile": "",
           "bua-clean-workflows": "",
           "bua-dump-errors": "",
-          "bua-ili-exceptions": ""
+          "bua-ili-exceptions": "",
+          "bua-profile-validation": ""
         }
       },
       "Next": "GetStepfunctionArns"
@@ -292,6 +293,11 @@
           "Variable": "$.context.start",
           "StringEquals": "ScaleDown",
           "Next": "ScaleDown"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "ProfileValidation",
+          "Next": "ProfileValidation"
         },
         {
           "Variable": "$.context.start",
@@ -491,6 +497,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-utility-profiles",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "ProfileValidation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-profile-validation",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {
