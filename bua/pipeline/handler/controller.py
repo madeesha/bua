@@ -325,11 +325,8 @@ class BUAControllerHandler:
 
     @staticmethod
     def _local_time():
-        utc_now = datetime.now(timezone.utc)
-        utc_now_no_microseconds = utc_now.replace(microsecond=0)
-        gmt_plus_10_timezone = timezone(timedelta(hours=10))
-        local_now = utc_now_no_microseconds.astimezone(gmt_plus_10_timezone)
-        return str(local_now)
+        local_now = datetime.now(ZoneInfo('Australia/Sydney')).replace(microsecond=0)
+        return local_now.strftime('%Y-%m-%d %H:%M:%S')
 
     def _log_processing_start(self, instance: str, name: str, this: str):
         time1 = self._local_time()
