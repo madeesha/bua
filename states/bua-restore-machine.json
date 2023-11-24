@@ -6,7 +6,7 @@
       "Type": "Pass",
       "Parameters": {
         "type": "step",
-        "name": "BUA Restore",
+        "name": "Restore",
         "next": "000_get_parameters",
         "speed": "fast",
         "retry_delay": 120,
