@@ -58,6 +58,7 @@ provision:
       bua-clean-workflows-machine.json \
       bua-dump-errors-machine.json \
       bua-ili-exceptions-machine.json \
+      bua-profile-validation-machine.json \
       bua-destroy-machine.json
     - |
       # Package bua for aws lambda layers
