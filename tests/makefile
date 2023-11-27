@@ -1,7 +1,7 @@
 PROFILE=anstead
 ENVIRONMENT=tst
 SNAPSHOT_ARN=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-21-bua-sql-20231001-20231121-20231121-202130
-UPDATE_ID=22
+UPDATE_ID=23
 BUCKET=tst-anstead-s3-bua
 
 help:
@@ -26,7 +26,7 @@ help:
 	../bin/restore-procedure $(PROFILE) bua_prepare_export_data
 
 4-test-run:
-	../bin/execute-bua-steps $(PROFILE) Test ScaleUpWorkflow,WarmStatistics,ScaleDown,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors
+	../bin/execute-bua-steps $(PROFILE) Test ScaleUpWorkflow,WarmStatistics,ScaleDown,Microscalar
 
 #4-test-utility-profiles:
 #	../bin/execute-bua-steps $(PROFILE) Test UtilityProfiles
