@@ -24,4 +24,4 @@ Path                               | Value
 /tst-anstead/bua/start_inclusive   | 2022-10-01
 /tst-anstead/bua/suffix            | bua-sql
 /tst-anstead/bua/today             | 2023-10-01
-/tst-anstead/bua/update_id         | 22
+/tst-anstead/bua/update_id         | 23
