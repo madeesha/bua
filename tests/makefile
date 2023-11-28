@@ -25,8 +25,12 @@ help:
 	../bin/restore-procedure $(PROFILE) filter_man_ilie_gas_no_pcf_hv
 	../bin/restore-procedure $(PROFILE) bua_prepare_export_data
 
+3a-restore-ili-exceptions-procedure:
+	../bin/restore-procedure $(PROFILE) ili_manual_line_item_exceptions
+	../bin/restore-procedure $(PROFILE) manual_ili_exception_approval
+
 4-test-run:
-	../bin/execute-bua-steps $(PROFILE) Test ScaleUpWorkflow,WarmStatistics,ScaleDown,Microscalar
+	../bin/execute-bua-steps $(PROFILE) Test ILIExceptions
 
 #4-test-utility-profiles:
 #	../bin/execute-bua-steps $(PROFILE) Test UtilityProfiles
