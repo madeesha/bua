@@ -1,4 +1,4 @@
-RUN_DATE=2023-11-21
+RUN_DATE=2023-11-28
 TODAY=2023-10-01
 START_INCLUSIVE=2022-10-01
 END_INCLUSIVE=2023-09-30
@@ -8,7 +8,10 @@ TOPIC=arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic
 SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:prod-data-2023-10-01-snapshot
 PREFIX=tst-anstead
 BUCKET=tst-anstead-s3-rw-integration
-BRANCH=master
+BRANCH=release-uat
+
+help:
+	@tput clear ; cat makefile
 
 #
 # ANSTEAD WEEKLY RUN
