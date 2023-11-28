@@ -1,4 +1,4 @@
-RUN_DATE=2023-11-21
+RUN_DATE=2023-11-28
 TODAY=2023-11-01
 START_INCLUSIVE=2022-11-01
 END_INCLUSIVE=2023-10-31
@@ -8,7 +8,7 @@ TOPIC=arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic
 SNAPSHOT=arn:aws:rds:ap-southeast-2:760694178318:snapshot:prd-earl-1-sql-21-20-Oct-31-2023-shared-key-encrypted
 PREFIX=prd-matten
 BUCKET=prd-matten-s3-bua
-BRANCH=master
+BRANCH=release-uat
 
 #
 # MATTEN WEEKLY RUN

@@ -2,7 +2,7 @@ Path                              | Value
 ----                              | -----
 /prd-matten/bua/adh_bucket_name   | prd-matten-s3-bua
 /prd-matten/bua/cluster_name      | matten
-/prd-matten/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,DumpErrors
+/prd-matten/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors
 /prd-matten/bua/domain            | ckhrilltzfkv.ap-southeast-2.rds.amazonaws.com
 /prd-matten/bua/end_exclusive     | 2023-11-01
 /prd-matten/bua/end_inclusive     | 2023-10-31
@@ -15,13 +15,13 @@ Path                              | Value
 /prd-matten/bua/params_id         | 2
 /prd-matten/bua/rds_dns_alias     | prd-sql.matten.encore.sh
 /prd-matten/bua/rdssecret         | cicd/prd-matten/rds/bua
-/prd-matten/bua/run_date          | 2023-11-21
+/prd-matten/bua/run_date          | 2023-11-28
 /prd-matten/bua/schema            | Turkey_BLU
 /prd-matten/bua/snapshot_arn      | arn:aws:rds:ap-southeast-2:760694178318:snapshot:prd-earl-1-sql-21-20-Oct-31-2023-shared-key-encrypted
 /prd-matten/bua/source_account_id | 760694178318
-/prd-matten/bua/source_date       | 2023-11-21
+/prd-matten/bua/source_date       | 2023-11-28
 /prd-matten/bua/sqlsecret         | cicd/prd-matten/rds/bua/passwords
 /prd-matten/bua/start_inclusive   | 2022-11-01
 /prd-matten/bua/suffix            | bua-sql
 /prd-matten/bua/today             | 2023-11-01
-/prd-matten/bua/update_id         | 11
+/prd-matten/bua/update_id         | 12
