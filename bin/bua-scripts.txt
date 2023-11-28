@@ -17,6 +17,7 @@ conf/Scripts/V2023.11.03.12.03.03__YCY_CB-20256_ExceptionType_add_update.sql
 conf/Scripts/V2023.11.13.15.45.00__MS_CB-20298_BUA_RAD_ExceptionType.sql
 conf/Scripts/V2023.11.19.21.40.01__LW_CB-20256_add_column_InvoiceScalar.sql
 conf/Scripts/V2023.11.20.23.51.00__DY_CB-20256_BUA_ili_exception_filter_run.sql
+conf/Scripts/V2023.11.27.10.55.00__MS_CB-20256_BUA_create_debug_table_month_scalar_verification.sql
 conf/Procedures/R__bua_approve_all_user_inv_hold.sql
 conf/Procedures/R__bua_create_basic_read.sql
 conf/Procedures/R__bua_create_invoice_scalar.sql
@@ -83,6 +84,7 @@ conf/Procedures/R__filter_man_remediation_hold_released.sql
 conf/Procedures/R__ili_invoice_run.sql
 conf/Procedures/R__ili_prepare_invoice_run.sql
 conf/Procedures/R__ili_manual_line_item_exceptions.sql
+conf/Procedures/R__manual_ili_exception_approval.sql
 conf/Procedures/R__manual_ili_update_approve_exceptions.sql
 conf/Procedures/R__import_gas_volumes_profile_creation.sql
 SupportScripts/Tickets/CB-17118/CB-17118_LoadInitialData.sql
