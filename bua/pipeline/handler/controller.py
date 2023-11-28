@@ -36,8 +36,9 @@ class BUAControllerHandler:
 
     def __init__(
             self, config, r53_client, sm_client, s3_client, ddb_bua_table, sqs_client, cf_client, rds_client,
-            sts_client, eks_client, ssm_client, session, mysql=pymysql, kubes=kubernetes
+            sts_client, eks_client, ssm_client, session, mysql=pymysql, kubes=kubernetes, print=print
     ):
+        self.print = print
         self.config = config
         self.s3_client = s3_client
         self.ddb_table = ddb_bua_table
@@ -45,7 +46,7 @@ class BUAControllerHandler:
         self.s3 = S3(s3_client=s3_client)
         self.ssm = SSM(ssm_client=ssm_client)
         secret_manager = SecretManager(sm_client=sm_client)
-        sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager, mysql=mysql)
+        sql_handler = SQL(config=config, s3_client=s3_client, secret_manager=secret_manager, mysql=mysql, print=print)
         rds_handler = RDS(rds_client=rds_client)
         reset_handler = Reset(config=config, rds=rds_handler, secret_manager=secret_manager)
         restore_handler = Restore(config=config, cf_client=cf_client, rds=rds_handler)
@@ -104,6 +105,7 @@ class BUAControllerHandler:
             'record_site_errors_queues': profiles_handler.record_site_errors_queues,
             'dump_site_errors_queues_to_s3': profiles_handler.dump_site_errors_queues_to_s3,
             'execute_sql': sql_handler.execute_sql,
+            'ili_manual_line_item_exceptions': sql_handler.ili_manual_line_item_exceptions,
             'clean_site_data': sql_handler.clean_site_data,
             'insert_event_log': sql_handler.insert_event_log,
             'set_rds_dns_entry': dns_handler.set_rds_dns_entry,
@@ -140,10 +142,10 @@ class BUAControllerHandler:
         return "COMPLETE", f'Calculated {len(stepfunctions)} stepfunction names'
 
     def handle_request(self, event: Dict):
-        print('ProjectVersion', self.config['version'])
+        self.print('ProjectVersion', self.config['version'])
         if 'Records' in event:
             for record in event['Records']:
-                print(record)
+                self.print(record)
                 if record['eventSource'] == 'aws:s3':
                     text = self._fetch_s3_object(record)
                     body = yaml.load(text, Loader=yaml.Loader)
@@ -211,7 +213,7 @@ class BUAControllerHandler:
                 body=yaml.dump(event),
                 delay=delay
             )
-            print(f'Sent message [{response["MessageId"]}] to {self.config["next_queue_url"]}')
+            self.print(f'Sent message [{response["MessageId"]}] to {self.config["next_queue_url"]}')
 
     def _handle_event_steps(self, event: Dict, name: str, this: str):
         if this not in event['steps']:
@@ -283,7 +285,7 @@ class BUAControllerHandler:
                     'cause': traceback.format_exception(e)
                 })
             )
-            print(f'Sent message [{response["MessageId"]}] to {self.config["failure_queue_url"]}')
+            self.print(f'Sent message [{response["MessageId"]}] to {self.config["failure_queue_url"]}')
         else:
             raise
 
@@ -292,7 +294,7 @@ class BUAControllerHandler:
 
             action = step['action']
             log_item['ACTION'] = action
-            print(f'Invoking [{action}] for [{this}]')
+            self.print(f'Invoking [{action}] for [{this}]')
 
             try:
                 if action not in self.handlers:
@@ -321,7 +323,7 @@ class BUAControllerHandler:
             'reason': reason,
             'when': log_item['TIME2']
         }
-        print(f'Result : [{status}] : {reason}')
+        self.print(f'Result : [{status}] : {reason}')
 
     @staticmethod
     def _local_time():

@@ -52,13 +52,8 @@
             }
           },
           "300_ili_manual_line_item_exceptions": {
-            "action": "execute_sql",
+            "action": "ili_manual_line_item_exceptions",
             "speed": "slow",
-            "args": {
-              "sql": [
-                "CALL ili_manual_line_item_exceptions(-1, 1, -1)"
-              ]
-            },
             "on": {
               "COMPLETE": {
                 "delay": 120,
