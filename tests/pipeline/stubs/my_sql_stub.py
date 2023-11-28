@@ -21,6 +21,16 @@ class MySQLStub:
     def fetchall(self):
         return self.resultsets.pop(0)
 
+    def mogrify(self, query, args=None):
+        return query % self._escape(args)
+
+    @staticmethod
+    def _escape(args):
+        return tuple(
+            f"'{arg}'" if isinstance(arg, str) else arg
+            for arg in args
+        )
+
     def __enter__(self):
         return self
 

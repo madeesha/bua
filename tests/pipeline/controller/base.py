@@ -9,6 +9,7 @@ from tests.pipeline.stubs.ddb_table_stub import DDBTableStub
 from tests.pipeline.stubs.eks_client_stub import EKSClientStub
 from tests.pipeline.stubs.kubernetes_stub import KubernetesStub
 from tests.pipeline.stubs.my_sql_stub import MySQLStub
+from tests.pipeline.stubs.print_stub import PrintStub
 from tests.pipeline.stubs.rds_client_stub import RDSClientStub
 from tests.pipeline.stubs.route53_client_stub import Route53ClientStub
 from tests.pipeline.stubs.s3_client_stub import S3ClientStub
@@ -157,6 +158,10 @@ class TestBase:
         return KubernetesStub(replicas=1)
 
     @fixture(autouse=True)
+    def print(self):
+        return PrintStub()
+
+    @fixture(autouse=True)
     def config(self, failure_queue_url, initiate_queue_url, prefix):
         return {
             'version': '123',
@@ -177,9 +182,10 @@ class TestBase:
         }
 
     @fixture(autouse=True)
-    def handler(self, r53, sm, s3, ddb_table, sqs, cf, rds, sts, eks, ssm, session, config, mysql, kubes):
+    def handler(self, r53, sm, s3, ddb_table, sqs, cf, rds, sts, eks, ssm, session, config, mysql, kubes, print):
         return BUAControllerHandler(
             config=config,
             r53_client=r53, sm_client=sm, s3_client=s3, ddb_bua_table=ddb_table, sqs_client=sqs, cf_client=cf,
-            rds_client=rds, sts_client=sts, eks_client=eks, ssm_client=ssm, session=session, mysql=mysql, kubes=kubes
+            rds_client=rds, sts_client=sts, eks_client=eks, ssm_client=ssm, session=session, mysql=mysql, kubes=kubes,
+            print=print.print
         )

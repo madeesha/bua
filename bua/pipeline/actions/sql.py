@@ -12,12 +12,13 @@ from bua.pipeline.handler.request import HandlerRequest
 
 class SQL:
 
-    def __init__(self, config, s3_client, secret_manager: SecretManager, mysql=pymysql):
+    def __init__(self, config, s3_client, secret_manager: SecretManager, mysql=pymysql, print=print):
         self.config = config
         self.s3 = s3_client
         self.sm = secret_manager
         self.prefix = config['prefix']
         self.mysql = mysql
+        self.print = print
 
     def _connect(self, data):
         update_id = data['update_id']
@@ -90,7 +91,7 @@ class SQL:
                         keys = ','.join(key_set)
                         placeholders = ','.join(['%s'] * len(key_set))
                         stmt = f'INSERT INTO EventLog ({keys}) VALUES ({placeholders})'
-                        print(stmt)
+                        self.print(stmt)
                         values = [event[key] for key in key_set]
                         cur.execute(stmt, values)
                     con.commit()
@@ -121,6 +122,25 @@ class SQL:
                         cur.execute(stmt)
                     con.commit()
             return "COMPLETE", f'Execute {len(sql)} SQL statements'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
+    def ili_manual_line_item_exceptions(self, request: HandlerRequest):
+        data = request.data
+        end_inclusive = data['end_inclusive']
+        try:
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    stmt = "CALL ili_manual_line_item_exceptions(-1, 1, -1, %s)"
+                    params = (end_inclusive, )
+                    self.print(cur.mogrify(stmt, params))
+                    cur.execute(stmt, params)
+                    con.commit()
+            return "COMPLETE", f'Executed ili_manual_line_item_exceptions for {end_inclusive}'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
                 return "RETRY", f'{e}'
@@ -317,7 +337,7 @@ class SQL:
         cur.execute("SELECT COALESCE(MAX(id),0) AS id FROM WorkflowInstance")
         workflow_instance_id = int(cur.fetchall()[0]['id'])
         data['workflow_instance_id'] = workflow_instance_id
-        print(f'Max workflow_instance_id is {workflow_instance_id}')
+        self.print(f'Max workflow_instance_id is {workflow_instance_id}')
         return workflow_instance_id
 
     def set_bua_account_id(self, request: HandlerRequest):
@@ -530,7 +550,7 @@ class SQL:
                         )
                         row_count = con.affected_rows()
                         total += row_count
-                        print(f'Resubmitted {row_count} {workflow_name} workflow instances')
+                        self.print(f'Resubmitted {row_count} {workflow_name} workflow instances')
             return "COMPLETE", f'Resubmitted {total} workflow instances'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
@@ -659,7 +679,7 @@ class SQL:
                 cur = con.cursor()
                 with cur:
                     for procedure in data['procedures']:
-                        print(f'Exporting {schema}.{procedure}')
+                        self.print(f'Exporting {schema}.{procedure}')
                         cur.execute(
                             "SELECT COUNT(*) AS total "
                             "FROM information_schema.ROUTINES "
@@ -701,7 +721,7 @@ class SQL:
                 cur = con.cursor()
                 with cur:
                     for procedure in data['procedures']:
-                        print(f'Importing {schema}.{procedure}')
+                        self.print(f'Importing {schema}.{procedure}')
                         cur.execute(
                             "SELECT COUNT(*) AS total "
                             "FROM information_schema.ROUTINES "
