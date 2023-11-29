@@ -10,6 +10,9 @@ PREFIX=tst-anstead
 BUCKET=tst-anstead-s3-rw-integration
 BRANCH=release-uat
 
+PREPARE_INPUT_QUEUE=https://sqs.ap-southeast-2.amazonaws.com/561082505378/tst-anstead-sqs-bua-site-prepare-queue
+PREPARE_FAILURE_QUEUE=https://sqs.ap-southeast-2.amazonaws.com/561082505378/tst-anstead-sqs-bua-site-prepare-failure-queue
+
 help:
 	@tput clear ; cat makefile
 
@@ -33,6 +36,18 @@ help:
 
 5-weekly-run:
 	../bin/execute-bua-steps $(PROFILE) Weekly 'EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors'
+
+6-run-script:
+	../bin/run-script $(PROFILE) ../bin/prepare-fix-scripts.sql
+
+7-update-procedure:
+	../bin/restore-procedure $(PROFILE) bua_prepare_export_data
+
+8-redrive-prepare-failures:
+	../venv/bin/python ../bin/redrive-sqs.py --profile $(PROFILE) --source $(PREPARE_FAILURE_QUEUE) --target $(PREPARE_INPUT_QUEUE)
+
+9-weekly-run-part-2:
+	../bin/execute-bua-steps $(PROFILE) Weekly 'Snapshot,Export,ProfileValidation,DumpErrors'
 
 update-today:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/today --value $(TODAY) --type String --overwrite --data-type text
