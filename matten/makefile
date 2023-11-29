@@ -28,6 +28,9 @@ BRANCH=release-uat
 4-restore-bua-scripts:
 	bash ../bin/restore-bua-scripts $(PROFILE)
 
+4-restore-prepare-script:
+	bash ../bin/restore-procedure matten bua_prepare_export_data
+
 5-weekly-run:
 	../bin/execute-bua-steps $(PROFILE) Weekly 'EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors'
 

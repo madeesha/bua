@@ -19,19 +19,18 @@ case "${1}" in
     exit 1
 esac
 
-file="conf/Procedures/R__${2}.sql"
-file_path="${HOME}/git/uss/turkey/${file}"
+file_path="${2}"
 if [[ ! -f "${file_path}" ]] ; then
-  echo "${file} does not exist at ${file_path}"
+  echo "does not exist at ${file_path}"
   exit 1
 fi
 
-echo "Applying ${file} to ${MYSQL_HOST}"
+echo "Applying ${file_path} to ${MYSQL_HOST}"
 read -p "Are you sure you wish to continue (Y/N) [N] ?" yesno
 if [[ "$yesno" != "Y" ]] ; then
   exit 1
 fi
 
-echo "Loading ${file}"
+echo "Loading ${file_path}"
 cat "${file_path}" | mysql --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" Turkey_BLU
-echo "Loaded ${file}"
+echo "Loaded ${file_path}"

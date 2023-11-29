@@ -4,6 +4,9 @@ SNAPSHOT_ARN=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-21-bua
 UPDATE_ID=23
 BUCKET=tst-anstead-s3-bua
 
+SOURCE_QUEUE_URL=https://sqs.ap-southeast-2.amazonaws.com/561082505378/tst-anstead-sqs-bua-site-basic-dlqueue
+TARGET_QUEUE_URL=https://sqs.ap-southeast-2.amazonaws.com/561082505378/tst-anstead-sqs-bua-site-data-dlqueue
+
 help:
 	@cat makefile
 
@@ -31,6 +34,16 @@ help:
 
 4-test-run:
 	../bin/execute-bua-steps $(PROFILE) Test ILIExceptions
+
+5-prepare-test-redrive:
+	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 sqs send-message-batch --queue-url $(SOURCE_QUEUE_URL) --entries file://message-batch.json | tee /tmp/test.log
+
+5-test-redrive-1:
+	../venv/bin/python ../bin/redrive-sqs.py --profile $(PROFILE) --source $(SOURCE_QUEUE_URL) --target $(TARGET_QUEUE_URL)
+
+5-test-redrive-2:
+	../venv/bin/python ../bin/redrive-sqs.py --profile $(PROFILE) --source $(TARGET_QUEUE_URL) --target $(SOURCE_QUEUE_URL)
+
 
 #4-test-utility-profiles:
 #	../bin/execute-bua-steps $(PROFILE) Test UtilityProfiles
