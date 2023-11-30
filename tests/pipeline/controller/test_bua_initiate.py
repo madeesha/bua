@@ -17,7 +17,10 @@ class TestCase(TestBase):
                 'suffix': suffix,
                 'domain': rds_domain_name,
                 'schema': schema_name,
-                'rdssecret': rds_secret_id
+                'rdssecret': rds_secret_id,
+                'run_date': '2023-08-17',
+                'source_date': '2023-08-17',
+                'today': '2023-05-01',
             },
             'steps': {
                 'step1': {
@@ -37,9 +40,9 @@ class TestCase(TestBase):
             'run_type': 'Utility',
             'run_date': '2023-08-17',
             'today': '2023-05-01',
-            'start_inclusive': '2022-11-01',
-            'end_exclusive': '2023-11-01',
-            'end_inclusive': '2023-10-31',
+            'start_inclusive': '2022-05-01',
+            'end_exclusive': '2023-05-01',
+            'end_inclusive': '2023-04-30',
             'source_date': '2023-08-17',
             'current_date': body['data']['current_date'],
             'current_time': body['data']['current_time'],
