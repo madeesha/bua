@@ -37,11 +37,11 @@
   },
   {
     "ParameterKey": "ADHBucketName",
-    "ParameterValue": "prd-matten-s3-bua"
+    "ParameterValue": "prd-matten-s3-rw-integration"
   },
   {
     "ParameterKey": "NotifySteps",
-    "ParameterValue": "not-set"
+    "ParameterValue": "Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors"
   },
   {
     "ParameterKey": "SourceAccountID",
