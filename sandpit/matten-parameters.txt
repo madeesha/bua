@@ -1,6 +1,6 @@
 Path                              | Value
 ----                              | -----
-/prd-matten/bua/adh_bucket_name   | prd-matten-s3-bua
+/prd-matten/bua/adh_bucket_name   | prd-matten-s3-rw-integration
 /prd-matten/bua/cluster_name      | matten
 /prd-matten/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors
 /prd-matten/bua/domain            | ckhrilltzfkv.ap-southeast-2.rds.amazonaws.com
@@ -11,7 +11,7 @@ Path                              | Value
 /prd-matten/bua/instance_type     | 8xlarge
 /prd-matten/bua/mysql_version     | 8.0.32
 /prd-matten/bua/node_group_name   | managed-ng-demand
-/prd-matten/bua/notify_steps      | Restore
+/prd-matten/bua/notify_steps      | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors
 /prd-matten/bua/params_id         | 2
 /prd-matten/bua/rds_dns_alias     | prd-sql.matten.encore.sh
 /prd-matten/bua/rdssecret         | cicd/prd-matten/rds/bua
@@ -24,4 +24,4 @@ Path                              | Value
 /prd-matten/bua/start_inclusive   | 2022-11-01
 /prd-matten/bua/suffix            | bua-sql
 /prd-matten/bua/today             | 2023-11-01
-/prd-matten/bua/update_id         | 12
+/prd-matten/bua/update_id         | 13
