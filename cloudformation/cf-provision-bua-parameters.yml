@@ -42,6 +42,9 @@ Parameters:
   RDSDNSAlias:
     Description: RDS DNS Alias
     Type: String
+  BastionDNSAlias:
+    Description: RDS DNS Alias for the bastion port
+    Type: String
   HostedZoneId:
     Description: Route53 hosted zone id
     Type: String
@@ -209,6 +212,14 @@ Resources:
       Description: "RDS DNS alias"
       Type: "String"
       Value: !Ref RDSDNSAlias
+
+  BastionDNSAliasParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub "/${ResourcePrefix}/bua/bastion_dns_alias"
+      Description: "RDS DNS alias for the bastion port"
+      Type: "String"
+      Value: !Ref BastionDNSAlias
 
   HostedZoneIdParam:
     Type: "AWS::SSM::Parameter"
