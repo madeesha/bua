@@ -121,7 +121,8 @@
           "bua-clean-workflows": "",
           "bua-dump-errors": "",
           "bua-ili-exceptions": "",
-          "bua-profile-validation": ""
+          "bua-profile-validation": "",
+          "bua-switch-bastion": ""
         }
       },
       "Next": "GetStepfunctionArns"
@@ -303,6 +304,11 @@
           "Variable": "$.context.start",
           "StringEquals": "Destroy",
           "Next": "Destroy"
+        },
+        {
+          "Variable": "$.context.start",
+          "StringEquals": "SwitchBastion",
+          "Next": "SwitchBastion"
         }
       ],
       "Default": "ExecutionFailed"
@@ -785,6 +791,24 @@
           "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
         },
         "StateMachineArn.$":"$.context.stepfunction.bua-destroy",
+        "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
+      },
+      "ResultSelector": {
+        "data.$": "$.Output.data",
+        "context.$": "$.Input.context"
+      },
+      "Next": "IsAnotherStep"
+    },
+    "SwitchBastion": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters":{
+        "Input":{
+          "data.$": "$.data",
+          "context.$": "$.context",
+          "AWS_STEP_FUNCTIONS_STARTED_BY_EXECUTION_ID.$": "$$.Execution.Id"
+        },
+        "StateMachineArn.$":"$.context.stepfunction.bua-switch-bastion",
         "Name.$": "States.Format('{}-{}', $.data.run_date, States.UUID())"
       },
       "ResultSelector": {

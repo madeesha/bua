@@ -59,7 +59,8 @@ provision:
       bua-dump-errors-machine.json \
       bua-ili-exceptions-machine.json \
       bua-profile-validation-machine.json \
-      bua-destroy-machine.json
+      bua-destroy-machine.json \
+      bua-switch-bastion-machine.json
     - |
       # Package bua for aws lambda layers
       rm -fr ./target/packages

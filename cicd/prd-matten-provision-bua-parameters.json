@@ -24,6 +24,10 @@
     "ParameterValue": "prd-sql.matten.encore.sh"
   },
   {
+    "ParameterKey": "BastionDNSAlias",
+    "ParameterValue": "prd-sql1.matten.encore.sh"
+  },
+  {
     "ParameterKey": "HostedZoneId",
     "ParameterValue": "Z00081093EURL25DEYLIH"
   },
@@ -41,7 +45,7 @@
   },
   {
     "ParameterKey": "NotifySteps",
-    "ParameterValue": "Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors"
+    "ParameterValue": "Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion"
   },
   {
     "ParameterKey": "SourceAccountID",
@@ -49,6 +53,6 @@
   },
   {
     "ParameterKey": "DefaultSteps",
-    "ParameterValue": "Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors"
+    "ParameterValue": "Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion"
   }
 ]
