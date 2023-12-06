@@ -27,6 +27,6 @@ fi
 
 while read -r file ; do
   echo "Loading ${file}"
-  cat "${HOME}/git/uss/turkey/${file}" | mysql --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" Turkey_BLU
+  cat "${HOME}/git/uss/turkey/${file}" | mysql --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" --init-command="SET SESSION SQL_MODE='REAL_AS_FLOAT,PIPES_AS_CONCAT,ANSI_QUOTES,IGNORE_SPACE,ONLY_FULL_GROUP_BY,ANSI,STRICT_TRANS_TABLES';" Turkey_BLU
   echo "Loaded ${file}"
 done < "${my_dir}/bua-scripts.txt"

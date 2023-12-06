@@ -35,6 +35,9 @@ help:
 4-test-run:
 	../bin/execute-bua-steps $(PROFILE) Test ILIExceptions
 
+5-test-run:
+	../bin/execute-bua-steps $(PROFILE) Test SwitchBastion
+
 5-prepare-test-redrive:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 sqs send-message-batch --queue-url $(SOURCE_QUEUE_URL) --entries file://message-batch.json | tee /tmp/test.log
 

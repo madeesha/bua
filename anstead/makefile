@@ -1,14 +1,17 @@
-RUN_DATE=2023-11-28
-TODAY=2023-10-01
-START_INCLUSIVE=2022-10-01
-END_INCLUSIVE=2023-09-30
-END_EXCLUSIVE=2023-10-01
+RUN_DATE=2023-12-06
+TODAY=2023-12-01
+START_INCLUSIVE=2022-12-01
+END_INCLUSIVE=2023-11-30
+END_EXCLUSIVE=2023-12-01
 PROFILE=anstead
 TOPIC=arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic
-SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:prod-data-2023-10-01-snapshot
+SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tmp-prd-earl-23-11-30-shared-key
 PREFIX=tst-anstead
-BUCKET=tst-anstead-s3-rw-integration
+BUCKET=tst-anstead-s3-bua
 BRANCH=release-uat
+NOTIFY_STEPS=Restore
+WEEKLY_RUN_STEPS=EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+BASTION_DNS_ALIAS=tmp-sql.anstead.encore.sh
 
 PREPARE_INPUT_QUEUE=https://sqs.ap-southeast-2.amazonaws.com/561082505378/tst-anstead-sqs-bua-site-prepare-queue
 PREPARE_FAILURE_QUEUE=https://sqs.ap-southeast-2.amazonaws.com/561082505378/tst-anstead-sqs-bua-site-prepare-failure-queue
@@ -20,7 +23,7 @@ help:
 # ANSTEAD WEEKLY RUN
 #
 
-1-update-parameters: update-today update-run-date update-source-date update-adh_bucket_name update-snapshot_arn update-notify_steps update-start-inclusive update-end-inclusive update-end-exclusive list-parameters
+1-update-parameters: update-today update-run-date update-source-date update-adh_bucket_name update-snapshot_arn update-notify_steps update-start-inclusive update-end-inclusive update-end-exclusive update-bastion-dns-alias list-parameters
 
 2-trigger-restore:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 sns publish --topic-arn $(TOPIC) --message 'reuse'
@@ -35,19 +38,7 @@ help:
 	bash ../bin/restore-bua-scripts $(PROFILE)
 
 5-weekly-run:
-	../bin/execute-bua-steps $(PROFILE) Weekly 'EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors'
-
-6-run-script:
-	../bin/run-script $(PROFILE) ../bin/prepare-fix-scripts.sql
-
-7-update-procedure:
-	../bin/restore-procedure $(PROFILE) bua_prepare_export_data
-
-8-redrive-prepare-failures:
-	../venv/bin/python ../bin/redrive-sqs.py --profile $(PROFILE) --source $(PREPARE_FAILURE_QUEUE) --target $(PREPARE_INPUT_QUEUE)
-
-9-weekly-run-part-2:
-	../bin/execute-bua-steps $(PROFILE) Weekly 'Snapshot,Export,ProfileValidation,DumpErrors'
+	../bin/execute-bua-steps $(PROFILE) Weekly $(WEEKLY_RUN_STEPS)
 
 update-today:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/today --value $(TODAY) --type String --overwrite --data-type text
@@ -74,7 +65,10 @@ update-snapshot_arn:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/snapshot_arn --value $(SNAPSHOT) --type String --overwrite --data-type text
 
 update-notify_steps:
-	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/notify_steps --value 'Restore' --type String --overwrite --data-type text
+	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/notify_steps --value $(NOTIFY_STEPS) --type String --overwrite --data-type text
+
+update-bastion-dns-alias:
+	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/bastion_dns_alias --value $(BASTION_DNS_ALIAS) --type String --overwrite --data-type text
 
 list-parameters:
 	mkdir -p ../sandpit
