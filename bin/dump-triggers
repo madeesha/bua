@@ -1,0 +1,31 @@
+#!/bin/bash
+set -feuo pipefail
+my_dir=$(dirname $0)
+case "$1" in
+  anstead)
+    export MYSQL_HOST="${TST_ANSTEAD_SQL}"
+    export MYSQL_PORT="166${TST_ANSTEAD_SQL_UPDATE_ID}"
+    export MYSQL_USER="core_admin"
+    export MYSQL_PWD="${TST_ANSTEAD_SQL_PASS}"
+    ;;
+  matten)
+    export MYSQL_HOST="${PRD_MATTEN_SQL}"
+    export MYSQL_PORT="176${PRD_MATTEN_SQL_UPDATE_ID}"
+    export MYSQL_USER="core_admin"
+    export MYSQL_PWD="${PRD_MATTEN_SQL_PASS}"
+    ;;
+  *)
+    echo 'Must be either anstead or matten'
+    exit 1
+esac
+
+echo "Dumping triggers from ${MYSQL_HOST}"
+read -p "Are you sure you wish to continue (Y/N) [N] ?" yesno
+if [[ "$yesno" != "Y" ]] ; then
+  exit 1
+fi
+
+dump_file="/tmp/${1}-triggers.sql"
+echo "Dumping triggers to ${dump_file}"
+mysqldump --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" --protocol=tcp --no-data --no-create-info --set-gtid-purged=OFF --triggers Turkey_BLU > "${dump_file}"
+echo "Dumped triggers to ${dump_file}"

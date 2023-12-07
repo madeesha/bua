@@ -34,6 +34,12 @@ help:
 3-refresh-git:
 	cd $(HOME)/git/uss/turkey && git checkout $(BRANCH) && git pull
 
+4-dump-triggers:
+	../bin/dump-triggers matten
+
+4-restore-triggers:
+	../bin/restore-triggers anstead matten
+
 4-restore-bua-scripts:
 	bash ../bin/restore-bua-scripts $(PROFILE)
 
