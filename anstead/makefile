@@ -5,12 +5,12 @@ END_INCLUSIVE=2023-11-30
 END_EXCLUSIVE=2023-12-01
 PROFILE=anstead
 TOPIC=arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic
-SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tmp-prd-earl-23-11-30-shared-key
+SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tmp-prd-earl-23-11-30-shared-key-with-segments
 PREFIX=tst-anstead
 BUCKET=tst-anstead-s3-bua
 BRANCH=release-uat
 NOTIFY_STEPS=Restore
-WEEKLY_RUN_STEPS=EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+WEEKLY_RUN_STEPS=EmptyQueues,ScaleUpWorkflow,WarmStatistics,ScaleDown,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
 BASTION_DNS_ALIAS=tmp-sql.anstead.encore.sh
 
 PREPARE_INPUT_QUEUE=https://sqs.ap-southeast-2.amazonaws.com/561082505378/tst-anstead-sqs-bua-site-prepare-queue
@@ -44,7 +44,13 @@ help:
 	bash ../bin/restore-bua-scripts $(PROFILE)
 
 5-weekly-run:
-	../bin/execute-bua-steps $(PROFILE) Weekly $(WEEKLY_RUN_STEPS)
+	../bin/execute-bua-steps $(PROFILE) Weekly2 $(WEEKLY_RUN_STEPS)
+
+6-clean-up:
+	../bin/execute-bua-steps $(PROFILE) CleanUp DumpErrors,SwitchBastion
+
+7-prepare-only:
+	../bin/execute-bua-steps $(PROFILE) CleanUp Prepare
 
 update-today:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/today --value $(TODAY) --type String --overwrite --data-type text
