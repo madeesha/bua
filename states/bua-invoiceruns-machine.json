@@ -40,7 +40,7 @@
             "speed": "slow",
             "args": {
               "sql": [
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 20), max_execution_minutes = 30 WHERE name = 'INVOICEGEN'"
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 5), max_execution_minutes = 6 WHERE name = 'INVOICEGEN'"
               ]
             },
             "on": {
