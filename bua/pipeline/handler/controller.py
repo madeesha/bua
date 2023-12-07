@@ -91,6 +91,7 @@ class BUAControllerHandler:
             'check_bua_control': sql_handler.check_bua_control,
             'set_bua_account_id': sql_handler.set_bua_account_id,
             'resubmit_failed_workflows': sql_handler.resubmit_failed_workflows,
+            'resubmit_timedout_workflows': sql_handler.resubmit_timedout_workflows,
             'wait_for_workflow_schedules': sql_handler.wait_for_workflow_schedules,
             'stats_sample_pages': sql_handler.stats_sample_pages,
             'get_max_workflow_instance': sql_handler.get_max_workflow_instance,
