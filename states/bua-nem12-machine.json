@@ -6,7 +6,7 @@
       "Type": "Pass",
       "Parameters": {
         "type": "step",
-        "name": "Generate NEM12",
+        "name": "NEM12",
         "next": "000_get_parameters",
         "speed": "fast",
         "retry_delay": 120,
@@ -31,11 +31,27 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "100_clear_error_queues"
+                "next": "50_adjust_workflow_timeouts"
               }
             }
           },
-          "100_clear_error_queues": {
+          "50_adjust_workflow_timeouts": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 20), max_execution_minutes = 30 WHERE name = 'ImportNem'",
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 20), max_execution_minutes = 30 WHERE name = 'AggregateReadNmiDate'",
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 20), max_execution_minutes = 30 WHERE name = 'RegenerateProfile'"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "next": "100_record_error_queues"
+              }
+            }
+          },
+          "100_record_error_queues": {
             "action": "record_site_errors_queues",
             "on": {
               "COMPLETE": {
