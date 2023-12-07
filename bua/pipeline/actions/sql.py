@@ -557,6 +557,39 @@ class SQL:
                 return "RETRY", f'{e}'
             raise
 
+    def resubmit_timedout_workflows(self, request: HandlerRequest):
+        data = request.data
+        workflow_names = data['workflow_names']
+        workflow_instance_id = int(data.get('workflow_instance_id', 0))
+        try:
+            total = 0
+            con = self._connect(data)
+            with con:
+                cur = con.cursor()
+                with cur:
+                    for workflow_name in workflow_names:
+                        cur.execute("SELECT id FROM Workflows WHERE name = %s", (workflow_name,))
+                        workflow_id = int(cur.fetchall()[0]['id'])
+                        cur.execute(
+                            "UPDATE WorkflowInstance wfi "
+                            "JOIN Exception exc ON exc.workflow_instance_id = wfi.id "
+                            "SET wfi.status = 'NEW' "
+                            "WHERE wfi.status = 'ERROR' "
+                            "AND wfi.workflow_id = %s "
+                            "AND wfi.id > %s "
+                            "AND (exc.payload LIKE '%request timeout%' "
+                            "     OR exc.payload LIKE '%Could not acquire a connection%') ",
+                            (workflow_id, workflow_instance_id)
+                        )
+                        row_count = con.affected_rows()
+                        total += row_count
+                        self.print(f'Resubmitted {row_count} {workflow_name} workflow instances')
+            return "COMPLETE", f'Resubmitted {total} workflow instances'
+        except pymysql.err.OperationalError as e:
+            if 'timed out' in str(e):
+                return "RETRY", f'{e}'
+            raise
+
     def wait_for_workflow_schedules(self, request: HandlerRequest):
         data = request.data
         args = request.step.get('args', dict())

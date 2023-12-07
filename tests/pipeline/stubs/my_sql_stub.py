@@ -3,8 +3,9 @@ from typing import Dict, List
 
 class MySQLStub:
 
-    def __init__(self, resultsets: List[Dict]):
+    def __init__(self, resultsets: List[Dict], affectedrows: List[int]):
         self.resultsets = resultsets
+        self.affectedrows = affectedrows
 
     def connect(self, host, user, password, database, cursorclass, autocommit):
         return self
@@ -20,6 +21,9 @@ class MySQLStub:
 
     def fetchall(self):
         return self.resultsets.pop(0)
+
+    def affected_rows(self):
+        return self.affectedrows.pop(0)
 
     def mogrify(self, query, args=None):
         return query % self._escape(args)

@@ -111,13 +111,14 @@
             "on": {
               "COMPLETE": {},
               "FAILED": {
-                "next": "150_reschedule_failed_workflows"
+                "next": "145_reschedule_timedout_workflows"
               },
               "ONHOLD": {}
             }
           },
-          "150_reschedule_failed_workflows": {
-            "action": "resubmit_failed_workflows",
+          "145_reschedule_timedout_workflows": {
+            "action": "resubmit_timedout_workflows",
+            "speed": "slow",
             "args": {
               "workflow_names": [
                 "ImportNem",
@@ -129,7 +130,26 @@
             },
             "on": {
               "COMPLETE": {
-                "delay": 60,
+                "sleep": 120,
+                "next": "150_reschedule_failed_workflows"
+              }
+            }
+          },
+          "150_reschedule_failed_workflows": {
+            "action": "resubmit_failed_workflows",
+            "speed": "slow",
+            "args": {
+              "workflow_names": [
+                "ImportNem",
+                "ImportGas",
+                "AggregateReadNmiDate",
+                "RegenerateProfile",
+                "ValidateNEM13Read"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 120,
                 "next": "160_wait_for_resubmitted_workflows"
               }
             }

@@ -151,7 +151,7 @@ class TestBase:
 
     @fixture(autouse=True)
     def mysql(self):
-        return MySQLStub([])
+        return MySQLStub([], [])
 
     @fixture(autouse=True)
     def kubes(self):
