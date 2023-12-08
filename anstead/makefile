@@ -5,7 +5,7 @@ END_INCLUSIVE=2023-11-30
 END_EXCLUSIVE=2023-12-01
 PROFILE=anstead
 TOPIC=arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic
-SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tmp-prd-earl-23-11-30-shared-key-with-segments
+SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-26-bua-sql-20231201-20231206-20231207-195909
 PREFIX=tst-anstead
 BUCKET=tst-anstead-s3-bua
 BRANCH=release-uat
@@ -51,6 +51,9 @@ help:
 
 7-prepare-only:
 	../bin/execute-bua-steps $(PROFILE) CleanUp Prepare
+
+8-test-nem12-changes:
+	../bin/execute-bua-steps $(PROFILE) TestNEM12 ScaleUpWorkflow,WarmStatistics,ScaleUpMeterdata,GenerateNEM12,ScaleDown
 
 update-today:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/today --value $(TODAY) --type String --overwrite --data-type text

@@ -18,11 +18,11 @@ Path                               | Value
 /tst-anstead/bua/rdssecret         | cicd/tst-anstead/rds/bua
 /tst-anstead/bua/run_date          | 2023-12-06
 /tst-anstead/bua/schema            | Turkey_BLU
-/tst-anstead/bua/snapshot_arn      | arn:aws:rds:ap-southeast-2:561082505378:snapshot:tmp-prd-earl-23-11-30-shared-key-with-segments
+/tst-anstead/bua/snapshot_arn      | arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-26-bua-sql-20231201-20231206-20231207-195909
 /tst-anstead/bua/source_account_id | 760694178318
 /tst-anstead/bua/source_date       | 2023-12-06
 /tst-anstead/bua/sqlsecret         | cicd/tst-anstead/rds/bua/passwords
 /tst-anstead/bua/start_inclusive   | 2022-12-01
 /tst-anstead/bua/suffix            | bua-sql
 /tst-anstead/bua/today             | 2023-12-01
-/tst-anstead/bua/update_id         | 26
+/tst-anstead/bua/update_id         | 27
