@@ -465,7 +465,7 @@ class SQL:
             "ON wi.workflow_id = wf.id "
             "WHERE wi.id > %s "
             "GROUP BY wi.status, wf.name ",
-            (workflow_instance_id)
+            (workflow_instance_id,)
         )
         results = {}
         for row in cur.fetchall():
@@ -577,8 +577,8 @@ class SQL:
                             "WHERE wfi.status = 'ERROR' "
                             "AND wfi.workflow_id = %s "
                             "AND wfi.id > %s "
-                            "AND (exc.payload LIKE '%request timeout%' "
-                            "     OR exc.payload LIKE '%Could not acquire a connection%') ",
+                            "AND (exc.payload LIKE '%%request timeout%%' "
+                            "     OR exc.payload LIKE '%%Could not acquire a connection%%') ",
                             (workflow_id, workflow_instance_id)
                         )
                         row_count = con.affected_rows()

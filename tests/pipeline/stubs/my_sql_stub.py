@@ -15,6 +15,8 @@ class MySQLStub:
 
     def execute(self, *args):
         assert 1 <= len(args) <= 2, f'Unexpected number of arguments to execute {len(args)}'
+        if len(args) > 1:
+            self.mogrify(args[0], args[1])
 
     def commit(self):
         pass
