@@ -50,7 +50,7 @@ help:
 	../bin/execute-bua-steps $(PROFILE) CleanUp DumpErrors,SwitchBastion
 
 7-prepare-only:
-	../bin/execute-bua-steps $(PROFILE) CleanUp Prepare
+	../bin/execute-bua-steps $(PROFILE) Prepare Prepare
 
 8-test-nem12-changes:
 	../bin/execute-bua-steps $(PROFILE) TestNEM12 ScaleUpWorkflow,WarmStatistics,ScaleUpMeterdata,GenerateNEM12,ScaleDown
@@ -84,6 +84,9 @@ update-notify_steps:
 
 update-bastion-dns-alias:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/bastion_dns_alias --value $(BASTION_DNS_ALIAS) --type String --overwrite --data-type text
+
+update-update-id:
+	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/update_id --value '26' --type String --overwrite --data-type text
 
 list-parameters:
 	mkdir -p ../sandpit
