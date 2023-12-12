@@ -1,0 +1,5 @@
+conf/Scripts/V2023.12.08.14.32.00__YCY_CB-20256_bua_gas_micro_scalar_defaults.sql
+conf/Procedures/R__bua_prepare_export_data.sql
+conf/Procedures/R__bua_create_basic_read.sql
+conf/Procedures/R__bua_create_invoice_scalar.sql
+conf/Procedures/R__bua_list_missing_periods.sql
