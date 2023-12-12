@@ -638,21 +638,63 @@ class SQL:
 
     def core_warm_database_indexes(self, request: HandlerRequest):
         data = request.data
-        concurrency = int(data['concurrency'])
+        args = request.step['args']
+        concurrency = int(args['concurrency'])
+        tables = args.get('tables', [])
+        schema_name = data['schema']
         try:
             con = self._connect(data)
             with con:
-                cur = con.cursor()
+                cur: pymysql.cursors.SSDictCursor = con.cursor()
                 with cur:
                     workflow_instance_id = self._set_max_workflow_instance_id(cur, data)
                     con.commit()
-                    cur.execute("CALL core_warm_database_indexes(%s, 1)", (concurrency, ))
-                    con.commit()
+                    if len(tables) == 0:
+                        self._warm_all_tables(con, concurrency, cur)
+                    else:
+                        self._warm_specific_tables(con, concurrency, cur, schema_name, tables)
             return "COMPLETE", f'CORE warm database indexes, max wfi {workflow_instance_id}'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
                 return "RETRY", f'{e}'
             raise
+
+    def _warm_specific_tables(self, con, concurrency, cur, schema_name, tables):
+        sql_key = 0
+        for table_name in tables:
+            self._warm_specific_table(con, concurrency, cur, schema_name, sql_key, table_name)
+
+    def _warm_specific_table(self, con, concurrency, cur, schema_name, sql_key, table_name):
+        self.print(f'Warming indexes for {table_name}')
+        stmt = """
+        SELECT DISTINCT index_name
+        FROM mysql.innodb_index_stats
+        WHERE table_name = %s
+        AND database_name = %s
+        """
+        params = (table_name, schema_name)
+        cur.execute(stmt, params)
+        indexes = [row['index_name'] for row in cur.fetchall()]
+        for index_name in indexes:
+            stmt = """
+            INSERT INTO EventLog
+            (source, name, description, payload, cr_user)
+            VALUES
+            ('WARM', 
+            'WarmIndexEvent', 
+            'Warm an index', 
+            JSON_OBJECT('table_name', %s, 'index_name', %s, 'sql_key', CONCAT('INDEX',%s)), -1)
+            """
+            params = (table_name, index_name, sql_key)
+            cur.execute(stmt, params)
+            sql_key = (sql_key + 1) % concurrency
+        con.commit()
+        self.print(f'Warming {len(indexes)} indexes for {table_name}')
+
+    def _warm_all_tables(self, con, concurrency, cur):
+        self.print(f'Warming indexes for all tables')
+        cur.execute("CALL core_warm_database_indexes(%s, 1)", (concurrency,))
+        con.commit()
 
     def disable_workflow_schedules(self, request: HandlerRequest):
         data = request.data
