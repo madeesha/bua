@@ -31,18 +31,18 @@
             },
             "on": {
               "COMPLETE": {
-                "next": "50_adjust_workflow_timeouts"
+                "next": "050_adjust_workflow_timeouts"
               }
             }
           },
-          "50_adjust_workflow_timeouts": {
+          "050_adjust_workflow_timeouts": {
             "action": "execute_sql",
             "speed": "slow",
             "args": {
               "sql": [
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 10), max_execution_minutes = 11 WHERE name = 'ImportNem'",
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 10), max_execution_minutes = 11 WHERE name = 'AggregateReadNmiDate'",
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 20), max_execution_minutes = 21 WHERE name = 'RegenerateProfile'"
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 29), max_execution_minutes = 30, priority = 'XHIGH' WHERE name = 'ImportNem'",
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 29), max_execution_minutes = 30, priority = 'NORMAL' WHERE name = 'AggregateReadNmiDate'",
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 29), max_execution_minutes = 30, priority = 'XLOW' WHERE name = 'RegenerateProfile'"
               ]
             },
             "on": {
