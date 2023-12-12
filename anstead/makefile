@@ -25,8 +25,8 @@ help:
 
 #1-update-parameters: update-today update-run-date update-source-date update-adh_bucket_name update-snapshot_arn update-notify_steps update-start-inclusive update-end-inclusive update-end-exclusive update-bastion-dns-alias list-parameters
 
-2-trigger-restore:
-	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 sns publish --topic-arn $(TOPIC) --message 'reuse'
+#2-trigger-restore:
+#	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 sns publish --topic-arn $(TOPIC) --message 'reuse'
 
 # REMEMBER TO WAIT FOR RESTORE TO FINISH, CHANGE LOCAL CONFIG TO POINT TO THE NEW DB
 # REMEMBER TO HAVE TST_ANSTEAD_SQL_UPDATE_ID SET CORRECTLY TO POINT TO THE NEW DB
@@ -52,8 +52,8 @@ help:
 #7-prepare-only:
 #	../bin/execute-bua-steps $(PROFILE) Prepare Prepare
 
-#8-test-nem12-changes:
-#	../bin/execute-bua-steps $(PROFILE) TestNEM12 ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleUpMeterdata,GenerateNEM12,ScaleDown
+8-test-nem12-changes:
+	../bin/execute-bua-steps $(PROFILE) TestNEM12 Restore,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleUpMeterdata,GenerateNEM12,ScaleDown
 
 #update-today:
 #	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/today --value $(TODAY) --type String --overwrite --data-type text
@@ -79,14 +79,14 @@ help:
 update-snapshot_arn:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/snapshot_arn --value $(SNAPSHOT) --type String --overwrite --data-type text
 
-update-notify_steps:
-	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/notify_steps --value $(NOTIFY_STEPS) --type String --overwrite --data-type text
+#update-notify_steps:
+#	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/notify_steps --value $(NOTIFY_STEPS) --type String --overwrite --data-type text
 
 #update-bastion-dns-alias:
 #	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/bastion_dns_alias --value $(BASTION_DNS_ALIAS) --type String --overwrite --data-type text
 
 update-update-id:
-	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/update_id --value '26' --type String --overwrite --data-type text
+	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/update_id --value '27' --type String --overwrite --data-type text
 
 list-parameters:
 	mkdir -p ../sandpit

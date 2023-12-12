@@ -3,7 +3,7 @@ Path                               | Value
 /tst-anstead/bua/adh_bucket_name   | tst-anstead-s3-bua
 /tst-anstead/bua/bastion_dns_alias | tmp-sql.anstead.encore.sh
 /tst-anstead/bua/cluster_name      | anstead
-/tst-anstead/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+/tst-anstead/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
 /tst-anstead/bua/domain            | cmil2mssslzz.ap-southeast-2.rds.amazonaws.com
 /tst-anstead/bua/end_exclusive     | 2023-12-01
 /tst-anstead/bua/end_inclusive     | 2023-11-30
@@ -12,7 +12,7 @@ Path                               | Value
 /tst-anstead/bua/instance_type     | 8xlarge
 /tst-anstead/bua/mysql_version     | 8.0.32
 /tst-anstead/bua/node_group_name   | managed-ng-anstead-demand-1-22-v20230914
-/tst-anstead/bua/notify_steps      | Restore
+/tst-anstead/bua/notify_steps      | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
 /tst-anstead/bua/params_id         | 2
 /tst-anstead/bua/rds_dns_alias     | tst-sql.anstead.encore.sh
 /tst-anstead/bua/rdssecret         | cicd/tst-anstead/rds/bua
@@ -25,4 +25,4 @@ Path                               | Value
 /tst-anstead/bua/start_inclusive   | 2022-12-01
 /tst-anstead/bua/suffix            | bua-sql
 /tst-anstead/bua/today             | 2023-12-01
-/tst-anstead/bua/update_id         | 28
+/tst-anstead/bua/update_id         | 27
