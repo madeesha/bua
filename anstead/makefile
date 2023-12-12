@@ -9,8 +9,8 @@ SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tmp-prd-earl-23-11-30-
 PREFIX=tst-anstead
 BUCKET=tst-anstead-s3-bua
 BRANCH=release-uat
-NOTIFY_STEPS=Restore
-WEEKLY_RUN_STEPS=EmptyQueues,ScaleUpWorkflow,WarmStatistics,ScaleDown,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+NOTIFY_STEPS=Restore,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleUpMeterdata,GenerateNEM12,ScaleDown
+WEEKLY_RUN_STEPS=EmptyQueues,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
 BASTION_DNS_ALIAS=tmp-sql.anstead.encore.sh
 
 PREPARE_INPUT_QUEUE=https://sqs.ap-southeast-2.amazonaws.com/561082505378/tst-anstead-sqs-bua-site-prepare-queue
@@ -52,8 +52,8 @@ help:
 #7-prepare-only:
 #	../bin/execute-bua-steps $(PROFILE) Prepare Prepare
 
-8-test-nem12-changes:
-	../bin/execute-bua-steps $(PROFILE) TestNEM12 ScaleUpWorkflow,WarmStatistics,ScaleUpMeterdata,GenerateNEM12,ScaleDown
+#8-test-nem12-changes:
+#	../bin/execute-bua-steps $(PROFILE) TestNEM12 ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleUpMeterdata,GenerateNEM12,ScaleDown
 
 #update-today:
 #	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/today --value $(TODAY) --type String --overwrite --data-type text
@@ -79,14 +79,14 @@ help:
 update-snapshot_arn:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/snapshot_arn --value $(SNAPSHOT) --type String --overwrite --data-type text
 
-#update-notify_steps:
-#	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/notify_steps --value $(NOTIFY_STEPS) --type String --overwrite --data-type text
+update-notify_steps:
+	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/notify_steps --value $(NOTIFY_STEPS) --type String --overwrite --data-type text
 
 #update-bastion-dns-alias:
 #	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/bastion_dns_alias --value $(BASTION_DNS_ALIAS) --type String --overwrite --data-type text
 
 update-update-id:
-	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/update_id --value '27' --type String --overwrite --data-type text
+	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/update_id --value '26' --type String --overwrite --data-type text
 
 list-parameters:
 	mkdir -p ../sandpit

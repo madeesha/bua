@@ -38,7 +38,20 @@
           "100_database_warming": {
             "action": "core_warm_database_indexes",
             "args": {
-              "concurrency": 32
+              "concurrency": 32,
+              "tables": [
+                "MeterRegister",
+                "Meter",
+                "Utility",
+                "UtilityFRMP",
+                "AccountUtility",
+                "Account",
+                "AccountBilling",
+                "UtilityDetail",
+                "UtilityNetwork",
+                "ServiceType",
+                "MeterRegisterDetail"
+              ]
             },
             "on": {
               "COMPLETE": {
