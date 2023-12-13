@@ -14,31 +14,45 @@ https://jira.alintaenergy.com.au/browse/CB-6866
 graph TD;
 EARL-1stOfMonth-Midnight-Schedule --> EARL-Encrypted-Snapshot;
 EARL-Encrypted-Snapshot --> EARL-ReEncrypt-Snapshot;
-EARL-ReEncrypt-Snapshot --> EARL-Share-Snapshot;
+EARL-ReEncrypt-Snapshot --> EARL-Shared-Snapshot;
 EARL-Shared-Snapshot --> EARL-Publish-To-Topic;
 ```
 
-### ANSTEAD Pipeline
+### MATTEN Pipeline
 
 ```mermaid
 graph TD;
-EARL-Publish-To-Topic --> ANSTEAD-Notify-SQS-Queue;
-ANSTEAD-Notify-SQS-Queue --> ANSTEAD-Notify-Lambda;
-ANSTEAD-Notify-Lambda --> ANSTEAD-BUA-StepFunction;
-EARL-Shared-Snapshot --> ANSTEAD-Restore-StepFunction;
-ANSTEAD-BUA-StepFunction --> ANSTEAD-Restore-StepFunction;
-ANSTEAD-Restore-StepFunction --> ANSTEAD-ScaleUp-Workflow-StepFunction;
-ANSTEAD-ScaleUp-Workflow-StepFunction --> ANSTEAD-Warming-StepFunction;
-ANSTEAD-Warming-StepFunction --> ANSTEAD-Segments-StepFunction;
-ANSTEAD-Segments-StepFunction --> ANSTEAD-MicroScalar-StepFunction;
-ANSTEAD-MicroScalar-StepFunction --> ANSTEAD-ResetBasicReads-StepFunction;
-ANSTEAD-ResetBasicReads-StepFunction --> ANSTEAD-BasicReads-StepFunction;
-ANSTEAD-BasicReads-StepFunction --> ANSTEAD-ScaleUp-MeterData-StepFunction;
-ANSTEAD-ScaleUp-MeterData-StepFunction --> ANSTEAD-GenerateNEM12-StepFunction;
-ANSTEAD-GenerateNEM12-StepFunction --> ANSTEAD-InvoiceRuns-StepFunction;
-ANSTEAD-InvoiceRuns-StepFunction --> ANSTEAD-ScaleDown-StepFunction;
-ANSTEAD-ScaleDown-StepFunction --> ANSTEAD-Export-StepFunction;
-ANSTEAD-Export-StepFunction --> ANSTEAD-Terminate-StepFunction;
+EARL-Publish-To-Topic --> MATTEN-Notify-SQS-Queue;
+MATTEN-Notify-SQS-Queue --> MATTEN-Notify-Lambda;
+MATTEN-Notify-Lambda --> MATTEN-BUA;
+EARL-Shared-Snapshot --> MATTEN-Restore;
+MATTEN-BUA --> MATTEN-Restore;
+MATTEN-Restore --> MATTEN-EmptyQueues;
+MATTEN-EmptyQueues --> MATTEN-CleanWorkflows;
+MATTEN-CleanWorkflows --> MATTEN-CleanInvoiceAttribute;
+MATTEN-CleanInvoiceAttribute --> MATTEN-CleanUtilityProfile;
+MATTEN-CleanUtilityProfile --> MATTEN-ScaleUpWorkflow;
+MATTEN-ScaleUpWorkflow --> MATTEN-WarmStatistics;
+MATTEN-WarmStatistics --> MATTEN-WarmIndexes;
+MATTEN-WarmIndexes --> MATTEN-ScaleDown-1;
+MATTEN-ScaleDown-1 --> MATTEN-UtilityProfiles;
+MATTEN-UtilityProfiles --> MATTEN-Segments;
+MATTEN-Segments --> MATTEN-Snapshot-1;
+MATTEN-Snapshot-1 --> MATTEN-Microscalar;
+MATTEN-Microscalar --> MATTEN-BasicReads;
+MATTEN-BasicReads --> MATTEN-ScaleUpMeterdata;
+MATTEN-ScaleUpMeterdata --> MATTEN-GenerateNEM12;
+MATTEN-GenerateNEM12 --> MATTEN-RestartMeterdata;
+MATTEN-RestartMeterdata --> MATTEN-InvoiceRuns;
+MATTEN-InvoiceRuns --> MATTEN-ILIExceptions;
+MATTEN-ILIExceptions --> MATTEN-ScaleDown-2;
+MATTEN-ScaleDown-2 --> MATTEN-Prepare;
+MATTEN-Prepare --> MATTEN-Snapshot-2;
+MATTEN-Snapshot-2 --> MATTEN-Export;
+MATTEN-Export --> MATTEN-ProfileValidation;
+MATTEN-ProfileValidation --> MATTEN-DumpErrors;
+MATTEN-DumpErrors --> MATTEN-SwitchBastion;
+MATTEN-Destroy;
 ```
 
 ## Stored Procedures
@@ -74,33 +88,48 @@ ANSTEAD-Export-StepFunction --> ANSTEAD-Terminate-StepFunction;
 | lambda-bua-controller-slow | Controls execution of the BUA process (15 minute timeout)                        |
 | lambda-bua-next            | Controls next step in SQS processing control                                     |
 | lambda-bua-notify          | Trigger the BUA step function based on a notification from a topic               |
-| lambda-bua-site-basic | Low concurrency SQS driven missing basic reads execution (32 concurrent)         |
-| lambda-bua-site-data | High concurrency SQS driven site data processing (800 concurrent)                |
-| lambda-bua-site-export | Low concurrency SQS driven export of BUA data (32 concurrent)                    |
-| lambda-bua-site-initiate | SQS driven site data processing initiation                                       |
-| lambda-bua-site-mscalar | Low concurrency SQS driven microscalar execution (32 concurrent)                 |
-| lambda-bua-site-nem12 | Low concurrency SQS driven NEM12 generation (32 concurrent)                      |
-| lambda-bua-site-prepare | Low concurrency SQS driven prepare export data (32 concurrent)                   |
-| lambda-bua-site-segment | Low concurrency SQS driven interval profile segment calculations (32 concurrent) |
+| lambda-bua-site-basic      | Low concurrency SQS driven missing basic reads execution (32 concurrent)         |
+| lambda-bua-site-data       | High concurrency SQS driven utility profile processing (800 concurrent)          |
+| lambda-bua-site-export     | Low concurrency SQS driven export of BUA data (32 concurrent)                    |
+| lambda-bua-site-initiate   | SQS driven site data processing initiation                                       |
+| lambda-bua-site-mscalar    | Low concurrency SQS driven microscalar execution (32 concurrent)                 |
+| lambda-bua-site-nem12      | Low concurrency SQS driven NEM12 generation (32 concurrent)                      |
+| lambda-bua-site-prepare    | Low concurrency SQS driven prepare export data (32 concurrent)                   |
+| lambda-bua-site-segment    | Low concurrency SQS driven interval profile segment calculations (32 concurrent) |
 
 ## State Machines
 
-| State machine | Purpose |
-|---------------|---------|
-| bua           | Controller machine |
-| bua-restore | Restore a RDS snapshot |
-| bua-scaleup-workflow | Scale up nodegroup and replicas for workflow to execute |
-| bua-warming | Force read from S3 to EBS for an RDS instance |
-| bua-segments | Calculate profile segments |
-| bua-microscalar | Calculate microscalar values |
-| bua-reset-basicreads | Reset any previously generated basic reads |
-| bua-basicreads | Calculate missing basic reads |
-| bua-scaleup-meterdata | Scale up nodegroup and replicas for meterdata to execute |
-| bua-nem12 | Generate missing NEM12 files |
-| bua-invoiceruns | Execute all invoice runs |
-| bua-scaledown | Scale down nodegroup and replicas |
-| bua-export | Export BUA data to S3 |
-| bua-terminate | Terminate the BUA RDS instance |
+| State machine              | Purpose                                                    | Step Name             |
+|----------------------------|------------------------------------------------------------|-----------------------|
+| bua                        | Controller machine                                         | DoNothing             |
+| bua-basicreads             | Calculate missing basic reads                              | BasicReads            |
+| bua-clean-invoiceattribute | Clean the invoiceattribute table                           | CleanInvoiceAttribute |
+| bua-clean-utilityprofile   | Clean the utilityprofile table                             | CleanUtilityProfile   |
+| bua-clean-workflows        | Clean the workflowinstance table                           | CleanWorkflows        |
+| bua-destroy                | Destroy the BUA RDS instance                               | Destroy               |
+| bua-dump-errors            | Dump messages in failure and dlq SQS queues to S3          | DumpErrors            |
+| bua-empty-queues           | Purge failure and dlqs from SQS                            | EmptyQueues           |
+| bua-export                 | Export BUA data to S3                                      | Export                |
+| bua-ili-exceptions         | Run ili exceptions filters                                 | ILIExceptions         |
+| bua-invoiceruns            | Execute all invoice runs                                   | InvoiceRuns           |
+| bua-microscalar            | Calculate microscalar values                               | Microscalar           |
+| bua-nem12                  | Generate missing NEM12 files                               | GenerateNEM12         |
+| bua-prepare                | Prepare data for export to S3                              | Prepare               |
+| bua-profile-validation     | Perform utility profile validation                         | ProfileValidation     |
+| bua-reset-basicreads       | Reset any previously generated basic reads                 | ResetBasicReads       |
+| bua-reset-nem12            | Reset generated NEM12 files                                | ResetNEM12            |
+| bua-restart-meterdata      | Restart the workflow and meterdata pods                    | RestartMeterdata      |
+| bua-restore                | Restore a RDS snapshot                                     | Restore               |
+| bua-scaledown              | Scale down nodegroup and replicas                          | ScaleDown             |
+| bua-scaleup-meterdata      | Scale up nodegroup and replicas for workflow and meterdata | ScaleUpMeterdata      |
+| bua-scaleup-workflow       | Scale up nodegroup and replicas for workflow to execute    | ScaleUpWorkflow       |
+| bua-segments               | Calculate profile segments                                 | Segments              |
+| bua-snapshot               | Take a snapshot of the RDS instance                        | Snapshot              |
+| bua-switch-bastion         | Switch the Route53 entry for the bastion RDS port          | SwitchBastion         |
+| bua-utility-profiles       | Extract DDB data and calculate utility profiles            | UtilityProfiles       |
+| bua-warm-indexes           | Warm the indexes of specific tables                        | WarmIndexes           | 
+| bua-warm-statistics         | Warm the statistics of all tables                         | WarmStatistics        |
+| bua-warming                | Force read from S3 to EBS for an RDS instance              | Warming               |
 
 ## Execution and Monitoring
 
@@ -117,92 +146,311 @@ If you do not then chances are the correct data will not be found by subsequent 
 If you need to re-run steps after an automated run fails, 
 then ensure you use the same run date for the manual steps as was used for the automated run.
 
+
+
 ### bua-restore
 
 *bua-restore* is used to create an RDS instance from a production snapshot.
 
-| Resource | Value | Purpose |
-|----------|-------|---------|
-| Step Function | tst-anstead-bua | Controller Step Function |
-| Step Function | tst-anstead-restore | Restore Step Function |
-| DynamoDB Table | tst-anstead-ddb-bua | Control table |
-| DynamoDB Partition Key | BUA Restore | Key to identify control records |
-| Cloudformation Stack | tst-anstead-14-bua-sql | Stack to create RDS instance |
+#### Prerequisites
 
-1. Execute Cloudformation template to create an RDS instance from a snapshot.
+None
+
+#### Dependencies
+
+| Type      | Name              |
+|-----------|-------------------|
+| Parameter | cluster_name      |
+| Parameter | domain            |
+| Parameter | hosted_zone_id    |
+| Parameter | instance_class    |
+| Parameter | instance_type     |
+| Parameter | mysql_version     |
+| Parameter | node_group_name   |
+| Parameter | params_id         |
+| Parameter | rds_dns_alias     |
+| Parameter | rdssecret         |
+| Parameter | schema            |
+| Parameter | snapshot_arn      |
+| Parameter | source_account_id |
+| Parameter | sqlsecret         |
+| Parameter | suffix            |
+| Parameter | update_id         |
+
+#### Steps
+
+1. Copy snapshot from EARL to MATTEN to use for restoring a new RDS instance.
+2. Execute Cloudformation template to create an RDS instance from a snapshot.
 2. Reset the core_admin password of the new RDS instance.
 3. Disable all workflow schedules
-4. Truncate WorkflowInstance and EventLog tables
-5. Set user passwords (for workflow, meterdata, and lambda)
+4. Set user passwords (for workflow, meterdata, and lambda)
 6. Calculate statistics for AggregatedRead
 7. Scale down any workflow or meterdata pods
 8. Set the Route53 entry to point to the new RDS instance
+9. Set the bua account id GlobalSetting value to this account
+
+
 
 ### bua-scaleup-workflow
 
 *bua-scaleup-workflow* is used to scale the EKS cluster to 1 node and workflow pods to 1 replicas.
 
+#### Prerequisites
+
+None
+
+#### Dependencies
+
+| Type      | Name              |
+|-----------|-------------------|
+| Parameter | cluster_name      |
+
+#### Steps
+
 1. scale EKS node group to 1 nodes
 2. scale workflow to 1 replicas
 
-### bua-warming
 
-*bua-warming* is used to drag in as many blocks from S3 to EBS as possible on the newly created database.
+
+### bua-warm-statistics
+
+*bua-warm-statistics* is used to drag in as many blocks from S3 to EBS as possible on the newly created database.
+
+#### Prerequisites
+
+| Step        |
+|-------------|
+| bua-restore |
+
+#### Dependencies
+
+| Type      | Name                            |
+|-----------|---------------------------------|
+| Service   | workflow-runner                 |
+| Procedure | core_warm_database_statistics   |
+
+#### Steps
 
 1. execute core_warm_database_statistics
 2. wait for workflows to complete
-3. execute core_warm_database_indexes
+
+
+
+### bua-warm-indexes
+
+*bua-warm-indexes* is used to drag in as many blocks from S3 to EBS as possible on the newly created database.
+
+#### Prerequisites
+
+| Step                |
+|---------------------|
+| bua-warm-statistics |
+
+#### Dependencies
+
+| Type    | Name            |
+|---------|-----------------|
+| Service | workflow-runner |
+
+#### Steps
+
+3. create EventLog records to warm indexes for select tables
 4. wait for workflows to complete
+
+
+
+### bua-utility-profiles
+
+*bua-utility-profiles* is used to extract the data from ddb and calculate utility profiles for interval electricity sites.
+
+#### Prerequisites
+
+| Step                |
+|---------------------|
+| bua-warm-statistics |
+| bua-warm-indexes    |
+
+#### Dependencies
+
+| Type      | Name                       |
+|-----------|----------------------------|
+| Procedure | bua_list_profile_registers |
+
+#### Steps
+
+1. Warm the MeterRegister table
+2. Warm the MarketPayloadMapping table
+3. Warm the Meter table
+4. Warm the Utility table
+5. Warm the UtilityDetail table
+6. Warm the UtilityNetwork table
+7. Warm the UtilityTni table
+8. Warm the Jurisdiction table
+9. Warm the ServiceType table
+10. Warm the MeterRegister table
+11. Clean the UtilityProfile table
+12. initiate extract interval reads from DDB to UtilityProfile
+13. Call bua_list_profile_registers
+13. wait for SQS queues to empty
+
+#### Logging
+
+BUAControl table records progress of the controller
+
+UtilityProfileLog table records progress of the utility profile processing
+
+
 
 ### bua-segments
 
 *bua-segments* is used to calculate the segment profiles for interval electricity sites.
 
-1. initiate extract interval reads from DDB to UtilityProfile
+#### Prerequisites
+
+| Step                 |
+|----------------------|
+| bua-utility-profiles |
+
+#### Dependencies
+
+| Type      | Name                                         |
+|-----------|----------------------------------------------|
+| Procedure | bua_dates_to_check                           |
+| Procedure | bua_mark_segment_jurisdiction_entries        |
+| Procedure | bua_fill_marked_segment_jurisdiction_entries |
+| Procedure | bua_create_macro_profile                     |
+
+#### Steps
+
+1. initiate calculation of SegmentJurisdictionAvgExclEst
 2. wait for SQS queues to empty
-2. initiate calculation of SegmentJurisdictionAvgExclEst
-3. wait for SQS queues to empty
-4. initiate SegmentJurisdictionCheck to find invalid segments
-5. wait for SQS queues to empty
-6. initiate SegmentJurisdictionFix to fix invalid segments
-7. wait for SQS queues to empty
-8. initiate Validate to validate segments for anomalies
-9. wait for SQS queues to empty
-10. execute bua_create_macro_profile
+3. initiate SegmentJurisdictionCheck to find invalid segments
+4. wait for SQS queues to empty
+5. initiate SegmentJurisdictionFix to fix invalid segments
+6. wait for SQS queues to empty
+9. execute bua_create_macro_profile
+
+#### Logging
+
+BUAControl table records progress of the controller
+
+UtilityProfileLog table records progress of the utility profile processing
+
+
 
 ### bua-microscalar
 
 *bua-microscalar* is used to calculate the microscalars for each account.
 
+#### Prerequisites
+
+| Step         |
+|--------------|
+| bua-segments |
+
+#### Dependencies
+
+| Type      | Name                        |
+|-----------|-----------------------------|
+| Procedure | bua_prep_unbilled_accounts  |
+| Procedure | bua_create_invoice_scalar   |
+
+#### Steps
+
 1. initiate MicroScalar to calculate micro scalar records
 2. wait for SQS queues to empty
+
+
 
 ### bua-reset-basicreads
 
 *bua-reset-basicreads* is used to clear out any generated basic reads.
 
+#### Prerequisites
+
+None
+
+#### Dependencies
+
+| Type      | Name                       |
+|-----------|----------------------------|
+| Procedure | bua_prep_unbilled_accounts |
+| Procedure | bua_reset_basic_read       |
+
+#### Steps
+
 1. initiate ResetBasicRead to reset any prior calculated basic reads
 2. wait for SQS queues to empty
 3. check BUAControl table for any failures
+
+
 
 ### bua-basicreads
 
 *bua-basicreads* is used to generate any missing basic reads.
 
+#### Prerequisites
+
+| Step            |
+|-----------------|
+| bua-microscalar |
+
+#### Dependencies
+
+| Type      | Name                       |
+|-----------|----------------------------|
+| Procedure | bua_prep_unbilled_accounts |
+| Procedure | bua_create_basic_read      |
+
+#### Steps
+
 1. initiate BasicRead to create missing basic reads
 2. wait for SQS queues to empty
 3. check BUAControl table for any failures
+
+
 
 ### bua-scaleup-meterdata
 
 *bua-scaleup-meterdata* is used to scale EKS to 10 nodes and meterdata to 8 replicas.
 
+#### Prerequisites
+
+None
+
+#### Dependencies
+
+| Type      | Name              |
+|-----------|-------------------|
+| Parameter | cluster_name      |
+
+#### Steps
+
 1. scale EKS node group to 10 nodes
+2. scale workflow to 1 replicas
 2. scale meterdata to 8 replicas
+
+
 
 ### bua-nem12
 
 *bua-nem12* is used to generate and load missing electricity interval reads.
+
+#### Prerequisites
+
+| Step           |
+|----------------|
+| bua-segments   |
+
+#### Dependencies
+
+| Type      | Name                  |
+|-----------|-----------------------|
+| Procedure | bua_prep_profile_nmis |
+| Service   | workflow-runner       |
+| Service   | meterdata             |
+
+#### Steps
 
 1. initiate NEM12 generation for missing electricity interval reads
 2. wait for SQS queues to empty
@@ -211,9 +459,29 @@ then ensure you use the same run date for the manual steps as was used for the a
 5. wait for rescheduled workflow instances to complete
 6. check for any remaining failed workflow instances
 
+
+
 ### bua-invoiceruns
 
 *bua-invoiceruns* is used to execute invoicing for all accounts.
+
+#### Prerequisites
+
+| Step            |
+|-----------------|
+| bua-segments    |
+| bua-microscalar |
+| bua-basicreads  |
+
+#### Dependencies
+
+| Type      | Name                      |
+|-----------|---------------------------|
+| Procedure | bua_initiate_invoice_runs |
+| Service   | workflow-runner           |
+| Service   | meterdata                 |
+
+#### Steps
 
 1. set priorities of workflows appropriately
 2. initiate invoice run batches
@@ -228,29 +496,90 @@ then ensure you use the same run date for the manual steps as was used for the a
 11. wait for resubmitted INVOICEGEN to complete
 12. check for any remaining failed INVOICEGEN
 
+
+
 ### bua-scaledown
 
 *bua-scaledown* is used to scale meterdata and workflow to 0 replicas and EKS to 0 nodes.
 
+#### Prerequisites
+
+None
+
+#### Dependencies
+
+| Type      | Name              |
+|-----------|-------------------|
+| Parameter | cluster_name      |
+
+#### Steps
+
 1. scale EKS node group to 0 nodes
 2. scale workflow and meterdata to 0 replicas
 
-### bua-export
 
-*bua-export* is used to prepare and export the BUA data to S3.
+
+### bua-prepare
+
+*bua-prepare* is used to prepare the BUA data for export to S3.
+
+#### Prerequisites
+
+| Step             |
+|------------------|
+| bua-invoiceruns  |
+
+#### Dependencies
+
+| Type      | Name                    |
+|-----------|-------------------------|
+| Procedure | bua_prep_all_accounts   |
+| Procedure | bua_prepare_export_data |
+
+#### Steps
 
 1. Truncate BUAAccountSummary and InvoiceLineItemMonthly
-2. Remove any old S3 files from tst-anstead-s3-bua/export/csv/{{run_date}}/
-3. Remove any old S3 files from tst-anstead-s3-rw-integration/ADH/OUTBOUND/BUA/
-4. Initiate preparation of data to export
-5. Wait for SQS queues to empty
-6. Export BUAAccountSummary as CSV to tst-anstead-s3-bua/export/csv/{{run_date}}/
-7. Export InvoiceLineItemMonthly as CSV to tst-anstead-s3-bua/export/csv/{{run_date}}/
-8. Wait for SQS queues to empty
-9. Copy S3 objects from tst-anstead-s3-bua/export/csv/{{run_date}}/ to tst-anstead-s3-rw-integration/ADH/OUTBOUND/BUA/
+2. Remove any old S3 files from prd-matten-s3-bua/export/csv/{{run_date}}/
+3. Initiate preparation of data to export
+4. Wait for SQS queues to empty
 
-### bua-terminate
 
-*bua-terminate* is used to terminate the BUA RDS instance.
 
-1. Delete the cloudformation stack tst-anstead-14-bua-sql
+### bua-export
+
+*bua-export* is used to export the BUA data to S3.
+
+#### Prerequisites
+
+| Step        |
+|-------------|
+| bua-prepare |
+
+#### Dependencies
+
+None
+
+#### Steps
+
+1. Export BUAAccountSummary as CSV to prd-matten-s3-bua/export/csv/{{run_date}}/
+2. Export InvoiceLineItemMonthly as CSV to prd-matten-s3-bua/export/csv/{{run_date}}/
+3. Wait for SQS queues to empty
+4. Copy S3 objects from prd-matten-s3-bua/export/csv/{{run_date}}/ to prd-matten-s3-rw-integration/ADH/OUTBOUND/BUA/
+
+
+
+### bua-destroy
+
+*bua-destroy* is used to destroy the BUA RDS instance.
+
+#### Prerequisites
+
+None
+
+#### Dependencies
+
+None
+
+#### Steps
+
+1. Delete the cloudformation stack (e.g. prd-matten-14-bua-sql)
