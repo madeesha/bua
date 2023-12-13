@@ -31,6 +31,19 @@
             },
             "on": {
               "COMPLETE": {
+                "next": "040_disable_regenerate_profile"
+              }
+            }
+          },
+          "040_disable_regenerate_profile": {
+            "action": "execute_sql",
+            "args": {
+              "sql": [
+                "UPDATE Workflows SET enabled = 0 WHERE name = 'RegenerateProfile'"
+              ]
+            },
+            "on": {
+              "COMPLETE": {
                 "next": "050_adjust_workflow_timeouts"
               }
             }
