@@ -18,7 +18,7 @@ list-parameters:
 	../../bin/execute-bua-steps $(PROFILE) ReRunPart1 $(RERUN_PART1)
 
 3-restore-bua-scripts:
-	bash ../../bin/restore-bua-scripts $(PROFILE)
+	bash ../../bin/restore-bua-scripts $(PROFILE) bua-scripts.txt
 
 4-rerun-part2:
 	../../bin/execute-bua-steps $(PROFILE) ReRunPart2 $(RERUN_PART2)

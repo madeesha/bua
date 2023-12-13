@@ -41,7 +41,7 @@ help:
 #	../bin/restore-triggers anstead matten
 
 4-restore-bua-scripts:
-	bash ../bin/restore-bua-scripts $(PROFILE)
+	bash ../bin/restore-bua-scripts $(PROFILE) ../config/bua-procedures.txt
 
 5-reset-prepare-tables:
 	bash ../bin/reset-prepare-tables $(PROFILE)
@@ -92,5 +92,4 @@ update-update-id:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/update_id --value '26' --type String --overwrite --data-type text
 
 list-parameters:
-	mkdir -p ../sandpit
-	../bin/list-bua-parameters $(PROFILE) | tee ../sandpit/$(PROFILE)-parameters.txt
+	../bin/list-bua-parameters $(PROFILE) | tee $(PROFILE)-parameters.txt
