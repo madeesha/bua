@@ -1,8 +1,7 @@
 PROFILE=matten
 PREFIX=prd-matten
 RERUN_PART1=Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown
-RERUN_PART2=UtilityProfiles,Segments,Snapshot
-RERUN_PART3=Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,ProfileValidation,DumpErrors
+RERUN_PART2=UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,ProfileValidation,DumpErrors
 UPDATE_ID=16
 
 # ###############################################
@@ -23,6 +22,3 @@ list-parameters:
 
 4-rerun-part2:
 	../../bin/execute-bua-steps $(PROFILE) ReRunPart2 $(RERUN_PART2)
-
-5-rerun-part3:
-	../../bin/execute-bua-steps $(PROFILE) ReRunPart3 $(RERUN_PART3)
