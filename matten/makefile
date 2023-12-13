@@ -18,14 +18,13 @@ update-notify_steps:
 	AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 ssm put-parameter --name /$(PREFIX)/bua/notify_steps --value $(NOTIFY_STEPS) --type String --overwrite --data-type text
 
 list-parameters:
-	mkdir -p ../sandpit
-	../bin/list-bua-parameters $(PROFILE) | tee ../sandpit/$(PROFILE)-parameters.txt
+	../bin/list-bua-parameters $(PROFILE) | tee $(PROFILE)-parameters.txt
 
 2-trigger-restore:
 		AWS_PROFILE=$(PROFILE) aws --region ap-southeast-2 sns publish --topic-arn $(TOPIC) --message 'reuse'
 
 4-restore-bua-scripts:
-	bash ../bin/restore-bua-scripts $(PROFILE)
+	bash ../bin/restore-bua-scripts $(PROFILE) ../config/bua-procedures.txt
 
 5-weekly-run:
 	../bin/execute-bua-steps $(PROFILE) DecRun3 $(WEEKLY_RUN_STEPS)
