@@ -53,9 +53,9 @@
             "speed": "slow",
             "args": {
               "sql": [
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 29), max_execution_minutes = 30, priority = 'XHIGH' WHERE name = 'ImportNem'",
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 29), max_execution_minutes = 30, priority = 'NORMAL' WHERE name = 'AggregateReadNmiDate'",
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 29), max_execution_minutes = 30, priority = 'XLOW' WHERE name = 'RegenerateProfile'"
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 30), max_execution_minutes = 35, priority = 'XHIGH' WHERE name = 'ImportNem'",
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 30), max_execution_minutes = 35, priority = 'NORMAL' WHERE name = 'AggregateReadNmiDate'",
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 30), max_execution_minutes = 35, priority = 'XLOW' WHERE name = 'RegenerateProfile'"
               ]
             },
             "on": {

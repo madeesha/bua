@@ -191,6 +191,21 @@
           "230_set_bua_account_id": {
             "action": "set_bua_account_id",
             "on": {
+              "COMPLETE": {
+                "next": "240_disable_logging_tasks"
+              }
+            }
+          },
+          "240_disable_logging_tasks": {
+            "action": "execute_sql",
+            "speed": "slow",
+            "args": {
+              "sql": [
+                "UPDATE Workflows SET log_completed = 0 WHERE log_completed != 0",
+                "UPDATE Workflows SET log_error = 0 WHERE log_error != 0"
+              ]
+            },
+            "on": {
               "COMPLETE": {}
             }
           }
