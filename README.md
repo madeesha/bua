@@ -6,6 +6,17 @@ how many units has a customer consumed in a month or over a periods selected tha
 
 https://jira.alintaenergy.com.au/browse/CB-6866
 
+## Service Dependencies
+
+The BUA process relies upon the version of workflow and meterdata matching what was in EARL when the snapshot was taken.
+
+| Accrual        | Snapshot                                              | Snapshot Date | Workflow | Meterdata |
+|----------------|-------------------------------------------------------|---------------|----------|-----------|
+| September 2023 | prod-data-2023-10-01-snapshot-shared-key              | 1st Oct 2023  | v25427   | v27560    |
+| October 2023   | prd-earl-1-sql-21-20-oct-31-2023-shared-key-encrypted | 1st Nov 2023  | v25427   | v27598    |
+| November 2023  | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted | 1st Dec 2023  | v25427   | v27649    |
+| December 2023  |                                                       | 1st Jan 2024  | v25427   | v27718    |
+
 ## Architecture
 
 ### EARL Pipeline
