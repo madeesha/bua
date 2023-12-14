@@ -26,3 +26,9 @@ list-parameters:
 
 5-rerun-part2:
 	../../bin/execute-bua-steps $(PROFILE) ReRunPart2 $(RERUN_PART2)
+
+6-rerun-part3:
+	../../bin/execute-bua-steps $(PROFILE) ReRunPart3 ScaleUpMeterdata
+
+7-rerun-part4:
+	../../bin/execute-bua-steps $(PROFILE) ReRunPart4 ILIExceptions,ScaleDown,Prepare,Export,Snapshot
