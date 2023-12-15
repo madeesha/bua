@@ -32,3 +32,6 @@ list-parameters:
 
 7-rerun-part4:
 	../../bin/execute-bua-steps $(PROFILE) ReRunPart4 ILIExceptions,ScaleDown,Prepare,Export,Snapshot
+
+8-rerun-part5:
+	../../bin/execute-bua-steps $(PROFILE) ReRunPart5 Export
