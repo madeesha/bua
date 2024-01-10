@@ -59,11 +59,17 @@ list-parameters:
 4-utility-profiles:
 	../../bin/execute-bua-steps $(PROFILE) Dec23Acc3 UtilityProfiles,Segments,Snapshot
 
-4-refresh-git:
-	cd $(HOME)/git/uss/turkey && git checkout $(BRANCH) && git pull
+5-micro-scalar:
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc4 Microscalar,Snapshot
 
-5-restore-bua-scripts:
-	../../bin/restore-bua-scripts $(PROFILE) bua-scripts.txt
+6-basic-reads:
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc5 BasicReads,Snapshot
 
-6-run-accruals:
-	../../bin/execute-bua-steps $(PROFILE) Dec23Acc4 Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+7-nem12:
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc6 ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot
+
+8-invoice-runs:
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc7 InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot
+
+9-prepare-export:
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc8 Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
