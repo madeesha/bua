@@ -56,6 +56,9 @@ list-parameters:
 3-run-warming:
 	../../bin/execute-bua-steps $(PROFILE) Dec23Acc2 EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown
 
+4-utility-profiles:
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc3 UtilityProfiles,Segments,Snapshot
+
 4-refresh-git:
 	cd $(HOME)/git/uss/turkey && git checkout $(BRANCH) && git pull
 
@@ -63,4 +66,4 @@ list-parameters:
 	../../bin/restore-bua-scripts $(PROFILE) bua-scripts.txt
 
 6-run-accruals:
-	../../bin/execute-bua-steps $(PROFILE) Dec23Acc3 UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc4 Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
