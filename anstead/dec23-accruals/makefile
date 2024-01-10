@@ -66,10 +66,10 @@ list-parameters:
 	../../bin/execute-bua-steps $(PROFILE) Dec23Acc5 BasicReads,Snapshot
 
 7-nem12:
-	../../bin/execute-bua-steps $(PROFILE) Dec23Acc6 ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc6 ScaleUpMeterdata,GenerateNEM12,Snapshot
 
 8-invoice-runs:
-	../../bin/execute-bua-steps $(PROFILE) Dec23Acc7 InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc7 RestartMeterdata,InvoiceRuns,Snapshot
 
 9-prepare-export:
-	../../bin/execute-bua-steps $(PROFILE) Dec23Acc8 Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+	../../bin/execute-bua-steps $(PROFILE) Dec23Acc8 ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
