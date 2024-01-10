@@ -447,6 +447,15 @@ None
 
 *bua-nem12* is used to generate and load missing electricity interval reads.
 
+#### Summary
+
+1. Use the bua_initiate action to get a list of NMI and date ranges to process
+2. For each NMI and date range submit a message to a queue.
+3. Use a cluster of 32 nem12 lambdas to consume the messages on the queue.
+4. For each message query the database for missing periods in AggregatedRead. 
+5. Construct a NEM12 file for the missing periods and submit it to the standard NEM12 file processing S3 bucket.
+6. Standard NEM12 file processing loads the NEM12 file into DDB and triggers import and aggregation in CORE using workflow.
+
 #### Prerequisites
 
 | Step           |
