@@ -573,6 +573,7 @@ class SQL:
                         cur.execute(
                             "UPDATE WorkflowInstance wfi "
                             "JOIN Exception exc ON exc.workflow_instance_id = wfi.id "
+                            "AND exc.cr_date >= wfi.start_time "
                             "SET wfi.status = 'NEW' "
                             "WHERE wfi.status = 'ERROR' "
                             "AND wfi.workflow_id = %s "
@@ -584,6 +585,8 @@ class SQL:
                         row_count = con.affected_rows()
                         total += row_count
                         self.print(f'Resubmitted {row_count} {workflow_name} workflow instances')
+            if total > 0:
+                return "RESUBMITTED", f'Resubmitted {total} workflow instances'
             return "COMPLETE", f'Resubmitted {total} workflow instances'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
