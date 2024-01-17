@@ -70,7 +70,7 @@ matten:deploy:
   needs:
     - 'build'
 
-anstead:restore:
+anstead:01:restore:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -83,7 +83,7 @@ anstead:restore:
     name: Restore
     steps: Restore
 
-anstead:clean:
+anstead:02:clean:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -96,7 +96,7 @@ anstead:clean:
     name: Clean
     steps: EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile
 
-anstead:warm:
+anstead:03:warm:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -109,7 +109,7 @@ anstead:warm:
     name: Warm
     steps: ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown
 
-anstead:profiles:
+anstead:04:profiles:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -122,7 +122,7 @@ anstead:profiles:
     name: Profiles
     steps: UtilityProfiles,Segments,Snapshot
 
-anstead:mscalar:
+anstead:05:mscalar:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -135,7 +135,7 @@ anstead:mscalar:
     name: MScalar
     steps: Microscalar,Snapshot
 
-anstead:basic:
+anstead:06:basic:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -148,7 +148,7 @@ anstead:basic:
     name: Basic
     steps: BasicReads,Snapshot
 
-anstead:nem12:
+anstead:07:nem12:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -161,7 +161,7 @@ anstead:nem12:
     name: NEM12
     steps: ScaleUpMeterdata,GenerateNEM12,Snapshot
 
-anstead:invoices:
+anstead:08:invoices:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -174,7 +174,7 @@ anstead:invoices:
     name: Invoices
     steps: RestartMeterdata,InvoiceRuns,Snapshot,ILIExceptions,Snapshot
 
-anstead:down:
+anstead:09:down:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -187,7 +187,7 @@ anstead:down:
     name: Down
     steps: ScaleDown
 
-anstead:prepare:
+anstead:10:prepare:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -200,7 +200,7 @@ anstead:prepare:
     name: Prepare
     steps: Prepare,Snapshot
 
-anstead:export:
+anstead:11:export:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -213,7 +213,7 @@ anstead:export:
     name: Export
     steps: Export
 
-anstead:final:
+anstead:12:final:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -225,3 +225,16 @@ anstead:final:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: Final
     steps: ProfileValidation,DumpErrors,SwitchBastion
+
+anstead:99:all:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: All
+    steps: Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
