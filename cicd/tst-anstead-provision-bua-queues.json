@@ -1,6 +1,6 @@
 [
   {
     "ParameterKey": "NotificationTopicArn",
-    "ParameterValue": ""
+    "ParameterValue": "arn:aws:sns:ap-southeast-2:760694178318:Prod-monthly-data-copy-Anstead-BillingRunProdSNSTopicAnstead36F6FD7E-xUj25zOiyuBV"
   }
 ]
