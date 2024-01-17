@@ -25,18 +25,19 @@ execution = client.start_execution(
 )
 execution_arn = execution['executionArn']
 
-print('Execution', execution_arn)
+print('Execution', execution_arn, flush=True)
+print('Execution Steps', steps, flush=True)
 
 execution = client.describe_execution(executionArn=execution_arn)
-print('Execution status', execution.get('status'))
+print('Execution status', execution.get('status'), flush=True)
 while execution.get('status') not in ('SUCCEEDED', 'FAILED', 'TIMED_OUT', 'ABORTED'):
     time.sleep(120)
     execution = client.describe_execution(executionArn=execution_arn)
-    print('Execution status', execution.get('status'))
+    print('Execution status', execution.get('status'), flush=True)
 
 if execution.get('status') == "SUCCEEDED":
     sys.exit(0)
 else:
-    print('Error', execution.get('error'))
-    print('Cause', execution.get('cause'))
+    print('Error', execution.get('error'), flush=True)
+    print('Cause', execution.get('cause'), flush=True)
     sys.exit(1)
