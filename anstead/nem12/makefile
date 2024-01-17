@@ -1,8 +1,8 @@
 PROFILE=anstead
-SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tmp-prd-earl-23-11-30-shared-key-with-basicreads
+SNAPSHOT=arn:aws:rds:ap-southeast-2:561082505378:snapshot:tst-anstead-27-bua-sql-20240101-20240110-20240111-144242
 PREFIX=tst-anstead
 BRANCH=master
-UPDATE_ID=27
+UPDATE_ID=28
 
 help:
 	@tput clear ; cat makefile
@@ -19,11 +19,5 @@ help:
 4-restore:
 	../../bin/execute-bua-steps $(PROFILE) TestNEM12 Restore
 
-5-refresh-git:
-	cd $(HOME)/git/uss/turkey && git checkout $(BRANCH) && git pull
-
-6-restore-bua-scripts:
-	../../bin/restore-bua-scripts $(PROFILE) ../../config/bua-procedures.txt
-
-7-test-nem12:
-	../../bin/execute-bua-steps $(PROFILE) TestNEM12 ScaleUpMeterdata,WarmStatistics,WarmIndexes,GenerateNEM12,RestartMeterdata,InvoiceRuns,ScaleDown
+5-test-nem12:
+	../../bin/execute-bua-steps $(PROFILE) TestNEM12 ScaleUpMeterdata,WarmStatistics,WarmIndexes,GenerateNEM12,ScaleDown

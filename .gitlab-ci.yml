@@ -226,7 +226,7 @@ anstead:12:final:
     name: Final
     steps: ProfileValidation,DumpErrors,SwitchBastion
 
-anstead:99:all:
+anstead:98:all:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -238,3 +238,15 @@ anstead:99:all:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: All
     steps: Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+
+anstead:99:rerun:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/trigger-bua.py
+  variables:
+    topic_arn: arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic
+    message: reuse

@@ -7,7 +7,7 @@ from datetime import datetime
 import uuid
 
 
-client = boto3.client('stepfunctions')
+client = boto3.client('stepfunctions', region_name='ap-southeast-2')
 
 state_machine_arn = os.getenv('state_machine_arn')
 name = os.getenv('name')
