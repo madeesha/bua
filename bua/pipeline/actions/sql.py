@@ -543,6 +543,10 @@ class SQL:
                         cur.execute(
                             "UPDATE WorkflowInstance "
                             "SET status = 'NEW' "
+                            ", runner_id = NULL "
+                            ", ready_time = NULL "
+                            ", start_time = NULL "
+                            ", end_time = NULL "
                             "WHERE status = 'ERROR' "
                             "AND workflow_id = %s "
                             "AND id > %s ",
@@ -551,6 +555,7 @@ class SQL:
                         row_count = con.affected_rows()
                         total += row_count
                         self.print(f'Resubmitted {row_count} {workflow_name} workflow instances')
+                        con.commit()
             return "COMPLETE", f'Resubmitted {total} workflow instances'
         except pymysql.err.OperationalError as e:
             if 'timed out' in str(e):
@@ -573,8 +578,12 @@ class SQL:
                         cur.execute(
                             "UPDATE WorkflowInstance wfi "
                             "JOIN Exception exc ON exc.workflow_instance_id = wfi.id "
-                            "AND exc.cr_date >= wfi.start_time "
+                            "AND exc.creation_date >= wfi.start_time "
                             "SET wfi.status = 'NEW' "
+                            ", wfi.runner_id = NULL "
+                            ", wfi.ready_time = NULL "
+                            ", wfi.start_time = NULL "
+                            ", wfi.end_time = NULL "
                             "WHERE wfi.status = 'ERROR' "
                             "AND wfi.workflow_id = %s "
                             "AND wfi.id > %s "
@@ -585,6 +594,7 @@ class SQL:
                         row_count = con.affected_rows()
                         total += row_count
                         self.print(f'Resubmitted {row_count} {workflow_name} workflow instances')
+                        con.commit()
             if total > 0:
                 return "RESUBMITTED", f'Resubmitted {total} workflow instances'
             return "COMPLETE", f'Resubmitted {total} workflow instances'
