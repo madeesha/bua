@@ -226,6 +226,19 @@ anstead:12:final:
     name: Final
     steps: ProfileValidation,DumpErrors,SwitchBastion
 
+anstead:13:destroy:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Destroy
+    steps: Destroy
+
 anstead:98:all:
   stage: "execute:test"
   timeout: 24 hours
