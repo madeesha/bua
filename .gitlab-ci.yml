@@ -239,6 +239,32 @@ anstead:13:destroy:
     name: Destroy
     steps: Destroy
 
+anstead:50:reset:basic:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: ResetBasicReads
+    steps: ResetBasicReads
+
+anstead:51:reset:nem12:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: ResetNEM12
+    steps: ResetNEM12
+
 anstead:98:all:
   stage: "execute:test"
   timeout: 24 hours
