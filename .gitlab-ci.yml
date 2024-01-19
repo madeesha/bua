@@ -120,7 +120,7 @@ anstead:04:profiles:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: Profiles
-    steps: UtilityProfiles,Segments,Snapshot
+    steps: UtilityProfiles,Segments
 
 anstead:05:mscalar:
   stage: "execute:test"
@@ -133,7 +133,7 @@ anstead:05:mscalar:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: MScalar
-    steps: Microscalar,Snapshot
+    steps: Microscalar
 
 anstead:06:basic:
   stage: "execute:test"
@@ -146,7 +146,7 @@ anstead:06:basic:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: Basic
-    steps: BasicReads,Snapshot
+    steps: BasicReads
 
 anstead:07:nem12:
   stage: "execute:test"
@@ -159,7 +159,7 @@ anstead:07:nem12:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: NEM12
-    steps: ScaleUpMeterdata,GenerateNEM12,Snapshot
+    steps: ScaleUpMeterdata,GenerateNEM12
 
 anstead:08:invoices:
   stage: "execute:test"
@@ -172,7 +172,7 @@ anstead:08:invoices:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: Invoices
-    steps: RestartMeterdata,InvoiceRuns,Snapshot,ILIExceptions,Snapshot
+    steps: RestartMeterdata,InvoiceRuns,ILIExceptions
 
 anstead:09:down:
   stage: "execute:test"
@@ -198,7 +198,7 @@ anstead:10:prepare:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: Prepare
-    steps: Prepare,Snapshot
+    steps: Prepare
 
 anstead:11:export:
   stage: "execute:test"
@@ -238,6 +238,19 @@ anstead:13:destroy:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: Destroy
     steps: Destroy
+
+anstead:20:snapshot:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Snapshot
+    steps: Snapshot
 
 anstead:50:reset:basic:
   stage: "execute:test"
