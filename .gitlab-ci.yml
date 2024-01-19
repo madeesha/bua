@@ -252,6 +252,19 @@ anstead:20:snapshot:
     name: Snapshot
     steps: Snapshot
 
+anstead:30:scaleup:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: ScaleUp
+    steps: ScaleUpMeterdata
+
 anstead:50:reset:basic:
   stage: "execute:test"
   timeout: 24 hours
