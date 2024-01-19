@@ -588,6 +588,10 @@ class SQL:
                             "AND wfi.workflow_id = %s "
                             "AND wfi.id > %s "
                             "AND (exc.payload LIKE '%%request timeout%%' "
+                            "     OR exc.payload LIKE '%%Remotely closed%%' "
+                            "     OR exc.payload LIKE '%%Connection reset%%' "
+                            "     OR exc.payload LIKE '%%IllegalStateException%%' "
+                            "     OR exc.payload LIKE '%%AbruptTerminationException%%' "
                             "     OR exc.payload LIKE '%%Could not acquire a connection%%') ",
                             (workflow_id, workflow_instance_id)
                         )
