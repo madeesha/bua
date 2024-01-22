@@ -404,12 +404,14 @@ class BUAControllerHandler:
         status = 'OK'
         reason = None
         if 'retries' in step:
+            tried = int(step.get('tried', 0))
             retries = int(step['retries'])
-            if retries >= 0:
-                step['retries'] = retries - 1
+            if tried <= retries:
+                step['tried'] = tried + 1
             else:
                 status = 'EXPIRED'
-                reason = f'Retries exceeded'
+                reason = f'Retries exceeded ({tried})'
+                step['tried'] = 0
         return status, reason
 
     @staticmethod
