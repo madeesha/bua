@@ -213,7 +213,7 @@ anstead:11:export:
     name: Export
     steps: Export
 
-anstead:12:final:
+anstead:12:validate:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -223,10 +223,36 @@ anstead:12:final:
     - python3 bin/execute-bua-steps.py
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
-    name: Final
-    steps: ProfileValidation,DumpErrors,SwitchBastion
+    name: Validate
+    steps: ProfileValidation
 
-anstead:13:destroy:
+anstead:13:dump:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Dump
+    steps: DumpErrors
+
+anstead:14:switch:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Switch
+    steps: SwitchBastion
+
+anstead:15:destroy:
   stage: "execute:test"
   timeout: 24 hours
   when: manual
@@ -302,7 +328,7 @@ anstead:98:all:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: All
-    steps: Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+    steps: Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,ProfileValidation,DumpErrors
 
 anstead:99:rerun:
   stage: "execute:test"
