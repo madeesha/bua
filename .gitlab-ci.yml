@@ -81,7 +81,7 @@ anstead:01:restore:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: Restore
-    steps: Restore
+    steps: ScaleDown,Restore
 
 anstead:02:clean:
   stage: "execute:test"
@@ -328,7 +328,7 @@ anstead:81:part1:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: Part1
-    steps: Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot
+    steps: ScaleDown,Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot
 
 anstead:82:part2:
   stage: "execute:test"
@@ -380,7 +380,7 @@ anstead:98:all:
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
     name: All
-    steps: Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,ProfileValidation,DumpErrors
+    steps: ScaleDown,Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,ProfileValidation,DumpErrors
 
 anstead:99:rerun:
   stage: "execute:test"
