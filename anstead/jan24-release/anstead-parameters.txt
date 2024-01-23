@@ -3,7 +3,7 @@ Path                               | Value
 /tst-anstead/bua/adh_bucket_name   | tst-anstead-s3-rw-integration
 /tst-anstead/bua/bastion_dns_alias | tmp-sql.anstead.encore.sh
 /tst-anstead/bua/cluster_name      | anstead
-/tst-anstead/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,Snapshot,InvoiceRuns,Snapshot,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
+/tst-anstead/bua/default_steps     | Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,ProfileValidation,DumpErrors
 /tst-anstead/bua/domain            | cmil2mssslzz.ap-southeast-2.rds.amazonaws.com
 /tst-anstead/bua/end_exclusive     | 2024-01-01
 /tst-anstead/bua/end_inclusive     | 2023-12-31

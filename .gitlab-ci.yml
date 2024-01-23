@@ -317,6 +317,58 @@ anstead:51:reset:nem12:
     name: ResetNEM12
     steps: ResetNEM12
 
+anstead:81:part1:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Part1
+    steps: Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot
+
+anstead:82:part2:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Part1
+    steps: ScaleUpMeterdata,GenerateNEM12,Snapshot
+
+anstead:83:part3:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Part1
+    steps: RestartMeterdata,InvoiceRuns,ILIExceptions,Snapshot
+
+anstead:84:part4:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Part1
+    steps: ScaleDown,Prepare,Snapshot,ProfileValidation,DumpErrors
+
 anstead:98:all:
   stage: "execute:test"
   timeout: 24 hours

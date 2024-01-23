@@ -23,9 +23,3 @@ help:
 
 3-list-parameters:
 	../../bin/list-bua-parameters $(PROFILE) | tee $(PROFILE)-parameters.txt
-
-4-restore:
-	../../bin/execute-bua-steps $(PROFILE) TestNEM12 Restore
-
-5-test-nem12:
-	../../bin/execute-bua-steps $(PROFILE) TestNEM12 ScaleUpMeterdata,WarmStatistics,WarmIndexes,GenerateNEM12,ScaleDown
