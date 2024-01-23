@@ -10,12 +10,13 @@ https://jira.alintaenergy.com.au/browse/CB-6866
 
 The BUA process relies upon the version of workflow and meterdata matching what was in EARL when the snapshot was taken.
 
-| Accrual        | Snapshot                                              | Snapshot Date | Workflow | Meterdata | Anstead | Matten   |
-|----------------|-------------------------------------------------------|---------------|----------|-----------|---------|----------|
-| September 2023 | prod-data-2023-10-01-snapshot-shared-key              | 1st Oct 2023  | v25427   | v27560    | #24     | #19      |
-| October 2023   | prd-earl-1-sql-21-20-oct-31-2023-shared-key-encrypted | 1st Nov 2023  | v25427   | v27598    |         | #13, #20 |
-| November 2023  | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted | 1st Dec 2023  | v25427   | v27649    | #26     | #16      |
-| December 2023  | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted | 1st Jan 2024  | v25427   | v27718    | #27     | #18      |
+| Accrual        | Snapshot                                                                    | Snapshot Date | Workflow | Meterdata | Anstead | Matten   |
+|----------------|-----------------------------------------------------------------------------|---------------|----------|-----------|---------|----------|
+| September 2023 | prod-data-2023-10-01-snapshot-shared-key                                    | 1st Oct 2023  | v25427   | v27560    | #24     | #19      |
+| October 2023   | prd-earl-1-sql-21-20-oct-31-2023-shared-key-encrypted                       | 1st Nov 2023  | v25427   | v27598    |         | #13, #20 |
+| November 2023  | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted                       | 1st Dec 2023  | v25427   | v27649    | #26     | #16      |
+| December 2023  | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                       | 1st Jan 2024  | v25427   | v27718    | #27     | #18      |
+| December 2023  | tmp-prd-earl-1-sql-23-15-Jan-21-2024-11-24-Jan-22-2024-shared-key-encrypted | 21st Jan 2024 | v25433   | v27843    | #29     |          |
 
 ## Architecture
 
