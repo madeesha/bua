@@ -73,6 +73,7 @@
           },
           "261_wait_for_scale_down_nodegroup": {
             "action": "wait_for_scale_nodegroup",
+            "retries": 15,
             "on": {
               "FAILED": {},
               "TERMINATE": {},

@@ -57,6 +57,7 @@
           },
           "110_wait_for_scale_up_nodegroup": {
             "action": "wait_for_scale_nodegroup",
+            "retries": 15,
             "on": {
               "FAILED": {},
               "TERMINATE": {},
@@ -85,6 +86,7 @@
           },
           "130_wait_for_scale_up_workflow": {
             "action": "check_replicas",
+            "retries": 15,
             "args": {
               "namespace": "core",
               "deployment": [
@@ -117,6 +119,7 @@
           },
           "150_wait_for_scale_up_meterdata": {
             "action": "check_replicas",
+            "retries": 15,
             "args": {
               "namespace": "core",
               "deployment": [
