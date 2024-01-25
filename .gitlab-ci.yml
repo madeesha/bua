@@ -340,7 +340,7 @@ anstead:82:part2:
     - python3 bin/execute-bua-steps.py
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
-    name: Part1
+    name: Part2
     steps: ScaleUpMeterdata,GenerateNEM12,Snapshot
 
 anstead:83:part3:
@@ -353,7 +353,7 @@ anstead:83:part3:
     - python3 bin/execute-bua-steps.py
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
-    name: Part1
+    name: Part3
     steps: RestartMeterdata,InvoiceRuns,ILIExceptions,Snapshot
 
 anstead:84:part4:
@@ -366,7 +366,7 @@ anstead:84:part4:
     - python3 bin/execute-bua-steps.py
   variables:
     state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
-    name: Part1
+    name: Part4
     steps: ScaleDown,Prepare,Snapshot,ProfileValidation,DumpErrors
 
 anstead:98:all:
