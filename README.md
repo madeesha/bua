@@ -10,6 +10,10 @@ https://jira.alintaenergy.com.au/browse/CB-6866
 
 The BUA process relies upon the version of workflow and meterdata matching what was in EARL when the snapshot was taken.
 
+```Each month after the CORE release it is important to update the service version in matten```
+
+```When updating the service version in matten it is important to update any variables that have changed as well```
+
 | Accrual        | Snapshot                                                                    | Snapshot Date | Workflow | Meterdata | Anstead | Matten   |
 |----------------|-----------------------------------------------------------------------------|---------------|----------|-----------|---------|----------|
 | September 2023 | prod-data-2023-10-01-snapshot-shared-key                                    | 1st Oct 2023  | v25427   | v27560    | #24     | #19      |
