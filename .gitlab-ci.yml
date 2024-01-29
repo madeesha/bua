@@ -19,6 +19,7 @@ stages:
   - "deploy:test"
   - "deploy:prod"
   - "execute:test"
+  - "execute:prod"
 
 build:
   stage: "build"
@@ -395,7 +396,7 @@ anstead:99:rerun:
     message: reuse
 
 matten:01:restore:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -410,7 +411,7 @@ matten:01:restore:
     - main
 
 matten:02:clean:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -425,7 +426,7 @@ matten:02:clean:
     - main
 
 matten:03:warm:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -440,7 +441,7 @@ matten:03:warm:
     - main
 
 matten:04:profiles:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -455,7 +456,7 @@ matten:04:profiles:
     - main
 
 matten:05:mscalar:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -470,7 +471,7 @@ matten:05:mscalar:
     - main
 
 matten:06:basic:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -485,7 +486,7 @@ matten:06:basic:
     - main
 
 matten:07:nem12:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -500,7 +501,7 @@ matten:07:nem12:
     - main
 
 matten:08:invoices:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -515,7 +516,7 @@ matten:08:invoices:
     - main
 
 matten:09:down:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -530,7 +531,7 @@ matten:09:down:
     - main
 
 matten:10:prepare:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -545,7 +546,7 @@ matten:10:prepare:
     - main
 
 matten:11:export:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -560,7 +561,7 @@ matten:11:export:
     - main
 
 matten:12:validate:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -575,7 +576,7 @@ matten:12:validate:
     - main
 
 matten:13:dump:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -590,7 +591,7 @@ matten:13:dump:
     - main
 
 matten:14:switch:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -605,7 +606,7 @@ matten:14:switch:
     - main
 
 matten:15:destroy:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -620,7 +621,7 @@ matten:15:destroy:
     - main
 
 matten:20:snapshot:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -635,7 +636,7 @@ matten:20:snapshot:
     - main
 
 matten:30:scaleup:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -650,7 +651,7 @@ matten:30:scaleup:
     - main
 
 matten:50:reset:basic:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -665,7 +666,7 @@ matten:50:reset:basic:
     - main
 
 matten:51:reset:nem12:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
@@ -680,7 +681,7 @@ matten:51:reset:nem12:
     - main
 
 matten:99:rerun:
-  stage: "execute:test"
+  stage: "execute:prod"
   timeout: 24 hours
   when: manual
   tags:
