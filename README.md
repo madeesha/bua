@@ -20,6 +20,12 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 
 ## Running
 
+### Manually executing the run
+
+If the last run needs to be repeated in a new RDS instance then use the gitlab task ```rerun``` to achieve this.
+
+If particular steps need to be run with the current RDS instance then use the relevant gitlab task.
+
 ### Deleting the RDS instance
 
 The best way to delete an RDS instance from a prior run is to delete the cloudformation stack that created it.
