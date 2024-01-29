@@ -53,9 +53,9 @@
             "speed": "slow",
             "args": {
               "sql": [
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 30), max_execution_minutes = 35, priority = 'XHIGH' WHERE name = 'ImportNem'",
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 30), max_execution_minutes = 35, priority = 'NORMAL' WHERE name = 'AggregateReadNmiDate'",
-                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 30), max_execution_minutes = 35, priority = 'XLOW' WHERE name = 'RegenerateProfile'"
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 3), max_execution_minutes = 5, priority = 'XHIGH' WHERE name = 'ImportNem'",
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 3), max_execution_minutes = 5, priority = 'NORMAL' WHERE name = 'AggregateReadNmiDate'",
+                "UPDATE Workflows SET tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 3), max_execution_minutes = 5, priority = 'XLOW' WHERE name = 'RegenerateProfile'"
               ]
             },
             "on": {
@@ -115,54 +115,36 @@
             "args": {
               "workflow_names": [
                 "ImportNem",
-                "ImportGas",
-                "AggregateReadNmiDate",
-                "RegenerateProfile",
-                "ValidateNEM13Read"
+                "AggregateReadNmiDate"
               ]
             },
             "on": {
               "COMPLETE": {},
               "FAILED": {
-                "next": "145_reschedule_timedout_workflows"
+                "next": "150_resubmit_timedout_workflows"
               },
               "ONHOLD": {}
             }
           },
-          "145_reschedule_timedout_workflows": {
+          "150_resubmit_timedout_workflows": {
             "action": "resubmit_timedout_workflows",
             "speed": "slow",
+            "retries": 5,
             "args": {
               "workflow_names": [
                 "ImportNem",
-                "ImportGas",
-                "AggregateReadNmiDate",
-                "RegenerateProfile",
-                "ValidateNEM13Read"
+                "AggregateReadNmiDate"
               ]
             },
             "on": {
               "COMPLETE": {
-                "sleep": 120,
-                "next": "150_reschedule_failed_workflows"
-              }
-            }
-          },
-          "150_reschedule_failed_workflows": {
-            "action": "resubmit_failed_workflows",
-            "speed": "slow",
-            "args": {
-              "workflow_names": [
-                "ImportNem",
-                "ImportGas",
-                "AggregateReadNmiDate",
-                "RegenerateProfile",
-                "ValidateNEM13Read"
-              ]
-            },
-            "on": {
-              "COMPLETE": {
-                "delay": 120,
+                "next": "160_wait_for_resubmitted_workflows"
+              },
+              "RESUBMITTED": {
+                "delay": 300,
+                "next": "140_wait_for_process_NEM12_files"
+              },
+              "EXPIRED": {
                 "next": "160_wait_for_resubmitted_workflows"
               }
             }
@@ -176,10 +158,7 @@
               "max_errors": 100000,
               "workflow_names": [
                 "ImportNem",
-                "ImportGas",
-                "AggregateReadNmiDate",
-                "RegenerateProfile",
-                "ValidateNEM13Read"
+                "AggregateReadNmiDate"
               ]
             },
             "on": {

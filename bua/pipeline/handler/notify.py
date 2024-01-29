@@ -61,7 +61,10 @@ class BUANotifyHandler(LambdaHandler):
         update_id = self._increment_update_id(parameters)
         self.log(f'Using update_id {update_id}')
 
-        pipeline_steps = self._get_pipeline_steps(parameters)
+        if body == 'reuse':
+            pipeline_steps = ''
+        else:
+            pipeline_steps = self._get_pipeline_steps(parameters)
         self.log(f'Using steps {pipeline_steps}')
 
         event = {

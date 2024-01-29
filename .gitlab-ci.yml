@@ -18,6 +18,7 @@ stages:
   - "build"
   - "deploy:test"
   - "deploy:prod"
+  - "execute:test"
 
 build:
   stage: "build"
@@ -68,3 +69,626 @@ matten:deploy:
     - main
   needs:
     - 'build'
+
+anstead:01:restore:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Restore
+    steps: ScaleDown,Restore
+
+anstead:02:clean:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Clean
+    steps: EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile
+
+anstead:03:warm:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Warm
+    steps: ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown
+
+anstead:04:profiles:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Profiles
+    steps: UtilityProfiles,Segments
+
+anstead:05:mscalar:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: MScalar
+    steps: Microscalar
+
+anstead:06:basic:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Basic
+    steps: BasicReads
+
+anstead:07:nem12:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: NEM12
+    steps: ScaleUpMeterdata,GenerateNEM12
+
+anstead:08:invoices:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Invoices
+    steps: RestartMeterdata,InvoiceRuns,ILIExceptions
+
+anstead:09:down:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Down
+    steps: ScaleDown
+
+anstead:10:prepare:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Prepare
+    steps: Prepare
+
+anstead:11:export:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Export
+    steps: Export
+
+anstead:12:validate:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Validate
+    steps: ProfileValidation
+
+anstead:13:dump:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Dump
+    steps: DumpErrors
+
+anstead:14:switch:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Switch
+    steps: SwitchBastion
+
+anstead:15:destroy:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Destroy
+    steps: Destroy
+
+anstead:20:snapshot:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Snapshot
+    steps: Snapshot
+
+anstead:30:scaleup:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: ScaleUp
+    steps: ScaleUpMeterdata
+
+anstead:50:reset:basic:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: ResetBasicReads
+    steps: ResetBasicReads
+
+anstead:51:reset:nem12:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: ResetNEM12
+    steps: ResetNEM12
+
+anstead:81:part1:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Part1
+    steps: ScaleDown,Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot
+
+anstead:82:part2:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Part2
+    steps: ScaleUpMeterdata,GenerateNEM12,Snapshot
+
+anstead:83:part3:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Part3
+    steps: RestartMeterdata,InvoiceRuns,ILIExceptions,Snapshot
+
+anstead:84:part4:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: Part4
+    steps: ScaleDown,Prepare,Snapshot,ProfileValidation,DumpErrors
+
+anstead:98:all:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: All
+    steps: ScaleDown,Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,ProfileValidation,DumpErrors
+
+anstead:99:rerun:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/trigger-bua.py
+  variables:
+    topic_arn: arn:aws:sns:ap-southeast-2:561082505378:tst-anstead-sns-bua-notify-topic
+    message: reuse
+
+matten:01:restore:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Restore
+    steps: ScaleDown,Restore
+  only:
+    - main
+
+matten:02:clean:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Clean
+    steps: EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile
+  only:
+    - main
+
+matten:03:warm:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Warm
+    steps: ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown
+  only:
+    - main
+
+matten:04:profiles:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Profiles
+    steps: UtilityProfiles,Segments
+  only:
+    - main
+
+matten:05:mscalar:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: MScalar
+    steps: Microscalar
+  only:
+    - main
+
+matten:06:basic:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Basic
+    steps: BasicReads
+  only:
+    - main
+
+matten:07:nem12:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: NEM12
+    steps: ScaleUpMeterdata,GenerateNEM12
+  only:
+    - main
+
+matten:08:invoices:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Invoices
+    steps: RestartMeterdata,InvoiceRuns,ILIExceptions
+  only:
+    - main
+
+matten:09:down:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Down
+    steps: ScaleDown
+  only:
+    - main
+
+matten:10:prepare:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Prepare
+    steps: Prepare
+  only:
+    - main
+
+matten:11:export:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Export
+    steps: Export
+  only:
+    - main
+
+matten:12:validate:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Validate
+    steps: ProfileValidation
+  only:
+    - main
+
+matten:13:dump:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Dump
+    steps: DumpErrors
+  only:
+    - main
+
+matten:14:switch:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Switch
+    steps: SwitchBastion
+  only:
+    - main
+
+matten:15:destroy:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Destroy
+    steps: Destroy
+  only:
+    - main
+
+matten:20:snapshot:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: Snapshot
+    steps: Snapshot
+  only:
+    - main
+
+matten:30:scaleup:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: ScaleUp
+    steps: ScaleUpMeterdata
+  only:
+    - main
+
+matten:50:reset:basic:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: ResetBasicReads
+    steps: ResetBasicReads
+  only:
+    - main
+
+matten:51:reset:nem12:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: ResetNEM12
+    steps: ResetNEM12
+  only:
+    - main
+
+matten:99:rerun:
+  stage: "execute:test"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/trigger-bua.py
+  variables:
+    topic_arn: arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic
+    message: reuse
+  only:
+    - main
