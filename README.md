@@ -18,6 +18,15 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | December 2023  | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                       | 1st Jan 2024  | v25427   | v27718    | #27     | #18      |
 | December 2023  | tmp-prd-earl-1-sql-23-15-Jan-21-2024-11-24-Jan-22-2024-shared-key-encrypted | 21st Jan 2024 | v25433   | v27843    | #29     |          |
 
+## Running
+
+### Deleting the RDS instance
+
+The best way to delete an RDS instance from a prior run is to delete the cloudformation stack that created it.
+
+For example: 
+```aws cloudformation delete-stack --stack-name prd-matten-16-bua-sql``` 
+
 ## Architecture
 
 ### EARL Pipeline
