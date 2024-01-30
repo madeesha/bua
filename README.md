@@ -14,6 +14,12 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 
 ```When updating the service version in matten it is important to update any variables that have changed as well```
 
+```The project makefile target check-workflow-config-matten will check for workflow config differences between earl and matten```
+
+```The project makefile target check-meterdata-config-matten will check for meterdata config differences between earl and matten```
+
+```Note that most differences are acceptable since the config in matten is meant to be different to earl to support higher performance```
+
 | Accrual        | Snapshot                                                                    | Snapshot Date | Workflow | Meterdata | Anstead | Matten   |
 |----------------|-----------------------------------------------------------------------------|---------------|----------|-----------|---------|----------|
 | September 2023 | prod-data-2023-10-01-snapshot-shared-key                                    | 1st Oct 2023  | v25427   | v27560    | #24     | #19      |
