@@ -92,7 +92,7 @@
               "num_groups": 16,
               "num_batches": 90,
               "concurrent_batches": 9,
-              "schedule_gap": 2,
+              "schedule_gap": 5,
               "min_days": 1
             },
             "on": {
