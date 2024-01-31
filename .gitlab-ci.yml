@@ -383,6 +383,19 @@ anstead:98:all:
     name: All
     steps: ScaleDown,Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,ProfileValidation,DumpErrors
 
+anstead:90:check:eks:
+  stage: "execute:prod"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - anstead
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:561082505378:stateMachine:tst-anstead-bua
+    name: CheckEKS
+    steps: ScaleDown,ScaleUpMeterdata,ScaleDown
+
 anstead:99:rerun:
   stage: "execute:test"
   timeout: 24 hours
@@ -677,6 +690,21 @@ matten:51:reset:nem12:
     state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
     name: ResetNEM12
     steps: ResetNEM12
+  only:
+    - main
+
+matten:90:check:eks:
+  stage: "execute:prod"
+  timeout: 24 hours
+  when: manual
+  tags:
+    - matten
+  script:
+    - python3 bin/execute-bua-steps.py
+  variables:
+    state_machine_arn: arn:aws:states:ap-southeast-2:077642019132:stateMachine:prd-matten-bua
+    name: CheckEKS
+    steps: ScaleDown,ScaleUpMeterdata,ScaleDown
   only:
     - main
 
