@@ -13,7 +13,7 @@ Path                               | Value
 /tst-anstead/bua/mysql_version     | 8.0.32
 /tst-anstead/bua/node_group_name   | managed-ng-anstead-demand-1-22-v20230914
 /tst-anstead/bua/notify_steps      | DoNothing
-/tst-anstead/bua/params_id         | 4
+/tst-anstead/bua/params_id         | 3
 /tst-anstead/bua/rds_dns_alias     | tst-sql.anstead.encore.sh
 /tst-anstead/bua/rdssecret         | cicd/tst-anstead/rds/bua
 /tst-anstead/bua/run_date          | 2024-01-23
@@ -25,4 +25,4 @@ Path                               | Value
 /tst-anstead/bua/start_inclusive   | 2023-01-01
 /tst-anstead/bua/suffix            | bua-sql
 /tst-anstead/bua/today             | 2024-01-01
-/tst-anstead/bua/update_id         | 31
+/tst-anstead/bua/update_id         | 30
