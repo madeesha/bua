@@ -31,6 +31,19 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 
 ## Running
 
+### Monthly pre-run checks (after the CORE release each month)
+
+1. Get the latest version of workflow and meterdata from EARL
+2. Update the cluster project for matten and anstead with the same versions
+3. Update the configuration in the matten EKS cluster with the same versions manually
+4. Run the makefile target check-workflow-config-matten to check for new config for workflow
+5. Update the cluster project for matten and anstead with any new config needed for workflow
+6. Update the configuration in matten EKS cluster with any new config needed for workflow
+7. Run the makefile target check-meterdata-config-matten to check for new config for meterdata
+8. Update the cluster project for matten and anstead with any new config needed for meterdata
+9. Update the configuration in matten EKS cluster with any new config needed for meterdata
+10. Execute the gitlab task matten:90:check:eks to verify that the cluster works with the updated configuration
+
 ### Manually executing the run
 
 If the last run needs to be repeated in a new RDS instance then use the gitlab task ```rerun``` to achieve this.
