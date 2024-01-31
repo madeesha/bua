@@ -22,13 +22,13 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 
 ### ANSTEAD
 
-| Accrual         | Snapshot                                                                    | Snapshot Date | Workflow | Meterdata | Anstead |
-|-----------------|-----------------------------------------------------------------------------|---------------|----------|-----------|---------|
+| Accrual         | Snapshot                                                                    | Snapshot Date | Workflow | Meterdata | Anstead | Notes                         |
+|-----------------|-----------------------------------------------------------------------------|---------------|----------|-----------|---------|-------------------------------|
 | September 2023  | prod-data-2023-10-01-snapshot-shared-key                                    | 1st Oct 2023  | v25427   | v27560    | #24     |
 | October 2023    | prd-earl-1-sql-21-20-oct-31-2023-shared-key-encrypted                       | 1st Nov 2023  | v25427   | v27598    |         |
 | November 2023   | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted                       | 1st Dec 2023  | v25427   | v27649    | #26     |
 | December 2023   | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                       | 1st Jan 2024  | v25427   | v27718    | #27     |
-| December 2023   | tmp-prd-earl-1-sql-23-15-Jan-21-2024-11-24-Jan-22-2024-shared-key-encrypted | 21st Jan 2024 | v25433   | v27843    | #29     |
+| December 2023   | tmp-prd-earl-1-sql-23-15-Jan-21-2024-11-24-Jan-22-2024-shared-key-encrypted | 21st Jan 2024 | v25433   | v27843    | #29     | disable keepalive in workflow |
 
 ### MATTEN
 
