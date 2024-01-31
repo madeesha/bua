@@ -91,8 +91,8 @@
             "args": {
               "num_groups": 16,
               "num_batches": 90,
-              "concurrent_batches": 9,
-              "schedule_gap": 5,
+              "concurrent_batches": 18,
+              "schedule_gap": 2,
               "min_days": 1
             },
             "on": {
