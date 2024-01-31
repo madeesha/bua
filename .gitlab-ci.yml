@@ -384,7 +384,7 @@ anstead:98:all:
     steps: ScaleDown,Restore,EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,Snapshot,BasicReads,Snapshot,ScaleUpMeterdata,GenerateNEM12,Snapshot,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Snapshot,Prepare,Snapshot,ProfileValidation,DumpErrors
 
 anstead:90:check:eks:
-  stage: "execute:prod"
+  stage: "execute:test"
   timeout: 24 hours
   when: manual
   tags:
