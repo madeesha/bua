@@ -43,6 +43,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 8. Update the cluster project for matten and anstead with any new config needed for meterdata
 9. Update the configuration in matten EKS cluster with any new config needed for meterdata
 10. Execute the gitlab task matten:90:check:eks to verify that the cluster works with the updated configuration
+11. Check the EventBridge rule in EARL Prod-monthly-data-copy-Workflo-ScheduleRuleDA5BD877-mQj81xNFV30u will run at the right time (in local time zone)
 
 ### Manually executing the run
 
