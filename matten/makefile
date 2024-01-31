@@ -4,6 +4,7 @@ BUCKET=prd-matten-s3-rw-integration
 TOPIC=arn:aws:sns:ap-southeast-2:077642019132:prd-matten-sns-bua-notify-topic
 NOTIFY_STEPS=Restore
 WEEKLY_RUN_STEPS=EmptyQueues,CleanWorkflows,CleanInvoiceAttribute,CleanUtilityProfile,ScaleUpWorkflow,WarmStatistics,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Export,ProfileValidation,DumpErrors
+RESTART_STEPS=ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown,UtilityProfiles,Segments,Snapshot,Microscalar,BasicReads,ScaleUpMeterdata,GenerateNEM12,RestartMeterdata,InvoiceRuns,ILIExceptions,ScaleDown,Prepare,Snapshot,Export,ProfileValidation,DumpErrors,SwitchBastion
 
 # ###############################################
 #      MATTEN PRODUCTION RUN CONFIGURATION
@@ -28,3 +29,6 @@ list-parameters:
 
 5-weekly-run:
 	../bin/execute-bua-steps $(PROFILE) DecRun3 $(WEEKLY_RUN_STEPS)
+
+6-restart-run:
+	../bin/execute-bua-steps $(PROFILE) FebRestart1 $(RESTART_STEPS)
