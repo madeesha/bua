@@ -60,6 +60,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 5. Run the makefile target check-meterdata-config-matten to check for new config for meterdata
 6. Update the cluster project for matten and anstead with any new config needed for meterdata
 7. Update the configuration in matten EKS cluster with any new config needed for meterdata 
+8. Update the configuration in anstead EKS cluster with any new config needed for meterdata 
 
 #### Validate EKS configuration in ANSTEAD and MATTEN
 
