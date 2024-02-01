@@ -40,9 +40,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | December 2023   | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                       | 1st Jan 2024  | v25427   | v27718    | #18      |
 | January 2024    | prd-earl-1-sql-13-00-jan-31-2024-shared-key-encrypted                       | 1st Feb 2024  | v25427   | v27843    | #21      |
 
-## Running
-
-### Monthly pre-run checks (after the CORE release each month)
+## Monthly pre-run checks (after the CORE release each month)
 
 #### Update version of services in ANSTEAD and MATTEN
 
@@ -83,13 +81,13 @@ https://gitlab.com/alintaenergy/ops/utils/month-end-prod-data-workflow/-/pipelin
 1. Check the EventBridge rule in EARL Prod-monthly-data-copy-Workflo-ScheduleRuleDA5BD877-mQj81xNFV30u will run at the right time (in local time zone)
 
 
-### Manually executing the run
+## Manually executing the run
 
 If the last run needs to be repeated in a new RDS instance then use the gitlab task ```rerun``` to achieve this.
 
 If particular steps need to be run with the current RDS instance then use the relevant gitlab task.
 
-### Deleting the RDS instance
+## Deleting the RDS instance
 
 The best way to delete an RDS instance from a prior run is to delete the cloudformation stack that created it.
 
