@@ -29,6 +29,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | November 2023   | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted                       | 1st Dec 2023  | v25427   | v27649    | #26     |
 | December 2023   | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                       | 1st Jan 2024  | v25427   | v27718    | #27     |
 | December 2023   | tmp-prd-earl-1-sql-23-15-Jan-21-2024-11-24-Jan-22-2024-shared-key-encrypted | 21st Jan 2024 | v25433   | v27843    | #29     | disable keepalive in workflow                   |
+| December 2023   | tst-anstead-29-bua-sql-20240101-20240123-20240125-095423                    | 21st Jan 2024 | v25427   | v27843    | #30     | testing rds oom during invoicing                |
 
 ### MATTEN
 
