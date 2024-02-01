@@ -44,17 +44,43 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 
 ### Monthly pre-run checks (after the CORE release each month)
 
+#### Update version of services in ANSTEAD and MATTEN
+
 1. Get the latest version of workflow and meterdata from EARL
 2. Update the cluster project for matten and anstead with the same versions
 3. Update the configuration in the matten EKS cluster with the same versions manually
-4. Run the makefile target check-workflow-config-matten to check for new config for workflow
-5. Update the cluster project for matten and anstead with any new config needed for workflow
-6. Update the configuration in matten EKS cluster with any new config needed for workflow
-7. Run the makefile target check-meterdata-config-matten to check for new config for meterdata
-8. Update the cluster project for matten and anstead with any new config needed for meterdata
-9. Update the configuration in matten EKS cluster with any new config needed for meterdata
-10. Execute the gitlab task matten:90:check:eks to verify that the cluster works with the updated configuration
-11. Check the EventBridge rule in EARL Prod-monthly-data-copy-Workflo-ScheduleRuleDA5BD877-mQj81xNFV30u will run at the right time (in local time zone)
+4. Update the configuration in the anstead EKS cluster with the same versions manually
+
+#### Update service configuration changes from EARL into ANSTEAD and MATTEN
+
+1. Run the makefile target check-workflow-config-matten to check for new config for workflow
+2. Update the cluster project for matten and anstead with any new config needed for workflow
+3. Update the configuration in matten EKS cluster with any new config needed for workflow
+4. Update the configuration in anstead EKS cluster with any new config needed for workflow
+5. Run the makefile target check-meterdata-config-matten to check for new config for meterdata
+6. Update the cluster project for matten and anstead with any new config needed for meterdata
+7. Update the configuration in matten EKS cluster with any new config needed for meterdata 
+
+#### Validate EKS configuration in ANSTEAD and MATTEN
+
+1. Execute the gitlab task anstead:90:check:eks to verify that the cluster works with the updated configuration
+2. Execute the gitlab task matten:90:check:eks to verify that the cluster works with the updated configuration
+
+#### Get latest EARL snapshot and test in ANSTEAD
+
+```
+Alinta platforms gitlab project to generate EARL snapshots for ANSTEAD
+https://gitlab.com/alintaenergy/ops/utils/month-end-prod-data-workflow/-/pipelines
+```
+
+1. Execute the task anstead-rds-refresh in the ops/utils/month-end-prod-data-workflow gitlab project pipeline
+2. Check the tst-anstead-bua step function has executed successfully in ANSTEAD once the above gitlab task has completed
+3. Execute the anstead:99:rerun gitlab task in the bua-aws gitlab project to test the snapshot in ANSTEAD
+4. Check the tst-anstead-bua step function has re-run succesfully.
+
+#### Check the EARL monthly schedule
+1. Check the EventBridge rule in EARL Prod-monthly-data-copy-Workflo-ScheduleRuleDA5BD877-mQj81xNFV30u will run at the right time (in local time zone)
+
 
 ### Manually executing the run
 
