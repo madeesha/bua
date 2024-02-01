@@ -94,6 +94,30 @@ The best way to delete an RDS instance from a prior run is to delete the cloudfo
 For example: 
 ```aws cloudformation delete-stack --stack-name prd-matten-16-bua-sql``` 
 
+
+## Execution and Monitoring
+
+### BEWARE, WARNING
+
+**IT IS NOT A GOOD IDEA TO RUN THE PROFILING STEP FUNCTION TWICE FOR THE SAME RUN DATE**
+
+The reason is it takes a while to delete the old records and the lambda often times out trying.
+If you need to then manually delete the old records first and then run it.
+
+**IT IS IMPORTANT THAT THE SAME RUN DATE IS USED FOR ALL STEP FUNCTIONS**
+
+If you do not then chances are the correct data will not be found by subsequent step functions.
+If you need to re-run steps after an automated run fails, 
+then ensure you use the same run date for the manual steps as was used for the automated run.
+
+**DO NOT RUN TESTS IN ANSTEAD ON THE 1st OF THE MONTH**
+
+On the first of the month a snapshot of EARL is provided to MATTEN and automatically triggers the monthly run.
+The same snapshot is then anonymised in EARL and then provided to ANSTEAD where it triggers updating the parameter store ready for use.
+The anonymisation takes about 15 hours, so this occurs around 3-4pm on the 1st of the month in ANSTEAD.
+Therefore, do not run the step functions on the 1st of the month in ANSTEAD to avoid conflicts with this automated process.
+
+
 ## Architecture
 
 ### EARL Pipeline
@@ -219,22 +243,6 @@ MATTEN-Destroy;
 | bua-warm-indexes           | Warm the indexes of specific tables                        | WarmIndexes           | 
 | bua-warm-statistics         | Warm the statistics of all tables                         | WarmStatistics        |
 | bua-warming                | Force read from S3 to EBS for an RDS instance              | Warming               |
-
-## Execution and Monitoring
-
-### BEWARE, WARNING
-
-**IT IS NOT A GOOD IDEA TO RUN THE PROFILING STEP FUNCTION TWICE FOR THE SAME RUN DATE**
-
-The reason is it takes a while to delete the old records and the lambda often times out trying.
-If you need to then manually delete the old records first and then run it.
-
-**IT IS IMPORTANT THAT THE SAME RUN DATE IS USED FOR ALL STEP FUNCTIONS**
-
-If you do not then chances are the correct data will not be found by subsequent step functions.
-If you need to re-run steps after an automated run fails, 
-then ensure you use the same run date for the manual steps as was used for the automated run.
-
 
 ## Step Functions
 
