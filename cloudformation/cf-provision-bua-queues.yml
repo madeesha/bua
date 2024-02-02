@@ -38,6 +38,23 @@ Resources:
         - Key: resource-class
           Value: data
 
+  LocalNotifyTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowRunnerToPublish
+            Effect: Allow
+            Action:
+              - 'SNS:Publish'
+            Resource:
+              - !Ref LocalNotifyTopic
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/${ClassName}-core-build"
+      Topics:
+        - !Ref LocalNotifyTopic
+
   LocalNotifyTopicSubscription:
     Type: AWS::SNS::Subscription
     Properties:
