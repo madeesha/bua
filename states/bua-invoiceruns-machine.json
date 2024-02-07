@@ -63,9 +63,9 @@
             "speed": "slow",
             "args": {
               "sql": [
-                "UPDATE Workflows SET priority = 'XHIGH' WHERE name = 'GENERATE_ILI'",
-                "UPDATE Workflows SET priority = 'HIGH' WHERE name = 'RUN_INVOICE_BATCH'",
-                "UPDATE Workflows SET priority = 'NORMAL' WHERE name = 'INVOICEGEN'",
+                "UPDATE Workflows SET priority = 'XHIGH', tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 3), max_execution_minutes = 5, sequence_spec = '\\'GENILI\\'' WHERE name = 'GENERATE_ILI'",
+                "UPDATE Workflows SET priority = 'HIGH', tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 30), max_execution_minutes = 35 WHERE name = 'RUN_INVOICE_BATCH'",
+                "UPDATE Workflows SET priority = 'NORMAL', tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 8), max_execution_minutes = 10 WHERE name = 'INVOICEGEN'",
                 "UPDATE GlobalSetting SET value = '1', active = 1 WHERE name = 'BUA_RUN'",
                 "CALL bua_approve_all_user_inv_hold()"
               ]
