@@ -90,9 +90,9 @@
             "speed": "slow",
             "args": {
               "num_groups": 16,
-              "num_batches": 90,
-              "concurrent_batches": 18,
-              "schedule_gap": 2,
+              "num_batches": 96,
+              "concurrent_batches": 32,
+              "schedule_gap": 1,
               "min_days": 1
             },
             "on": {
