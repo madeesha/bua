@@ -63,9 +63,9 @@
             "speed": "slow",
             "args": {
               "sql": [
-                "UPDATE Workflows SET priority = 'XHIGH' WHERE name = 'GENERATE_ILI'",
-                "UPDATE Workflows SET priority = 'HIGH' WHERE name = 'RUN_INVOICE_BATCH'",
-                "UPDATE Workflows SET priority = 'NORMAL' WHERE name = 'INVOICEGEN'",
+                "UPDATE Workflows SET priority = 'XHIGH', tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 3), max_execution_minutes = 5, sequence_spec = '\\'GENILI\\'' WHERE name = 'GENERATE_ILI'",
+                "UPDATE Workflows SET priority = 'HIGH', tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 30), max_execution_minutes = 35 WHERE name = 'RUN_INVOICE_BATCH'",
+                "UPDATE Workflows SET priority = 'NORMAL', tasks = JSON_SET(tasks, '$[0].timeoutMinutes', 8), max_execution_minutes = 10 WHERE name = 'INVOICEGEN'",
                 "UPDATE GlobalSetting SET value = '1', active = 1 WHERE name = 'BUA_RUN'",
                 "CALL bua_approve_all_user_inv_hold()"
               ]
@@ -90,9 +90,9 @@
             "speed": "slow",
             "args": {
               "num_groups": 16,
-              "num_batches": 90,
-              "concurrent_batches": 18,
-              "schedule_gap": 2,
+              "num_batches": 96,
+              "concurrent_batches": 32,
+              "schedule_gap": 1,
               "min_days": 1
             },
             "on": {
@@ -104,6 +104,7 @@
           },
           "130_wait_for_invoice_run_schedules": {
             "action": "wait_for_workflow_schedules",
+            "speed": "slow",
             "args": {
               "workflow_names": [
                 "GENERATE_ILI"
@@ -118,6 +119,7 @@
           },
           "140_wait_for_invoice_runs_ili": {
             "action": "wait_for_workflows",
+            "speed": "slow",
             "retry_delay": 300,
             "args": {
               "max_errors": 100000,
@@ -137,6 +139,7 @@
           },
           "150_wait_for_invoice_run_batches": {
             "action": "wait_for_workflows",
+            "speed": "slow",
             "retry_delay": 300,
             "args": {
               "workflow_names": [
@@ -157,6 +160,7 @@
           },
           "160_reschedule_failed_invoice_batches": {
             "action": "resubmit_failed_workflows",
+            "speed": "slow",
             "retries": 3,
             "args": {
               "workflow_names": [
@@ -172,6 +176,7 @@
           },
           "170_wait_for_invoice_run_batches": {
             "action": "wait_for_workflows",
+            "speed": "slow",
             "retry_delay": 300,
             "args": {
               "max_errors": 100000,
@@ -191,6 +196,7 @@
           },
           "180_wait_for_invoicegen": {
             "action": "wait_for_workflows",
+            "speed": "slow",
             "retry_delay": 300,
             "retries": 42,
             "args": {
@@ -213,6 +219,7 @@
           },
           "190_reschedule_failed_invoicegen": {
             "action": "resubmit_failed_workflows",
+            "speed": "slow",
             "retries": 1,
             "args": {
               "workflow_names": [
@@ -228,6 +235,7 @@
           },
           "200_wait_for_invoicegen": {
             "action": "wait_for_workflows",
+            "speed": "slow",
             "retry_delay": 300,
             "retries": 9,
             "args": {
@@ -264,6 +272,7 @@
           },
           "220_check_invoicegen_status": {
             "action": "wait_for_workflows",
+            "speed": "slow",
             "retries": 0,
             "args": {
               "max_errors": 100000,
