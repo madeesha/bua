@@ -32,6 +32,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | December 2023   | tst-anstead-29-bua-sql-20240101-20240123-20240125-095423                    | 21st Jan 2024 | v25427   | v27843    | #30     | testing rds oom during invoicing                |
 | January 2024    | tmp-prd-earl-1-sql-13-00-Jan-31-2024-02-55-Feb-01-2024-shared-key-encrypted | 1st Feb 2024  | v25427   | v27843    | #32     |
 | January 2024    | tst-anstead-32-bua-sql-20240201-20240201-20240203-002614                    | 1st Feb 2024  | v25427   | v27843    | #33     | testing rds oom during invoicing                |
+| January 2024    | tmp-prd-earl-1-sql-13-00-Jan-31-2024-02-55-Feb-01-2024-shared-key-encrypted | 1st Feb 2024  | v25427   | v27843    | #35     | testing all config changes effects on all steps |
 
 ### MATTEN
 
