@@ -45,7 +45,7 @@ help:
 	../../bin/list-bua-parameters $(PROFILE) | tee $(PROFILE)-parameters.txt
 
 2-restore:
-	../../bin/execute-bua-steps $(PROFILE) NEM12-Restore Restore,WarmStatistics,WarmIndexes
+	../../bin/execute-bua-steps $(PROFILE) NEM12-Restore Restore,ScaleUpWorkflow,WarmStatistics,WarmIndexes
 
 3-scale-up:
 	../../bin/execute-bua-steps $(PROFILE) NEM12-ScaleUp ScaleUpMeterdata
