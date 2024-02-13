@@ -28,11 +28,31 @@
                 "end_inclusive",
                 "end_exclusive",
                 "cluster_name",
-                "node_group_name"
+                "node_group_name",
+                "rds_dns_alias",
+                "hosted_zone_id"
               ]
             },
             "on": {
               "COMPLETE": {
+                "next": "050_switch_dns"
+              }
+            }
+          },
+          "050_switch_dns": {
+            "comment": "need to update route53 entries with the rds server endpoint",
+            "action": "set_rds_dns_entry",
+            "args": {
+              "route53_records": [
+                {
+                  "name": "{{rds_dns_alias}}",
+                  "type": "CNAME"
+                }
+              ]
+            },
+            "on": {
+              "COMPLETE": {
+                "delay": 60,
                 "next": "100_scale_up_nodegroup"
               }
             }
