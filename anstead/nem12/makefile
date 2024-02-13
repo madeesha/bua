@@ -47,14 +47,17 @@ help:
 2-restore:
 	../../bin/execute-bua-steps $(PROFILE) NEM12-Restore Restore,ScaleUpWorkflow,WarmStatistics,WarmIndexes
 
-3-scale-up:
+3-warm:
+	../../bin/execute-bua-steps $(PROFILE) NEM12-Warm ScaleUpWorkflow,WarmStatistics,WarmIndexes,ScaleDown
+
+4-scale-up:
 	../../bin/execute-bua-steps $(PROFILE) NEM12-ScaleUp ScaleUpMeterdata
 
-4-test-nem12:
+5-test-nem12:
 	../../bin/execute-bua-steps $(PROFILE) NEM12-Test GenerateNEM12
 
-5-reset-nem12:
+6-reset-nem12:
 	../../bin/execute-bua-steps $(PROFILE) NEM12-Reset ResetNEM12
 
-6-scale-down:
+7-scale-down:
 	../../bin/execute-bua-steps $(PROFILE) NEM12-ScaleDown ScaleDown
