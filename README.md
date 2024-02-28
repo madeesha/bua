@@ -22,18 +22,18 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 
 ### ANSTEAD
 
-| Accrual         | Snapshot                                                                    | Snapshot Date | Workflow | Meterdata | Anstead | Notes                                           |
-|-----------------|-----------------------------------------------------------------------------|---------------|----------|-----------|---------|-------------------------------------------------|
-| September 2023  | prod-data-2023-10-01-snapshot-shared-key                                    | 1st Oct 2023  | v25427   | v27560    | #24     | workflow with improved retry sequence key logic |
-| October 2023    | prd-earl-1-sql-21-20-oct-31-2023-shared-key-encrypted                       | 1st Nov 2023  | v25427   | v27598    |         |
-| November 2023   | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted                       | 1st Dec 2023  | v25427   | v27649    | #26     |
-| December 2023   | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                       | 1st Jan 2024  | v25427   | v27718    | #27     |
-| December 2023   | tmp-prd-earl-1-sql-23-15-Jan-21-2024-11-24-Jan-22-2024-shared-key-encrypted | 21st Jan 2024 | v25433   | v27843    | #29     | disable keepalive in workflow                   |
-| December 2023   | tst-anstead-29-bua-sql-20240101-20240123-20240125-095423                    | 21st Jan 2024 | v25427   | v27843    | #30     | testing rds oom during invoicing                |
-| January 2024    | tmp-prd-earl-1-sql-13-00-Jan-31-2024-02-55-Feb-01-2024-shared-key-encrypted | 1st Feb 2024  | v25427   | v27843    | #32     |
-| January 2024    | tst-anstead-32-bua-sql-20240201-20240201-20240203-002614                    | 1st Feb 2024  | v25427   | v27843    | #33     | testing rds oom during invoicing                |
-| January 2024    | tmp-prd-earl-1-sql-13-00-Jan-31-2024-02-55-Feb-01-2024-shared-key-encrypted | 1st Feb 2024  | v25427   | v27843    | #35     | testing all config changes effects on all steps |
-| February 2024   | tmp-prd-earl-1-sql-10-37-feb-20-2024-02-02-feb-21-2024-shared-key-encrypted | 21st Feb 2024 | v25427   | v27899    | #37     | test run before the end of the month            |
+| Accrual        | Snapshot                                                                    | Snapshot Date | Workflow | Meterdata | Anstead | Notes                                           |
+|----------------|-----------------------------------------------------------------------------|---------------|----------|-----------|---------|-------------------------------------------------|
+| September 2023 | prod-data-2023-10-01-snapshot-shared-key                                    | 1st Oct 2023  | v25427   | v27560    | #24     | workflow with improved retry sequence key logic |
+| October 2023   | prd-earl-1-sql-21-20-oct-31-2023-shared-key-encrypted                       | 1st Nov 2023  | v25427   | v27598    |         |
+| November 2023  | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted                       | 1st Dec 2023  | v25427   | v27649    | #26     |
+| December 2023  | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                       | 1st Jan 2024  | v25427   | v27718    | #27     |
+| December 2023  | tmp-prd-earl-1-sql-23-15-Jan-21-2024-11-24-Jan-22-2024-shared-key-encrypted | 21st Jan 2024 | v25433   | v27843    | #29     | disable keepalive in workflow                   |
+| December 2023  | tst-anstead-29-bua-sql-20240101-20240123-20240125-095423                    | 21st Jan 2024 | v25427   | v27843    | #30     | testing rds oom during invoicing                |
+| January 2024   | tmp-prd-earl-1-sql-13-00-Jan-31-2024-02-55-Feb-01-2024-shared-key-encrypted | 1st Feb 2024  | v25427   | v27843    | #32     |
+| January 2024   | tst-anstead-32-bua-sql-20240201-20240201-20240203-002614                    | 1st Feb 2024  | v25427   | v27843    | #33     | testing rds oom during invoicing                |
+| January 2024   | tmp-prd-earl-1-sql-13-00-Jan-31-2024-02-55-Feb-01-2024-shared-key-encrypted | 1st Feb 2024  | v25427   | v27843    | #35     | testing all config changes effects on all steps |
+| January 2024   | tmp-prd-earl-1-sql-10-37-feb-20-2024-02-02-feb-21-2024-shared-key-encrypted | 21st Feb 2024 | v25427   | v27899    | #37     | test run before the end of the month            |
 
 ### MATTEN
 
