@@ -44,6 +44,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | November 2023   | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted                       | 1st Dec 2023  | v25427   | v27649    | #16      |
 | December 2023   | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                       | 1st Jan 2024  | v25427   | v27718    | #18      | 21:45:11 |
 | January 2024    | prd-earl-1-sql-13-00-jan-31-2024-shared-key-encrypted                       | 1st Feb 2024  | v25427   | v27843    | #21      | 21:46:22 |
+| February 2024   | prd-earl-1-sql-13-00-feb-29-2024-shared-key-encrypted                       | 1st Mar 2024  | v25427   | v27893    | #22      | 24:45:55 |
 
 ## Monthly pre-run checks (after the CORE release each month)
 
