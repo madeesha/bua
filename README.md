@@ -46,6 +46,9 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | January 2024    | prd-earl-1-sql-13-00-jan-31-2024-shared-key-encrypted                       | 1st Feb 2024  | v25427   | v27843    | #21      | 21:46:22 |
 | February 2024   | prd-earl-1-sql-13-00-feb-29-2024-shared-key-encrypted                       | 1st Mar 2024  | v25427   | v27893    | #22      | 24:45:55 |
 
+* Note: Runtime is the time when the stepfunction in earl that takes the snapshot starts until the time when the bua stepfunction in matten completed.
+* Note: If the stepfunction fails then exclude any time when it was not running from the calculation.
+
 ## Monthly pre-run checks (after the CORE release each month)
 
 #### Update version of services in ANSTEAD and MATTEN
