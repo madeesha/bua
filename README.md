@@ -39,15 +39,16 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 
 ### MATTEN
 
-| Accrual         | Snapshot                                                                   | Snapshot Date | Workflow | Meterdata | Matten   | Runtime  |
-|-----------------|----------------------------------------------------------------------------|---------------|----------|-----------|----------|----------|
-| September 2023  | prod-data-2023-10-01-snapshot-shared-key                                   | 1st Oct 2023  | v25427   | v27560    | #19      |
-| October 2023    | prd-earl-1-sql-21-20-oct-31-2023-shared-key-encrypted                      | 1st Nov 2023  | v25427   | v27598    | #13, #20 |
-| November 2023   | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted                      | 1st Dec 2023  | v25427   | v27649    | #16      |
-| December 2023   | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted                      | 1st Jan 2024  | v25427   | v27718    | #18      | 21:45:11 |
-| January 2024    | prd-earl-1-sql-13-00-jan-31-2024-shared-key-encrypted                      | 1st Feb 2024  | v25427   | v27843    | #21      | 21:46:22 |
-| February 2024   | prd-earl-1-sql-13-00-feb-29-2024-shared-key-encrypted                      | 1st Mar 2024  | v25427   | v27893    | #22      | 24:45:55 |
-| March 2024      | prd-earl-1-sql-13-00-mar-31-2024-shared-key-encrypted                      | 1st Apr 2024  | v25427   | v27893    | #23      | 21:02:58 |
+| Accrual        | Snapshot                                              | Snapshot Date | Workflow | Meterdata | Matten   | Runtime                                               |
+|----------------|-------------------------------------------------------|---------------|----------|-----------|----------|-------------------------------------------------------|
+| September 2023 | prod-data-2023-10-01-snapshot-shared-key              | 1st Oct 2023  | v25427   | v27560    | #19      |
+| October 2023   | prd-earl-1-sql-21-20-oct-31-2023-shared-key-encrypted | 1st Nov 2023  | v25427   | v27598    | #13, #20 |
+| November 2023  | prd-earl-1-sql-13-00-nov-30-2023-shared-key-encrypted | 1st Dec 2023  | v25427   | v27649    | #16      |
+| December 2023  | prd-earl-1-sql-13-00-dec-31-2023-shared-key-encrypted | 1st Jan 2024  | v25427   | v27718    | #18      | 21:45:11                                              |
+| January 2024   | prd-earl-1-sql-13-00-jan-31-2024-shared-key-encrypted | 1st Feb 2024  | v25427   | v27843    | #21      | 21:46:22                                              |
+| February 2024  | prd-earl-1-sql-13-00-feb-29-2024-shared-key-encrypted | 1st Mar 2024  | v25427   | v27893    | #22      | 24:45:55                                              |
+| March 2024     | prd-earl-1-sql-13-00-mar-31-2024-shared-key-encrypted | 1st Apr 2024  | v25427   | v27893    | #23      | 21:02:58                                              |
+| April 2024     | prd-earl-1-sql-2024-04-30-14-13-shared-key-encrypted  | 1st May 2024  | v25427   | v27893    | #27      | 20:06:55 (Manual run using system generated snapshot) |
 
 * Note: Runtime is the time when the stepfunction in earl that takes the snapshot starts until the time when the bua stepfunction in matten completed.
 * Note: If the stepfunction fails then exclude any time when it was not running from the calculation.
