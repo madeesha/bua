@@ -36,6 +36,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | January 2024   | tmp-prd-earl-1-sql-10-37-feb-20-2024-02-02-feb-21-2024-shared-key-encrypted | 21st Feb 2024 | v25427   | v27899    | #37     | test run before the end of the month            |
 | Feb 2024       | tmp-prd-earl-1-sql-05-16-mar-25-2024-20-37-mar-25-2024-shared-key-encrypted | 26th Mar 2024 | v25399   | v27932    | #40     | test run before the end of the month            |
 | March 2024     | tmp-prd-earl-1-sql-08-24-apr-23-2024-00-53-apr-24-2024-shared-key-encrypted | 24th Apr 2024 | v25399   | v27932    | #43     | test run before the end of the month            |
+| April 2024     | tmp-prd-earl-1-sql-14-00-May-31-2024-20-24-Jun-03-2024-shared-key-encrypted | 3rd June 2024 | v25399   | v28011    | #45     | test run after the end of the month             |
 
 ### MATTEN
 
