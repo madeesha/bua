@@ -35,7 +35,7 @@ Parameters:
   RDSMySQLVersion:
     Description: RDS MySQL Version
     Type: String
-    Default: "8.0.32"
+    Default: "8.0.35"
   SQLSecret:
     Description: SQL Secret Name
     Type: String

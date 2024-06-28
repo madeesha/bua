@@ -12,7 +12,7 @@ class TestCase(TestBase):
                 'params_id': 11,
                 'snapshot_arn': 'arn:aws:rds:ap-southeast-2:123:snapshot:mydb-snapshot',
                 'instance_type': '8xlarge',
-                'mysql_version': '8.0.32',
+                'mysql_version': '8.0.35',
                 'instance_class': 'DBInstanceClassR6i'
             },
             'steps': {
