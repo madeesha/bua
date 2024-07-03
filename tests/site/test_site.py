@@ -168,6 +168,51 @@ class TestClass:
         assert len(db.executions) == count
         assert db.commits == [True]
 
+    @pytest.mark.parametrize('nmi,res_bus,jurisdiction,tni,stream_types,start_inclusive,end_exclusive,records,count', [
+        ('1234567890', 'RES', 'QLD', 'QSPN', {'B1': 'SOLAR', 'E1': 'PRIMARY'}, '2023-01-01', '2023-01-01', [
+            {'IDT': '20230101', 'SFX': 'E1', 'CFG': 'B1E1', 'DIR': 'E',
+             'TOT': '48', 'CNT': '48',
+             'TEST': '0', 'CEST': '0',
+             'TACT': '48', 'CACT': '0',
+             'TSUB': '0', 'CSUB': '0',
+             'TFIN': '0', 'CFIN': '0',
+             'VAL': ['1'] * 48, 'QUA': ['A'] * 48,
+             'UOM': 'KWH', 'FDT': '202301010203', 'UDT': '20230101020304', 'MDT': None, 'SER': 'SERIAL1', 'REG': '001',
+             'MDM': 'N1'},
+            {'IDT': '20230101', 'SFX': 'E1', 'CFG': 'B1E1', 'DIR': 'E',
+             'TOT': '48', 'CNT': '48',
+             'TEST': '0', 'CEST': '0',
+             'TACT': '48', 'CACT': '0',
+             'TSUB': '0', 'CSUB': '0',
+             'TFIN': '0', 'CFIN': '0',
+             'VAL': ['1'] * 48, 'QUA': ['A'] * 48,
+             'UOM': 'KWH', 'FDT': '202301010203', 'UDT': '20230101020304', 'MDT': None, 'SER': 'SERIAL1', 'REG': '001',
+             'MDM': 'N1'},
+            {'IDT': '20230101', 'SFX': 'E1', 'CFG': 'B1E1', 'DIR': 'E',
+             'TOT': '48', 'CNT': '48',
+             'TEST': '0', 'CEST': '0',
+             'TACT': '48', 'CACT': '0',
+             'TSUB': '0', 'CSUB': '0',
+             'TFIN': '0', 'CFIN': '0',
+             'VAL': ['1'] * 48, 'QUA': ['A'] * 48,
+             'UOM': 'KWH', 'FDT': '202301010203', 'UDT': '20230101020304', 'MDT': None, 'SER': 'SERIAL1', 'REG': '001',
+             'MDM': 'N1'}
+        ], 6)
+    ])
+    def test_insert_batch(
+            self, nmi, res_bus, jurisdiction, tni, stream_types, start_inclusive, end_exclusive, records, count
+    ):
+        table = {}
+        queue = Queue({}, True, self.log)
+        db = Database()
+        conn = DBProxy(mysql=MySQL(db), username='test', password='test')
+        conn.connect({'prefix': 'tst', 'update_id': '1', 'suffix': 'sql', 'domain': 'com', 'schema': 'turkey'})
+        site = SiteData(queue, conn, self.log, True, table)
+        site.insert_site_data('Utility', '2023-06-01 00:00:00', nmi, res_bus, jurisdiction, tni, stream_types,
+                              start_inclusive, end_exclusive, records, batch_size=2)
+        assert len(db.executions) == count
+        assert db.commits == [True]
+
     @pytest.mark.parametrize(
         'identifier_type,jurisdiction_name,tni_name,res_bus,stream_type,avg_sum,incl_est,aggregator,_filter,identifier',
         [
