@@ -2,3 +2,9 @@
 venv
 .pytest_cache
 target
+/.idea
+/.scannerwork
+/.idea_modules
+/.classpath
+/.project
+/.settings

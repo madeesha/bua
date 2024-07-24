@@ -285,8 +285,9 @@ class SiteData(Action):
         return 'E'
 
     def insert_site_data(self, run_type, run_date, nmi, res_bus, jurisdiction, tni, stream_types,
-                         start_inclusive, end_exclusive, records):
+                         start_inclusive, end_exclusive, records, batch_size=10000):
         """Insert site data records into UtilityProfile"""
+
         with self.conn.cursor() as cur:
             try:
                 cur.execute(
@@ -308,6 +309,10 @@ class SiteData(Action):
                 )
                 sql = None
                 sql_args = []
+                commit_req_chunk = False
+                record_count = 1
+                batch_num = 1
+                total_records = len(records) if isinstance(records, list) else 0
                 for record in records:
                     read_date = record['IDT']
                     nmi_suffix = record['SFX']
@@ -345,17 +350,26 @@ class SiteData(Action):
                     args.append(record['MDM'])
                     columns = ','.join(fields)
                     params = ','.join(['%s'] * len(fields))
+                    commit_req_chunk = True if (record_count % batch_size == 0 or record_count >= total_records) else False
+                    sql_args.extend(args)
                     if sql is None:
                         sql = f"INSERT IGNORE INTO UtilityProfile ({columns}) VALUES ({params})"
                     else:
                         sql = sql + f",({params})"
-                    sql_args.extend(args)
-                if sql is not None and len(sql_args) > 0:
-                    cur.execute(sql, sql_args)
+
+                    """insert in batches to avoid memory issue"""
+                    if (commit_req_chunk == True and len(sql_args) > 0):
+                        cur.execute(sql, sql_args)
+                        log_message = f'Batch-{batch_num}: {record_count} records inserted for NMI: {nmi}'
+                        self.log(log_message)
+                        sql = None
+                        sql_args = []
+                        batch_num += 1
+                    record_count += 1
                 Action.record_processing_summary(
-                    cur, run_date, run_type, nmi, start_inclusive, len(records)
+                    cur, run_date, run_type, nmi, start_inclusive, total_records
                 )
-                self.log('Imported', len(records), 'records for nmi', nmi)
+                self.log('Imported', total_records, 'records for nmi', nmi)
                 self.conn.commit()
             except InternalError as ex:
                 traceback.print_exception(ex)
