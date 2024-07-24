@@ -285,7 +285,7 @@ class SiteData(Action):
         return 'E'
 
     def insert_site_data(self, run_type, run_date, nmi, res_bus, jurisdiction, tni, stream_types,
-                         start_inclusive, end_exclusive, records, batch_size=1000):
+                         start_inclusive, end_exclusive, records, batch_size=10000):
         """Insert site data records into UtilityProfile"""
 
         with self.conn.cursor() as cur:
