@@ -57,6 +57,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | May 2024       | prd-earl-1-sql-14-00-May-31-2024-shared-key-encrypted | 1st June 2024 | v25427   | v27995    | #28      | 20:35:06.686                                          |
 | June 2024      | prd-earl-1-sql-14-00-jun-30-2024-shared-key-encrypted | 1st July 2024 | v25427   | v28110    | #29      | 23:01:50.672                                          |
 | July 2024      | prd-earl-1-sql-14-00-jul-31-2024-shared-key-encrypted | 1st Aug 2024  | v25427   | v28135    | #30      | 26:08:30.699                                          |
+| August 2024    | prd-earl-1-sql-14-00-aug-31-2024-shared-key-encrypted | 1st Sep 2024  | v25449   | v28148    | #31      | 20:56:08.375                                          |
 
 * Note: Runtime is the time when the stepfunction in earl that takes the snapshot starts until the time when the bua stepfunction in matten completed.
 * Note: If the stepfunction fails then exclude any time when it was not running from the calculation.
