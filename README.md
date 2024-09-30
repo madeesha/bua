@@ -41,6 +41,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | May 2024       | tmp-prd-5-6-24-shared-encrypted-key                                         | 11th July 2024 | v25399   | v28110    | #48     | Utility profiles run for 3 years of data.       |
 | June 2024      | tmp-prd-5-6-24-shared-encrypted-key                                         | 31st July 2024 | v25399   | v28129    | #49     | test run for period 01/05/2024 - 30/06/2024     |
 | July 2024      | tmp-prd-earl-1-sql-23-50-aug-25-2024-13-49-aug-26-2024-shared-key-encrypted | 27th Aug 2024  | v25449   | v28148    | #52     | test run before the end of the month            |
+| Aug 2024       | tmp-prd-earl-1-sql-01-13-sep-25-2024-18-13-sep-25-2024-shared-key-encrypted | 28th Sep 2024  | v25449   | v28167    | #56     | snapshot creation extremely slow. Prod limit 100|
 
 ### MATTEN
 
