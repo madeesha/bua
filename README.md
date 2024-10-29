@@ -110,6 +110,14 @@ https://gitlab.com/alintaenergy/ops/utils/month-end-prod-data-workflow/-/pipelin
 SHOW CREATE PROCEDURE bua_prepare_export_data;
 ```
 Need to make sure the sql_mode for bua_prepare_export_data is "REAL_AS_FLOAT,PIPES_AS_CONCAT,ANSI_QUOTES,IGNORE_SPACE,ONLY_FULL_GROUP_BY,ANSI"
+If STRICT_TRANS_TABLES exists in the sql_mode, use below command to remove it.
+```
+export MYSQL_HOST=<host>
+export MYSQL_PORT=<por>
+export MYSQL_USER=<db-user>
+export file=conf/Procedures/R__bua_prepare_export_data.sql
+cat "${file}" | mysql --host="${MYSQL_HOST}" --port="${MYSQL_PORT}" --user="${MYSQL_USER}" --init-command="SET SESSION SQL_MODE='REAL_AS_FLOAT,PIPES_AS_CONCAT,ANSI_QUOTES,IGNORE_SPACE,ONLY_FULL_GROUP_BY,ANSI';" Turkey_BLU -p
+```
 
 ## Manually executing the run
 
