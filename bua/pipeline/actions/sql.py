@@ -35,7 +35,7 @@ class SQL:
             cursorclass=pymysql.cursors.DictCursor, autocommit=False
         )
         with con.cursor() as cur:
-            cur.execute("SET SESSION innodb_lock_wait_timeout = 60")
+            cur.execute("SET SESSION innodb_lock_wait_timeout = 300")
         return con
 
     def clean_site_data(self, request: HandlerRequest):
