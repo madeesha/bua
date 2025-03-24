@@ -60,6 +60,8 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 | July 2024      | prd-earl-1-sql-14-00-jul-31-2024-shared-key-encrypted | 1st Aug 2024  | v25427   | v28135    | #30      | 26:08:30.699                                          |
 | August 2024    | prd-earl-1-sql-14-00-aug-31-2024-shared-key-encrypted | 1st Sep 2024  | v25449   | v28148    | #31      | 20:56:08.375                                          |
 | September 2024 | prd-earl-1-sql-14-00-sep-30-2024-shared-key-encrypted | 1st Oct 2024  | v25449   | v28167    | #32      | 2D:13H (3 redrives due to failures)                   |
+| March 2025     | prd-earl-1-sql-13-00-feb-28-2025-shared-key-encrypted | 1st Mar 2025  | v25448   | v28350    |          |                                                       |
+
 
 * Note: Runtime is the time when the stepfunction in earl that takes the snapshot starts until the time when the bua stepfunction in matten completed.
 * Note: If the stepfunction fails then exclude any time when it was not running from the calculation.
@@ -740,3 +742,201 @@ None
 #### Steps
 
 1. Delete the cloudformation stack (e.g. prd-matten-14-bua-sql)
+
+
+
+# Utility Profile Step - Temporary Fix Guide
+
+For each month's BUA run, we keep monitoring the Matten AWS Step Functions. If the `UtilityProfile` step fails due to exceeding the AWS Lambda 15-minute limitation, we will see the `UtilityProfile` step function in red. In such cases, we need to apply a temporary fix and then redrive the main BUA step function.
+
+## Steps to Apply Temporary Fix
+
+1. **Clean History Data**
+   - Execute the necessary SQL commands to clean history data.
+   
+<details>
+<summary>SQL truncate tables</summary>
+
+
+```
+TRUNCATE TABLE UtilityProfile;
+TRUNCATE TABLE UtilityProfileVariance;
+TRUNCATE TABLE UtilityProfileSummary;
+```
+
+</details>
+
+2. **Create and Populate Temporary Table**
+   - Manually run SQL to create a temporary table.
+   - Manually run SQL to create a stored procedure.
+   - Call the stored procedure to populate this temporary table.
+
+<details>
+<summary>Create bua_list_profile_registers_temp table</summary>
+
+
+```
+CREATE TABLE "bua_list_profile_registers_temp" (
+  "nmi" varchar(15) DEFAULT NULL,
+  "res_bus" varchar(3) DEFAULT NULL,
+  "jurisdiction" varchar(50) DEFAULT NULL,
+  "nmi_suffix" varchar(10) DEFAULT NULL,
+  "stream_type" varchar(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
+  "tni" varchar(50) DEFAULT NULL
+)
+```
+
+</details>
+
+<details>
+<summary>Create stored proc</summary>
+
+
+```
+DELIMITER $$
+CREATE PROCEDURE bua_list_profile_registers_ruibin(
+IN in_start_inclusive DATE,
+IN in_end_exclusive DATE,
+IN in_today DATE,
+IN in_run_date DATETIME)
+COMMENT 'List the registers that are to be included in profile segment generation'
+BEGIN
+    DECLARE vi_run_date DATETIME DEFAULT COALESCE(in_run_date, CAST(CAST(DATE_SUB(NOW(), INTERVAL DAYOFMONTH(NOW())-1 DAY) AS DATE) AS DATETIME));
+    DECLARE vi_today DATE DEFAULT COALESCE(in_today, DATE_SUB(CAST(vi_run_date AS DATE), INTERVAL DAYOFMONTH(vi_run_date)-1 DAY));
+    DECLARE vi_month_start DATE DEFAULT DATE_SUB(vi_today, INTERVAL DAYOFMONTH(vi_today)-1 DAY);
+    DECLARE vi_year_ago DATE DEFAULT DATE_SUB(vi_month_start, INTERVAL 1 YEAR);
+    DECLARE vi_start_inclusive DATE DEFAULT COALESCE(in_start_inclusive, vi_year_ago);
+    DECLARE vi_end_exclusive DATE DEFAULT COALESCE(in_end_exclusive, vi_month_start);
+
+        DELETE FROM bua_list_profile_registers_temp;
+        INSERT INTO bua_list_profile_registers_temp (nmi, res_bus, jurisdiction, nmi_suffix, stream_type, tni)
+    SELECT
+        ut.identifier AS 'nmi',
+        SUBSTR(COALESCE(ut.cust_class_code, 'RESIDENTIAL'),1,3) AS 'res_bus',
+        ju.name AS 'jurisdiction',
+        mr.suffix_id AS 'nmi_suffix',
+        CASE
+            WHEN COALESCE(mp.value, 'NO') = 'YES' THEN 'CONTROL'
+            WHEN SUBSTR(mr.suffix_id,1,1) = 'A' THEN 'SOLAR'
+            WHEN SUBSTR(mr.suffix_id,1,1) = 'B' THEN 'SOLAR'
+            WHEN SUBSTR(mr.suffix_id,1,1) = 'C' THEN 'SOLAR'
+            WHEN SUBSTR(mr.suffix_id,1,1) = 'J' THEN 'SOLAR'
+            WHEN SUBSTR(mr.suffix_id,1,1) = 'K' THEN 'SOLAR'
+            WHEN SUBSTR(mr.suffix_id,1,1) = 'L' THEN 'SOLAR'
+            WHEN SUBSTR(mr.suffix_id,1,1) = 'N' AND mr.direction_indicator = 'I' THEN 'SOLAR'
+            WHEN SUBSTR(mr.suffix_id,1,1) = 'X' AND mr.direction_indicator = 'I' THEN 'SOLAR'
+            ELSE 'PRIMARY'
+            END AS 'stream_type',
+        MAX(IF(ud.utility_status='A',tn.name,'')) AS 'tni'
+    FROM MeterRegister mr
+    LEFT JOIN MarketPayloadMapping mp ON mp.market_value = mr.controlled_load AND mp.market_tag = 'ControlledLoad'
+    JOIN Meter mt ON mr.meter_id = mt.id
+    JOIN Utility ut ON mt.utility_id = ut.id
+    JOIN UtilityDetail ud ON ud.utility_id = ut.id
+    JOIN UtilityNetwork un ON ut.utility_network_id = un.id
+    JOIN UtilityTni tn ON ud.utility_tni_id = tn.id
+    JOIN Jurisdiction ju ON ju.id = un.jurisdiction_id
+    JOIN ServiceType st ON un.service_type_id = st.id AND st.name = 'ELECTRICITY'
+    JOIN MeterRegisterDetail md ON md.meter_register_id = mr.id AND md.status = 'C' AND md.start_date < vi_end_exclusive AND COALESCE(md.end_date,NOW()) >= vi_start_inclusive
+    WHERE (
+        mt.meter_installation_type LIKE 'COMMS%'
+        OR mt.meter_installation_type LIKE 'MR%'
+    )
+    AND LENGTH(ut.identifier) = 10
+    GROUP BY ut.identifier, ut.cust_class_code, ju.name, mr.suffix_id, mp.value, mr.direction_indicator
+    ORDER BY 1;
+END;$$
+DELIMITER ;
+```
+
+</details>
+
+<details>
+<summary>Populate bua_list_profile_registers_temp table</summary>
+
+
+```
+-- in_start_inclusive,     in_end_exclusive, in_today,   in_run_date
+-- 2024-05-01 (last year), 2025-05-01,       2025-05-01, 2025-05-01
+
+CALL bua_list_profile_registers_ruibin('2024-05-01', '2025-05-01', '2025-05-01', '2025-05-01');
+```
+
+</details>
+
+
+3. **Deploy Hot-Fix Branch**
+   - Deploy the hot-fix branch into the Matten environment. 
+   - Ensure that the hot-fix branch is **not** merged into the master branch.
+   - [hot-fix merge request](https://gitlab.com/alintaenergy/serverless/bua-aws/-/merge_requests/166/diffs)
+
+4. **Redrive Main BUA Step Function**
+   - After the temporary table is populated and the hot-fix branch is deployed, **redrive** the main BUA step function.
+
+5. **Monitor the Run**
+   - Continuously monitor the run until it is finished in Matten. Typically, the run starts at 0:00 on the 1st of the month and finishes around 6:00 am on the 2nd of the month.
+
+6. **Check S3 Bucket**
+   - Verify that the S3 bucket contains all the expected CSV files after the BUA step function is complete.
+   - s3://prd-matten-s3-rw-integration/ADH/OUTBOUND/BUA
+
+7. **Summarize the BUA Run**
+   - Manually run an SQL query in Matten to get the summary of the BUA run.
+   - Share the summary with the stakeholders:
+     - "Martin, Yasna" <Yasna.Martin@alintaenergy.com.au>; 
+     - "Seebacher, Anais" <Anais.Seebacher@alintaenergy.com.au>;
+     - "Davis, Andrew" <Andrew.Davis@alintaenergy.com.au>; 
+     - "Donelson, Melanie" <Melanie.Donelson@alintaenergy.com.au>; 
+     - "Firth, Michael" <Michael.Firth@alintaenergy.com.au>; 
+     - "Heffernan, Heath" <Heath.Heffernan@alintaenergy.com.au>; 
+     - "Mukherjee, Jaya" <Jaya.Mukherjee@alintaenergy.com.au>; 
+     - "Nickolas Kardamitsis" <Nickolas.Kardamitsis@tally-group.com>; 
+     - "Ruibin Chen" <Ruibin.Chen@tally-group.com>;
+
+<details>
+<summary>SQL for summary and export into CSV</summary>
+
+
+```
+CREATE TEMPORARY TABLE tmp_accrual_export AS
+SELECT ili_state,
+       discount_state,
+       feature_type_name,
+       j.name state,
+       st.name fuel,
+       jas.name segment,
+       ilim.year_mnth,
+       time_class_name,
+       SUM(ilim.net_amount) net_amount,
+       SUM(IF(ilim.plan_item_type_name = 'USAGE_RETAIL' ,ilim.quantity, 0)) volume,
+       SUM(IF(ilim.plan_item_type_name = 'DAILY_RETAIL',ilim.quantity, 0)) days,
+       COUNT(distinct a.id) accounts,
+       SUM(ilim.discount_net_propensity) discount_net_propensity,
+       SUM(ilim.discount_net) discount_net,
+       SUM(ilim.net_amount- ilim.discount_net_propensity) net_amount_less_discount
+FROM InvoiceLineItemMonthly ilim
+JOIN Account a ON a.id = ilim.account_id
+JOIN ServiceType st ON st.id = a.service_type_id
+JOIN JournalAccountSegment jas ON a.journal_segment_id = jas.id
+JOIN AccountUtility au ON au.account_id = a.id
+JOIN Utility u ON u.id = au.utility_id
+JOIN Jurisdiction j ON j.id = u.jurisdiction_id
+GROUP BY ili_state, discount_state,
+      feature_type_name, j.name, st.name, jas.name, ilim.year_mnth, time_class_name;
+      
+SELECT *
+FROM tmp_accrual_export;
+
+```
+
+</details>
+
+8. **Stop Matten RDS Instances**
+   - After receiving confirmation from stakeholders or after one week, stop the Matten RDS instances to save on budget.
+
+
+## Notes
+
+- Always ensure that the hot-fix branch is deployed correctly and that all temporary tables are populated before redriving the main BUA step function.
+- Keep close communication with stakeholders to confirm the run's success and address any issues promptly.
+
