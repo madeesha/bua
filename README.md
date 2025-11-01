@@ -68,6 +68,8 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 
 ## Monthly pre-run checks (after the CORE release each month)
 
+#### Make sure last month earl re encypted snapshot is present in the account. (This will exepedite the kms re-encyption in the run) - snapshot name should be something like this prd-earl-1-sql-13-00-oct-31-2025.
+
 #### Update version of services in ANSTEAD and MATTEN
 
 1. Get the latest version of workflow and meterdata from EARL
