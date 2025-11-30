@@ -77,7 +77,7 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 3. Update the configuration in the matten EKS cluster with the same versions manually
 4. Update the configuration in the anstead EKS cluster with the same versions manually
 
-#### Rollbadck Hot-Fix Branch code
+#### Rollback Hot-Fix Branch code
    - Deploy the code from main/master into the Matten environment. 
    - Validate Lambda Layer code has been deployed from main branch
 
