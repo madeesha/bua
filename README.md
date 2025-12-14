@@ -77,6 +77,10 @@ The BUA process relies upon the version of workflow and meterdata matching what 
 3. Update the configuration in the matten EKS cluster with the same versions manually
 4. Update the configuration in the anstead EKS cluster with the same versions manually
 
+#### Rollback Hot-Fix Branch code
+   - Deploy the code from main/master into the Matten environment. 
+   - Validate Lambda Layer code has been deployed from main branch
+
 #### Update service configuration changes from EARL into ANSTEAD and MATTEN
 
 1. Run the makefile target check-workflow-config-matten to check for new config for workflow
@@ -751,7 +755,7 @@ None
 
 For each month's BUA run, we keep monitoring the Matten AWS Step Functions. If the `UtilityProfile` step fails due to exceeding the AWS Lambda 15-minute limitation, we will see the `UtilityProfile` step function in red. In such cases, we need to apply a temporary fix and then redrive the main BUA step function.
 
-## Steps to Apply Temporary Fix
+## Steps to Apply Temporary Fix/Workaround
 
 1. **Clean History Data**
    - Execute the necessary SQL commands to clean history data.
@@ -868,11 +872,11 @@ CALL bua_list_profile_registers_ruibin('2024-05-01', '2025-05-01', '2025-05-01',
 
 
 3. **Deploy Hot-Fix Branch**
-   - Deploy the hot-fix branch into the Matten environment. 
-   - Ensure that the hot-fix branch is **not** merged into the master branch.
+   - Deploy the hot-fix branch (rahul/fix_oct_run) into the Matten environment. 
+   - Ensure that the hot-fix branch (rahul/fix_oct_run) is **not** merged into the master branch.
    - [hot-fix merge request](https://gitlab.com/alintaenergy/serverless/bua-aws/-/merge_requests/166/diffs)
 
-4. **Redrive Main BUA Step Function**
+4. **Redrive Main BUA Step Function (NOT THE UTILITY PROFILE ONE)**
    - After the temporary table is populated and the hot-fix branch is deployed, **redrive** the main BUA step function.
 
 5. **Monitor the Run**
