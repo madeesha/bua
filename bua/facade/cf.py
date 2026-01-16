@@ -99,6 +99,40 @@ class CF:
             DisableRollback=True
         )
 
+    def create_aurora_stack(
+            self, stack_name, template_path,
+            env_name, cluster_name,
+            params_id, snapshot_arn, prefix, update_id, suffix,
+            instance_type, engine_version
+    ):
+        print(f'Create Aurora stack with {template_path}')
+        if not os.path.exists(template_path):
+            raise Exception(f'Cannot find {template_path}')
+        with open(template_path, 'r') as fp:
+            template_body = '\n'.join(fp.readlines())
+        if len(template_body) > 51200:
+            raise Exception(f'Cannot use a template that exceeds 51200 bytes')
+        self.cf.create_stack(
+            StackName=stack_name,
+            TemplateBody=template_body,
+            Parameters=[
+                {'ParameterKey': 'ParamsID', 'ParameterValue': params_id},
+                {'ParameterKey': 'ResourcePrefix', 'ParameterValue': prefix},
+                {'ParameterKey': 'ClassName', 'ParameterValue': cluster_name},
+                {'ParameterKey': 'EnvironmentName', 'ParameterValue': env_name},
+                {'ParameterKey': 'InstanceType', 'ParameterValue': instance_type},
+                {'ParameterKey': 'DBSnapshotIdentifier', 'ParameterValue': snapshot_arn},
+                {'ParameterKey': 'EngineVersion', 'ParameterValue': engine_version},
+                {'ParameterKey': 'UpdateID', 'ParameterValue': update_id},
+                {'ParameterKey': 'BuildQlikCluster', 'ParameterValue': 'no'},
+                {'ParameterKey': 'BuildAuditCluster', 'ParameterValue': 'no'},
+            ],
+            Capabilities=[
+                'CAPABILITY_NAMED_IAM'
+            ],
+            DisableRollback=True
+        )
+
     def create_upgrade_version_change_set(self, stack_name, change_set_name, template_path, mysql_version):
         print(f'Create change set with {template_path}')
         if not os.path.exists(template_path):
