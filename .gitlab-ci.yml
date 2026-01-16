@@ -34,8 +34,8 @@ build:
       chmod u+x cf-lint
       ./cf-lint
     - |
-      # Check python test coverage
-      coverage run --branch -m pytest --durations=0 tests
+      # Check python test coverage with verbose output
+      coverage run --branch -m pytest --durations=0 -vv tests  # Added -vv for verbose
       coverage report -m
   variables:
     CF_ROLE: CloudformationReleaseRole
