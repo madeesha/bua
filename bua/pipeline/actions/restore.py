@@ -60,6 +60,10 @@ class Restore:
             
             msg = f'{stack_name} : Stack creation in progress'
             return "COMPLETE", msg
+        
+        # ADD THIS: Handle case when stack already exists
+        msg = f'{stack_name} : Stack already exists with status {stack["StackStatus"]}'
+        return "COMPLETE", msg
 
     def _convert_to_aurora_version(self, mysql_version):
         """Convert MySQL version to Aurora engine version format"""
