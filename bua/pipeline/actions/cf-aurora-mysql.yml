@@ -1,0 +1,450 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: RDS Aurora MySQL 8.0 Cluster template for CORE
+
+Parameters:
+  ResourcePrefix:
+    Description: 'Parameter store path holding the prefix to apply to resource names e.g. dev-musk'
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/encore/account/metadata/ResourcePrefix'
+  ClassName:
+    Description: 'Parameter store path holding the cluster or class name e.g. musk'
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/encore/account/metadata/ClassName'
+  EnvironmentName:
+    Description: 'Parameter store path holding the environment name e.g. dev'
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/encore/account/metadata/EnvironmentName'
+  UpdateID:
+    Description: 'Revision of the cluster to create'
+    Type: String
+    Default: "6"
+  DBName:
+    Description: 'Name of the MySQL database schema to create'
+    Type: String
+    Default: "Turkey_BLU"
+  BackupRetention:
+    Description: 'Number of days to keep automated backups for'
+    Type: String
+    Default: "7"
+  EngineVersion:
+    Description: 'Version of the Aurora cluster'
+    Type: String
+    Default: '8.0.mysql_aurora.3.02.2'
+    AllowedValues:
+      - "8.0.mysql_aurora.3.02.2"
+      - "8.0.mysql_aurora.3.02.3"
+      - "8.0.mysql_aurora.3.03.0"
+      - "8.0.mysql_aurora.3.03.1"
+  InstanceType:
+    Description: 'The RDS instance type to use for cluster instances'
+    Type: String
+    Default: "db.r6i.4xlarge"
+  ParamsID:
+    Description: 'Revision of the parameter groups to use for the cluster'
+    Type: String
+    Default: "1"
+  DBSnapshotIdentifier:
+    Description: 'Snapshot identifier to create database from or blank for new database or read replica'
+    Type: String
+    Default: ''
+  ReadReplicaOf:
+    Description: 'ARN of the source database to replicate from or blank for a primary cluster'
+    Type: String
+    Default: ''
+  WasReadReplica:
+    Description: 'Whether converting the cluster from a read replica to a primary'
+    Type: String
+    Default: 'yes'
+  BuildQlikCluster:
+    Description: 'Whether to build a replica cluster for Qlik. yes to build the Qlik cluster'
+    Type: String
+    Default: 'yes'
+  BuildAuditCluster:
+    Description: 'Whether to build a cluster for Audit. yes to build the Audit cluster'
+    Type: String
+    Default: 'yes'
+  AuditReadReplicaOf:
+    Description: 'ARN of the source audit database to replicate from or blank for a primary audit cluster'
+    Type: String
+    Default: ''
+  AuditWasReadReplica:
+    Description: 'Whether converting the audit cluster from a read replica to a primary'
+    Type: String
+    Default: 'yes'
+  AuditDBSnapshotIdentifier:
+    Description: 'Snapshot identifier to create audit database from or blank for new database or read replica'
+    Type: String
+    Default: ''
+  AuditDBName:
+    Description: 'Name of the audit MySQL database schema to create'
+    Type: String
+    Default: "audit"
+  AuditInstanceType:
+    Description: 'The RDS instance type to use for the audit cluster instances'
+    Type: String
+    Default: "db.r6i.large"
+  AuditParamsID:
+    Description: 'Revision of the parameter groups to use for the audit cluster'
+    Type: String
+    Default: "1"
+  DeleteProtection:
+    Description: 'Whether delete protection is enabled on the clusters'
+    Type: String
+    Default: "yes"
+  ClusterReadOnly:
+    Description: 'Whether the primary cluster is read only'
+    Type: String
+    Default: "no"
+  AuditReadOnly:
+    Description: 'Whether the audit cluster is read only'
+    Type: String
+    Default: "no"
+  ClusterReader:
+    Description: 'Whether the primary cluster has a reader instance'
+    Type: String
+    Default: "yes"
+  AuditReader:
+    Description: 'Whether the audit cluster has a reader instance'
+    Type: String
+    Default: "yes"
+  QlikReader:
+    Description: 'Whether the qlik cluster has a reader instance'
+    Type: String
+    Default: "yes"
+
+Conditions:
+  HasDeleteProtection: !Equals [!Ref DeleteProtection, 'yes']
+  ClusterShouldBeReadOnly: !Equals [ !Ref ClusterReadOnly, 'yes']
+  AuditShouldBeReadOnly: !Equals [ !Ref AuditReadOnly, 'yes']
+  HasDBSnapshotIdentifier: !Not [!Equals [!Ref DBSnapshotIdentifier, '']]
+  HasReplicaReference: !Not [!Equals [!Ref ReadReplicaOf, '']]
+  OnceWasReadReplica: !Equals [!Ref WasReadReplica, 'yes']
+  HasReplicaReferenceAndNotDBSnapshotIdentifier: !And [!Condition HasReplicaReference, !Not [ !Condition HasDBSnapshotIdentifier] ]
+  HasReplicaReferenceOrDBSnapshotIdentifier: !Or [!Condition HasReplicaReference, !Condition HasDBSnapshotIdentifier, !Condition OnceWasReadReplica]
+  ShouldBuildQlikCluster: !Equals [!Ref BuildQlikCluster, 'yes']
+  ShouldBuildAuditCluster: !Equals [!Ref BuildAuditCluster, 'yes']
+  HasAuditDBSnapshotIdentifier: !Not [!Equals [!Ref AuditDBSnapshotIdentifier, '']]
+  HasAuditReplicaReference: !Not [!Equals [!Ref AuditReadReplicaOf, '']]
+  OnceWasAuditReadReplica: !Equals [!Ref AuditWasReadReplica, 'yes']
+  HasAuditReplicaReferenceAndNotDBSnapshotIdentifier: !And [!Condition HasAuditReplicaReference, !Not [ !Condition HasAuditDBSnapshotIdentifier] ]
+  HasAuditReplicaReferenceOrDBSnapshotIdentifier: !Or [!Condition HasAuditReplicaReference, !Condition HasAuditDBSnapshotIdentifier, !Condition OnceWasAuditReadReplica]
+  ShouldBuildClusterReader: !Equals [!Ref ClusterReader, 'yes']
+  ShouldBuildQlikReader: !And [!Equals [!Ref BuildQlikCluster, 'yes'], !Equals [!Ref QlikReader, 'yes']]
+  ShouldBuildAuditReader: !And [!Equals [!Ref BuildAuditCluster, 'yes'], !Equals [!Ref AuditReader, 'yes']]
+
+Resources:
+
+  RdsClusterSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: 'CORE RDS Aurora MySQL 8.0 Instance Master Credentials'
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "core_admin"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ResourcePrefix}-rds-aurora-instance-secret'
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds-parameter-group
+        - Key: resource-class
+          Value: data
+
+  DBCluster:
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Type: 'AWS::RDS::DBCluster'
+    Properties:
+      BackupRetentionPeriod: !Ref BackupRetention
+      CopyTagsToSnapshot: true
+      DatabaseName: !If [ HasReplicaReferenceOrDBSnapshotIdentifier, !Ref 'AWS::NoValue', !Ref DBName ]
+      DBClusterIdentifier: !Sub "${ResourcePrefix}-aurora-${UpdateID}"
+      DBClusterParameterGroupName: !If [ HasReplicaReference,
+                                         !If [ ClusterShouldBeReadOnly,
+                                               !Sub 'core-rds-aurora-mysql8-replica-cluster-${ParamsID}-param-group',
+                                               !Sub 'core-rds-aurora-mysql8-writable-replica-cluster-${ParamsID}-param-group'],
+                                         !Sub 'core-rds-aurora-mysql8-cluster-${ParamsID}-param-group' ]
+      DBInstanceParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${ParamsID}-param-group'
+      DBSubnetGroupName: !Sub "${ResourcePrefix}-rds-subnet-group"
+      DeletionProtection: !If [ HasDeleteProtection, true, false]
+      EnableCloudwatchLogsExports:
+        - audit
+        - error
+        - general
+        - slowquery
+      Engine: 'aurora-mysql'
+      EngineMode: provisioned
+      EngineVersion: !Ref EngineVersion
+      KmsKeyId: !ImportValue CORECMK
+      MasterUsername: !If [ HasReplicaReferenceOrDBSnapshotIdentifier, !Ref 'AWS::NoValue', core_admin ]
+      MasterUserPassword: !If [ HasReplicaReferenceOrDBSnapshotIdentifier, !Ref 'AWS::NoValue', !Sub '{{resolve:secretsmanager:${RdsClusterSecret}::password}}' ]
+      Port: 3306
+      PreferredBackupWindow: '14:00-15:00'
+      PreferredMaintenanceWindow: 'Sun:15:00-Sun:15:45'
+      ReplicationSourceIdentifier: !If [ HasReplicaReferenceAndNotDBSnapshotIdentifier, !Ref ReadReplicaOf, !Ref 'AWS::NoValue' ]
+      SnapshotIdentifier: !If [ HasDBSnapshotIdentifier, !Ref DBSnapshotIdentifier, !Ref 'AWS::NoValue' ]
+      StorageEncrypted: !If [ HasDBSnapshotIdentifier, !Ref 'AWS::NoValue', true ]
+      VpcSecurityGroupIds:
+        - Fn::ImportValue:
+            Fn::Sub:
+              - '${ResourcePrefix}-RDSSecurityGroup'
+              - ResourcePrefix: !Ref ResourcePrefix
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-${UpdateID}"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+
+  DBInstanceA:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      DBClusterIdentifier: !Ref DBCluster
+      DBInstanceIdentifier: !Sub "${ResourcePrefix}-aurora-${UpdateID}-a"
+      DBInstanceClass: !Ref InstanceType
+      DBParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${ParamsID}-param-group'
+      Engine: 'aurora-mysql'
+      EnablePerformanceInsights: true
+      PerformanceInsightsKMSKeyId: !ImportValue CORECMK
+      PerformanceInsightsRetentionPeriod: 731
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-${UpdateID}-a"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+
+  DBInstanceB:
+    Type: 'AWS::RDS::DBInstance'
+    Condition: ShouldBuildClusterReader
+    DependsOn:
+      - DBInstanceA
+    Properties:
+      DBClusterIdentifier: !Ref DBCluster
+      DBInstanceIdentifier: !Sub "${ResourcePrefix}-aurora-${UpdateID}-b"
+      DBInstanceClass: !Ref InstanceType
+      DBParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${ParamsID}-param-group'
+      Engine: 'aurora-mysql'
+      EnablePerformanceInsights: true
+      PerformanceInsightsKMSKeyId: !ImportValue CORECMK
+      PerformanceInsightsRetentionPeriod: 731
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-${UpdateID}-b"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+
+  QlikCluster:
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Condition: ShouldBuildQlikCluster
+    Type: 'AWS::RDS::DBCluster'
+    DependsOn:
+      - DBInstanceA
+    Properties:
+      BackupRetentionPeriod: 1
+      CopyTagsToSnapshot: true
+      DBClusterIdentifier: !Sub "${ResourcePrefix}-aurora-qlik-${UpdateID}"
+      DBClusterParameterGroupName: !Sub 'core-rds-aurora-mysql8-replica-cluster-${ParamsID}-param-group'
+      DBInstanceParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${ParamsID}-param-group'
+      DBSubnetGroupName: !Sub "${ResourcePrefix}-rds-subnet-group"
+      DeletionProtection: !If [ HasDeleteProtection, true, false]
+      EnableCloudwatchLogsExports:
+        - audit
+        - error
+        - general
+        - slowquery
+      Engine: 'aurora-mysql'
+      EngineMode: provisioned
+      EngineVersion: !Ref EngineVersion
+      KmsKeyId: !ImportValue CORECMK
+      Port: 3306
+      PreferredBackupWindow: '14:00-15:00'
+      PreferredMaintenanceWindow: 'Sun:15:00-Sun:15:45'
+      ReplicationSourceIdentifier: !GetAtt DBCluster.DBClusterArn
+      StorageEncrypted: true
+      VpcSecurityGroupIds:
+        - Fn::ImportValue:
+            Fn::Sub:
+              - '${ResourcePrefix}-RDSSecurityGroup'
+              - ResourcePrefix: !Ref ResourcePrefix
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-qlik-${UpdateID}"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+
+  QlikInstanceA:
+    Type: 'AWS::RDS::DBInstance'
+    Condition: ShouldBuildQlikCluster
+    Properties:
+      DBClusterIdentifier: !Ref QlikCluster
+      DBInstanceIdentifier: !Sub "${ResourcePrefix}-aurora-qlik-${UpdateID}-a"
+      DBInstanceClass: !Ref InstanceType
+      DBParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${ParamsID}-param-group'
+      Engine: 'aurora-mysql'
+      EnablePerformanceInsights: true
+      PerformanceInsightsKMSKeyId: !ImportValue CORECMK
+      PerformanceInsightsRetentionPeriod: 731
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-qlik-${UpdateID}-a"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+
+  QlikInstanceB:
+    Type: 'AWS::RDS::DBInstance'
+    Condition: ShouldBuildQlikReader
+    Properties:
+      DBClusterIdentifier: !Ref QlikCluster
+      DBInstanceIdentifier: !Sub "${ResourcePrefix}-aurora-qlik-${UpdateID}-b"
+      DBInstanceClass: !Ref InstanceType
+      DBParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${ParamsID}-param-group'
+      Engine: 'aurora-mysql'
+      EnablePerformanceInsights: true
+      PerformanceInsightsKMSKeyId: !ImportValue CORECMK
+      PerformanceInsightsRetentionPeriod: 731
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-qlik-${UpdateID}-b"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+
+  AuditCluster:
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Condition: ShouldBuildAuditCluster
+    Type: 'AWS::RDS::DBCluster'
+    Properties:
+      BackupRetentionPeriod: !Ref BackupRetention
+      CopyTagsToSnapshot: true
+      DatabaseName: !If [ HasAuditReplicaReferenceOrDBSnapshotIdentifier, !Ref 'AWS::NoValue', !Ref AuditDBName ]
+      DBClusterIdentifier: !Sub "${ResourcePrefix}-aurora-audit-${UpdateID}"
+      DBClusterParameterGroupName: !If [ HasAuditReplicaReference,
+                                         !If [ AuditShouldBeReadOnly,
+                                               !Sub 'core-rds-aurora-mysql8-replica-cluster-${AuditParamsID}-param-group',
+                                               !Sub 'core-rds-aurora-mysql8-writable-replica-cluster-${AuditParamsID}-param-group'],
+                                         !Sub 'core-rds-aurora-mysql8-cluster-${AuditParamsID}-param-group' ]
+      DBInstanceParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${AuditParamsID}-param-group'
+      DBSubnetGroupName: !Sub "${ResourcePrefix}-rds-subnet-group"
+      DeletionProtection: !If [ HasDeleteProtection, true, false]
+      EnableCloudwatchLogsExports:
+        - audit
+        - error
+        - general
+        - slowquery
+      Engine: 'aurora-mysql'
+      EngineMode: provisioned
+      EngineVersion: !Ref EngineVersion
+      KmsKeyId: !ImportValue CORECMK
+      MasterUsername: !If [ HasAuditReplicaReferenceOrDBSnapshotIdentifier, !Ref 'AWS::NoValue', core_admin ]
+      MasterUserPassword: !If [ HasAuditReplicaReferenceOrDBSnapshotIdentifier, !Ref 'AWS::NoValue', !Sub '{{resolve:secretsmanager:${RdsClusterSecret}::password}}' ]
+      Port: 3306
+      PreferredBackupWindow: '14:00-15:00'
+      PreferredMaintenanceWindow: 'Sun:15:00-Sun:15:45'
+      ReplicationSourceIdentifier: !If [ HasAuditReplicaReferenceAndNotDBSnapshotIdentifier, !Ref AuditReadReplicaOf, !Ref 'AWS::NoValue' ]
+      SnapshotIdentifier: !If [ HasAuditDBSnapshotIdentifier, !Ref AuditDBSnapshotIdentifier, !Ref 'AWS::NoValue' ]
+      StorageEncrypted: !If [ HasAuditDBSnapshotIdentifier, !Ref 'AWS::NoValue', true ]
+      VpcSecurityGroupIds:
+        - Fn::ImportValue:
+            Fn::Sub:
+              - '${ResourcePrefix}-RDSSecurityGroup'
+              - ResourcePrefix: !Ref ResourcePrefix
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-audit-${UpdateID}"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+
+  AuditDBInstanceA:
+    Type: 'AWS::RDS::DBInstance'
+    Condition: ShouldBuildAuditCluster
+    Properties:
+      DBClusterIdentifier: !Ref AuditCluster
+      DBInstanceIdentifier: !Sub "${ResourcePrefix}-aurora-audit-${UpdateID}-a"
+      DBInstanceClass: !Ref AuditInstanceType
+      DBParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${AuditParamsID}-param-group'
+      Engine: 'aurora-mysql'
+      EnablePerformanceInsights: true
+      PerformanceInsightsKMSKeyId: !ImportValue CORECMK
+      PerformanceInsightsRetentionPeriod: 731
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-audit-${UpdateID}-a"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data
+
+  AuditDBInstanceB:
+    Type: 'AWS::RDS::DBInstance'
+    Condition: ShouldBuildAuditReader
+    Properties:
+      DBClusterIdentifier: !Ref AuditCluster
+      DBInstanceIdentifier: !Sub "${ResourcePrefix}-aurora-audit-${UpdateID}-b"
+      DBInstanceClass: !Ref AuditInstanceType
+      DBParameterGroupName: !Sub 'core-rds-aurora-mysql8-instance-${AuditParamsID}-param-group'
+      Engine: 'aurora-mysql'
+      EnablePerformanceInsights: true
+      PerformanceInsightsKMSKeyId: !ImportValue CORECMK
+      PerformanceInsightsRetentionPeriod: 731
+      Tags:
+        - Key: Name
+          Value: !Sub "${ResourcePrefix}-aurora-audit-${UpdateID}-b"
+        - Key: env
+          Value: !Ref EnvironmentName
+        - Key: class
+          Value: !Ref ClassName
+        - Key: resource-type
+          Value: rds
+        - Key: resource-class
+          Value: data

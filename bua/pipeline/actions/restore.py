@@ -25,20 +25,33 @@ class Restore:
         mysql_version = data['mysql_version']
         instance_class = data['instance_class']
         snapshot_account_id = snapshot_arn.split(':')[4]
+        
+        # Determine if this is Aurora based on snapshot ARN
+        is_aurora = ':cluster-snapshot:' in snapshot_arn
+        
         if snapshot_account_id != self.config['aws_account']:
             msg = f'Cannot perform cross account restore directly'
             return "NEEDCOPY", msg
+        
         stack_name = f'{self.prefix}-{update_id}-{suffix}'
         stack = self.cf.check_stack_status(stack_name)
         if stack['StackStatus'] == 'CREATE_FAILED':
             msg = f'{stack_name} : Previous stack creation failed'
             return "FAILED", msg
         if stack['StackStatus'] == 'NO_SUCH_STACK':
-            print(f'{stack_name} : Creating new stack using cf-rds-mysql.yml')
-            template_path = pathlib.Path(__file__).parent / 'cf-rds-mysql.yml'
+            # Choose the appropriate CloudFormation template
+            if is_aurora:
+                template_file = 'cf-aurora-mysql.yml'
+                print(f'{stack_name} : Creating new Aurora cluster stack using {template_file}')
+            else:
+                template_file = 'cf-rds-mysql.yml'
+                print(f'{stack_name} : Creating new RDS instance stack using {template_file}')
+            
+            template_path = pathlib.Path(__file__).parent / template_file
             if not os.path.exists(template_path):
                 msg = f'{stack_name} : Cannot find template {template_path}'
                 return "ABORT", msg
+            
             self.cf.create_stack(
                 stack_name, template_path,
                 self.env_name, self.cluster_name,
@@ -70,15 +83,26 @@ class Restore:
         snapshot_arn: str = data['snapshot_arn']
         kms_key_id: str = self.config['core_kms_key_id']
         mysql_version: str = data['mysql_version']
-        if mysql_version.startswith('8.0'):
-            option_group_name = self.config['mysql80_option_group_name']
+        
+        # Determine if this is Aurora or RDS snapshot
+        is_aurora = ':cluster-snapshot:' in snapshot_arn
+        
+        if not is_aurora:
+            # RDS instance snapshot - needs option group
+            if mysql_version.startswith('8.0'):
+                option_group_name = self.config['mysql80_option_group_name']
+            else:
+                msg = f'{snapshot_arn} : Unsupported mysql version {mysql_version}'
+                return "FAILED", msg
         else:
-            msg = f'{snapshot_arn} : Unsupported mysql version {mysql_version}'
-            return "FAILED", msg
+            # Aurora cluster snapshot - no option group needed
+            option_group_name = None
+        
         snapshot_account_id = snapshot_arn.split(':')[4]
         if snapshot_account_id == self.config['aws_account']:
             msg = f'{snapshot_arn} : Already a local snapshot'
             return "COMPLETE", msg
+        
         snapshot_name = snapshot_arn.split(':')[-1]
         new_snapshot_arn = self.rds.copy_snapshot(
             snapshot_arn=snapshot_arn, snapshot_name=snapshot_name,
@@ -107,7 +131,23 @@ class Restore:
         args = request.step['args']
         snapshot_name = args['snapshot_name']
         instance_identifier = args['instance_identifier']
-        snapshot_arn = self.rds.create_snapshot(snapshot_name=snapshot_name, db_instance_identifier=instance_identifier)
+        
+        # Determine if this is Aurora or RDS based on identifier or explicit flag
+        is_aurora = args.get('database_type') == 'aurora' or data.get('database_type') == 'aurora'
+        
+        if is_aurora:
+            # Create Aurora cluster snapshot
+            snapshot_arn = self.rds.create_cluster_snapshot(
+                snapshot_name=snapshot_name, 
+                db_cluster_identifier=instance_identifier
+            )
+        else:
+            # Create RDS instance snapshot
+            snapshot_arn = self.rds.create_snapshot(
+                snapshot_name=snapshot_name, 
+                db_instance_identifier=instance_identifier
+            )
+        
         data['snapshot_arn'] = snapshot_arn
         msg = f'{snapshot_arn} : Create snapshot in progress'
         return "COMPLETE", msg
