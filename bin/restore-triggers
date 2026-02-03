@@ -4,13 +4,13 @@ my_dir=$(dirname $0)
 case "$1" in
   anstead)
     export MYSQL_HOST="${TST_ANSTEAD_SQL}"
-    export MYSQL_PORT="166${TST_ANSTEAD_SQL_UPDATE_ID}"
+    export MYSQL_PORT="3306"
     export MYSQL_USER="core_admin"
     export MYSQL_PWD="${TST_ANSTEAD_SQL_PASS}"
     ;;
   matten)
     export MYSQL_HOST="${PRD_MATTEN_SQL}"
-    export MYSQL_PORT="176${PRD_MATTEN_SQL_UPDATE_ID}"
+    export MYSQL_PORT="3306"
     export MYSQL_USER="core_admin"
     export MYSQL_PWD="${PRD_MATTEN_SQL_PASS}"
     ;;
